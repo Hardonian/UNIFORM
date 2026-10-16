@@ -1,0 +1,16 @@
+{
+  "schema": "uniform.import-manifest/v1",
+  "files": {
+    "four_no_pure_instant_grid.csv": {
+      "source": "C:/Users/scott/Downloads/four_no_pure_instant_grid.csv",
+      "status": "unlinked-evidence",
+      "rows": 81,
+      "claimed_context": "seed 7, four players, stationary denominator-2 grid",
+      "missing_dependency": "examples/four_no_pure_instant_grid.json was referenced by the supplied research program but was not supplied",
+      "source_sha256": "B059F883986A84BA5190ADFD9BF3F8DE0EC4FEC1759AD5705511FBBD2CE105EC",
+      "repository_sha256": "1F49CA9A7D8B7D2FF811858834664DFB6B346452B9F7B30C6A1E7CAE9AFC394A",
+      "line_endings_note": "The repository copy uses normalized LF line endings; parsed headers and all 81 rows match the source.",
+      "verification": "The table is preserved row-for-row, but its regret column cannot be recomputed until the complete payoff array is available. It must not be cited as a reproduced result."
+    }
+  }
+}
