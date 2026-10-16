@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/periodic-grid-search-v1.schema.json",
+  "title": "UNIFORM exact periodic grid search result",
+  "type": "object",
+  "required": [
+    "schema",
+    "denominator",
+    "period",
+    "players",
+    "total_profiles",
+    "evaluated_profiles",
+    "complete_shard",
+    "complete_global_grid",
+    "best"
+  ],
+  "properties": {
+    "schema": {"const": "uniform.periodic-grid-search/v1"},
+    "denominator": {"type": "integer", "minimum": 1},
+    "period": {"type": "integer", "minimum": 1},
+    "players": {"type": "integer", "minimum": 1},
+    "total_profiles": {"type": "integer", "minimum": 1},
+    "evaluated_profiles": {"type": "integer", "minimum": 0},
+    "complete_shard": {"type": "boolean"},
+    "complete_global_grid": {"type": "boolean"},
+    "best": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["profile", "maximum_regret"]
+      }
+    }
+  },
+  "additionalProperties": true
+}

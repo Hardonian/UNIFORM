@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/essential-aps-polytopes-v1.schema.json",
+  "title": "UNIFORM essential APS rational-polytope iteration",
+  "type": "object",
+  "required": ["schema", "iterations", "fixed_point", "sets"],
+  "properties": {
+    "schema": {"const": "uniform.essential-aps-polytopes/v1"},
+    "iterations": {"type": "integer", "minimum": 0},
+    "fixed_point": {"type": "boolean"},
+    "equality": {"type": "string"},
+    "sets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["representation", "polytopes"],
+        "properties": {
+          "representation": {"const": "finite-union-of-rational-v-polytopes"},
+          "polytopes": {"type": "array"}
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

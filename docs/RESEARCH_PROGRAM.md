@@ -44,13 +44,15 @@ before relying on it.
 
 - M1: exact quitting engine, periodic deviations, horizons, tests — implemented.
 - M2: fixed-period QF_NRA with explicit scope — implemented.
-- M3: exact discounted/finite-horizon stochastic validators — implemented.
+- M3: exact discounted/finite-horizon stochastic validators and stationary-profile
+  QF_NRA campaigns with independent rational witness checking — implemented.
 - M4: deterministic Rayon million-game screen and exact handoff — implemented.
-- M5: rational model extraction and solver stamps — implemented; algebraic-number
-  certification and proof traces remain open.
-- M6: finite symbolic AKRS paths and point-cloud essential APS — implemented as a
-  restricted representation; full convex/set-valued computation remains open.
-- M7: Lean certificate lemmas — source added; local toolchain verification pending.
+- M5: rational model extraction, reproducible multi-solver artifacts, native proof
+  retention, and exact one-generator algebraic witnesses — implemented. Independent
+  checking of native UNSAT proofs and general multivariate algebraic models remain open.
+- M6: finite symbolic AKRS paths and finite unions of exact rational V-polytopes for
+  essential APS — implemented. Curved, irrational, and symbolic semialgebraic set
+  representations remain open.
+- M7: Lean certificate lemmas — implemented and locally built with the pinned toolchain.
 - M8: a paper is appropriate only after a genuinely new theorem or counterexample,
   independent reruns, and mathematical peer review.
-

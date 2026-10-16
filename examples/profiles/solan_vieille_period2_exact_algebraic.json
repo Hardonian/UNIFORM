@@ -1,0 +1,34 @@
+{
+  "schema": "uniform.algebraic-periodic-profile/v1",
+  "title": "Exact Solan-Vieille period-two algebraic profile",
+  "generator": {
+    "symbol": "z",
+    "defining_polynomial_coefficients": ["15", "-96", "179", "-121", "27"],
+    "coefficient_order": "ascending",
+    "isolating_interval": [
+      "26547470883022/100000000000000",
+      "26547470883024/100000000000000"
+    ]
+  },
+  "profile": [
+    [
+      ["-5/44", "3/44", "127/22", "-135/44"],
+      ["0"],
+      ["0", "1"],
+      ["0"]
+    ],
+    [
+      ["0"],
+      ["-5/44", "3/44", "127/22", "-135/44"],
+      ["0"],
+      ["0", "1"]
+    ]
+  ],
+  "derivation": {
+    "x": "(-15 + 9*z + 762*z^2 - 405*z^3)/132 after reduction",
+    "source_equations": [
+      "2*x*z^2 - 5*x*z + 3*x + z^2 - 2*z = 0",
+      "3*x^2*z + x^2 - 6*x*z - 2*x + 3*z = 0"
+    ]
+  }
+}

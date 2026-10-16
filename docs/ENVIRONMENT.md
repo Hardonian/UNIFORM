@@ -14,6 +14,15 @@
 - Z3 command-line executable: absent; optional Python binding 5.3.1 installed and tested
 - cvc5 command-line executable: absent; optional Python binding 1.4.2 installed and tested
 
+Follow-up package verification built `uniform-lab` 0.3.0 as both wheel and sdist. The
+wheel contains the algebraic, quitting/stochastic solver-campaign, exact-grid, and
+rational-polytope modules plus ten JSON schemas. The expanded suite passes 37 tests;
+Ruff and strict Mypy pass. Z3 and cvc5 produced independently checked rational SAT
+models in both quitting-game and stochastic-game smoke campaigns. Native UNSAT proof
+retention was exercised for both bindings on an inconsistent linear-real fixture. The
+pinned Lean build was rerun explicitly through
+`C:\Users\scott\.elan\bin\lake.exe` and completed 3,139 jobs.
+
 The checked-in Rust observation scanned 1,000,000 generated games with seed 7. Its
 JSON records elapsed time and throughput. This laptop is not the EPYC/NVIDIA host
 described by the supplied directive, so no EPYC, CUDA, or NVIDIA execution is claimed.

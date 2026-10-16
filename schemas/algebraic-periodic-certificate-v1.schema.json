@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/algebraic-periodic-certificate-v1.schema.json",
+  "title": "UNIFORM exact algebraic periodic regret certificate",
+  "type": "object",
+  "required": [
+    "schema",
+    "scope",
+    "arithmetic",
+    "generator",
+    "profile",
+    "regrets_by_start_phase",
+    "maximum_regret",
+    "exact_equilibrium_in_scope"
+  ],
+  "properties": {
+    "schema": {"const": "uniform.algebraic-periodic-certificate/v1"},
+    "scope": {"type": "string"},
+    "arithmetic": {"type": "string"},
+    "generator": {
+      "type": "object",
+      "required": [
+        "defining_polynomial_coefficients",
+        "isolating_interval",
+        "root_count_in_open_interval"
+      ]
+    },
+    "profile": {"$ref": "#/$defs/matrix"},
+    "values_by_start_phase": {"$ref": "#/$defs/matrix"},
+    "best_deviation_values_by_start_phase": {"$ref": "#/$defs/matrix"},
+    "regrets_by_start_phase": {"$ref": "#/$defs/matrix"},
+    "maximum_regret": {"$ref": "#/$defs/element"},
+    "exact_equilibrium_in_scope": {"type": "boolean"}
+  },
+  "$defs": {
+    "element": {
+      "type": "object",
+      "required": ["basis", "coefficients", "sign"],
+      "properties": {
+        "basis": {"type": "array", "items": {"type": "string"}},
+        "coefficients": {"type": "array", "items": {"type": "string"}},
+        "sign": {"enum": [-1, 0, 1]}
+      }
+    },
+    "matrix": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {"$ref": "#/$defs/element"}
+      }
+    }
+  },
+  "additionalProperties": true
+}

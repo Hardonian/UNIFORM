@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/stochastic-model-check-v1.schema.json",
+  "title": "UNIFORM independently checked stochastic solver model",
+  "type": "object",
+  "required": [
+    "schema",
+    "solver_status",
+    "independently_valid",
+    "beta",
+    "epsilon",
+    "profile"
+  ],
+  "properties": {
+    "schema": {"const": "uniform.stochastic-model-check/v1"},
+    "solver_status": {"type": "string"},
+    "independently_valid": {"type": "boolean"},
+    "beta": {"type": "string"},
+    "epsilon": {"type": "string"},
+    "profile": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "unparsed_algebraic_values": {"type": "object"}
+  },
+  "additionalProperties": false
+}
