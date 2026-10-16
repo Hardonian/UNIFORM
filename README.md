@@ -74,6 +74,6 @@ defining polynomial. This handles the present benchmark and other one-generator
 certificates; it is not a general multivariate real-algebraic decision procedure.
 
 See [`docs/CERTIFICATE_MATHEMATICS.md`](docs/CERTIFICATE_MATHEMATICS.md) for the exact
-claims made by each checker, [`docs/RESEARCH_PROGRAM.md`](docs/RESEARCH_PROGRAM.md) for
-the roadmap, and [`research_log/2026-10-16.md`](research_log/2026-10-16.md) for this
-implementation run.
+claims made by each checker, [`docs/CLI.md`](docs/CLI.md) for all commands,
+[`docs/RESEARCH_PROGRAM.md`](docs/RESEARCH_PROGRAM.md) for the roadmap, and
+[`research_log/2026-10-16.md`](research_log/2026-10-16.md) for this implementation run.

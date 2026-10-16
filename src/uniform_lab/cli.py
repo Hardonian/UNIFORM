@@ -270,7 +270,9 @@ def main(argv: list[str] | None = None) -> int:
         summary_path = output / "campaign.json"
         dump_json(summary, summary_path)
         print(dump_json(summary), end="")
-        return 0 if all(artifact.run.status != "error" for artifact in artifacts) else 2
+        if any(artifact.run.status in {"error", "missing"} for artifact in artifacts):
+            return 2
+        return 0 if summary["decisive_solvers_agree"] else 3
     if args.command == "check-model":
         game = load_quitting_game(args.game)
         text = Path(args.model).read_text(encoding="utf-8")
