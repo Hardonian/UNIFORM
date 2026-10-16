@@ -1,0 +1,36 @@
+{
+  "created_utc": "2026-10-16T23:28:55.740865+00:00",
+  "model": {
+    "independent_verification": "passed",
+    "rational_value_count": 4,
+    "unparsed_value_names": [],
+    "verification_note": "exact Fraction re-evaluation of all encoded same-period deviations"
+  },
+  "query": {
+    "bytes": 859,
+    "claim_scope": "independent profiles; all deterministic deviations with the same period",
+    "epsilon": "0",
+    "game_sha256": "8cb32853b582fc949ac71c72beacd041be359379e0e4a06b41d0c35a1d900e97",
+    "path": "C:\\Users\\scott\\GitHub\\UNIFORM\\solver-output\\final-smoke\\query.smt2",
+    "period": 1,
+    "sha256": "bb174c9835403917a9671ed75db1d91316e356ffd02a38a95639c3b133ca45a9"
+  },
+  "run": {
+    "backend": "python-binding",
+    "elapsed_seconds": 0.14733459999843035,
+    "executable": "python:z3",
+    "native_proof_sha256": null,
+    "proof_available": false,
+    "returncode": 0,
+    "solver": "z3",
+    "status": "sat",
+    "timed_out": false,
+    "version": "5.3.1"
+  },
+  "schema": "uniform.solver-artifact/v1",
+  "trust_boundary": {
+    "global_game_claim": false,
+    "sat": "candidate until independently checked",
+    "unsat": "bounded solver result; native proof is not independently checked here"
+  }
+}

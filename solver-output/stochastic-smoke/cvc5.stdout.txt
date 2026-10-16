@@ -1,0 +1,8 @@
+sat
+(
+(define-fun x_0_0_0 () Real 0.0)
+(define-fun x_0_0_1 () Real 1.0)
+(define-fun v_0_0 () Real 2.0)
+(define-fun d_0_0_0 () Real 0.0)
+(define-fun d_0_1_0 () Real 2.0)
+)

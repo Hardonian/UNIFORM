@@ -1,0 +1,12 @@
+{"plugins": [],
+ "package": "uniform",
+ "options": {},
+ "name": "Uniform",
+ "isModule": true,
+ "importArts":
+ {"Uniform.Certificate":
+  [["C:\\Users\\scott\\GitHub\\UNIFORM\\lean\\.lake\\build\\lib\\lean\\Uniform\\Certificate.olean",
+    "C:\\Users\\scott\\GitHub\\UNIFORM\\lean\\.lake\\build\\lib\\lean\\Uniform\\Certificate.olean.server"],
+   ["C:\\Users\\scott\\GitHub\\UNIFORM\\lean\\.lake\\build\\lib\\lean\\Uniform\\Certificate.ir.sig",
+    "C:\\Users\\scott\\GitHub\\UNIFORM\\lean\\.lake\\build\\lib\\lean\\Uniform\\Certificate.ir"]]},
+ "dynlibs": []}
