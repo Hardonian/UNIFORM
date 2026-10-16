@@ -34,8 +34,13 @@ from .screening import verify_screen_document
 from .smt import export_periodic_qfnra, independently_check_model
 from .solver import (
     build_solver_artifact,
+    build_stochastic_solver_artifact,
     campaign_summary,
     persist_solver_artifact,
+)
+from .stochastic_smt import (
+    export_discounted_stationary_qfnra,
+    independently_check_stochastic_model,
 )
 
 
@@ -115,6 +120,36 @@ def _parser() -> argparse.ArgumentParser:
     check.add_argument("model")
     check.add_argument("--period", type=int, required=True)
     check.add_argument("--epsilon", default="0")
+
+    stochastic_smt = sub.add_parser(
+        "stochastic-smt", help="export discounted stationary stochastic-game QF_NRA"
+    )
+    stochastic_smt.add_argument("game")
+    stochastic_smt.add_argument("--beta", default="9/10")
+    stochastic_smt.add_argument("--epsilon", default="0")
+    stochastic_smt.add_argument("--output", required=True)
+
+    stochastic_campaign = sub.add_parser(
+        "stochastic-solve-campaign",
+        help="run and independently check a discounted stationary solver campaign",
+    )
+    stochastic_campaign.add_argument("game")
+    stochastic_campaign.add_argument("--beta", default="9/10")
+    stochastic_campaign.add_argument("--epsilon", default="0")
+    stochastic_campaign.add_argument(
+        "--solvers", choices=("z3", "cvc5"), nargs="+", default=["z3", "cvc5"]
+    )
+    stochastic_campaign.add_argument("--timeout", type=float, default=60.0)
+    stochastic_campaign.add_argument("--proof", action="store_true")
+    stochastic_campaign.add_argument("--output-dir", required=True)
+
+    stochastic_check = sub.add_parser(
+        "stochastic-check-model", help="independently check a rational stochastic SAT model"
+    )
+    stochastic_check.add_argument("game")
+    stochastic_check.add_argument("model")
+    stochastic_check.add_argument("--beta", default="9/10")
+    stochastic_check.add_argument("--epsilon", default="0")
 
     screen = sub.add_parser("verify-screen", help="verify Rust screening output exactly")
     screen.add_argument("screen_file")
@@ -221,7 +256,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "smt":
         game = load_quitting_game(args.game)
         epsilon = parse_rational(args.epsilon, field="epsilon")
-        Path(args.output).write_text(
+        target = Path(args.output)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
             export_periodic_qfnra(game, args.period, epsilon), encoding="utf-8", newline="\n"
         )
         print(args.output)
@@ -285,6 +322,80 @@ def main(argv: list[str] | None = None) -> int:
                     "solver_status": model.status,
                     "independently_valid": valid,
                     "profile": [[rational_text(x) for x in phase] for phase in profile],
+                    "unparsed_algebraic_values": model.algebraic_or_unknown,
+                }
+            ),
+            end="",
+        )
+        return 0 if valid else 2
+    if args.command == "stochastic-smt":
+        stochastic_game = load_stochastic_game(args.game)
+        beta = parse_rational(args.beta, field="beta")
+        epsilon = parse_rational(args.epsilon, field="epsilon")
+        target = Path(args.output)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            export_discounted_stationary_qfnra(stochastic_game, beta, epsilon),
+            encoding="utf-8",
+            newline="\n",
+        )
+        print(args.output)
+        return 0
+    if args.command == "stochastic-solve-campaign":
+        stochastic_game = load_stochastic_game(args.game)
+        beta = parse_rational(args.beta, field="beta")
+        epsilon = parse_rational(args.epsilon, field="epsilon")
+        output = Path(args.output_dir)
+        output.mkdir(parents=True, exist_ok=True)
+        query = output / "query.smt2"
+        query.write_text(
+            export_discounted_stationary_qfnra(stochastic_game, beta, epsilon),
+            encoding="utf-8",
+            newline="\n",
+        )
+        artifacts = [
+            build_stochastic_solver_artifact(
+                query,
+                solver,
+                game=stochastic_game,
+                beta=beta,
+                epsilon=epsilon,
+                timeout=args.timeout,
+                produce_proof=args.proof,
+            )
+            for solver in dict.fromkeys(args.solvers)
+        ]
+        for artifact in artifacts:
+            persist_solver_artifact(artifact, output)
+        summary = campaign_summary(artifacts)
+        dump_json(summary, output / "campaign.json")
+        print(dump_json(summary), end="")
+        if any(artifact.run.status in {"error", "missing"} for artifact in artifacts):
+            return 2
+        return 0 if summary["decisive_solvers_agree"] else 3
+    if args.command == "stochastic-check-model":
+        stochastic_game = load_stochastic_game(args.game)
+        beta = parse_rational(args.beta, field="beta")
+        epsilon = parse_rational(args.epsilon, field="epsilon")
+        model_text = Path(args.model).read_text(encoding="utf-8")
+        model, stationary_profile, valid = independently_check_stochastic_model(
+            stochastic_game, beta, epsilon, model_text
+        )
+        print(
+            dump_json(
+                {
+                    "schema": "uniform.stochastic-model-check/v1",
+                    "solver_status": model.status,
+                    "independently_valid": valid,
+                    "beta": rational_text(beta),
+                    "epsilon": rational_text(epsilon),
+                    "profile": [
+                        [
+                            [rational_text(value) for value in probabilities]
+                            for probabilities in state_profile
+                        ]
+                        for state_profile in stationary_profile
+                    ],
                     "unparsed_algebraic_values": model.algebraic_or_unknown,
                 }
             ),

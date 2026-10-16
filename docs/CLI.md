@@ -31,6 +31,12 @@ and decimal strings are rejected by the certificate loaders.
   SHA-256 hashes. Decisive disagreement returns exit code 3.
 - `uniform check-model GAME MODEL --period P --epsilon Q` independently checks a saved
   rational SAT model.
+- `uniform stochastic-smt GAME --beta B --epsilon Q --output QUERY` exports the
+  discounted stationary QF_NRA system for a finite stochastic game.
+- `uniform stochastic-solve-campaign GAME --beta B --epsilon Q --output-dir DIR` runs
+  both solvers and independently checks rational stationary profiles from every state.
+- `uniform stochastic-check-model GAME MODEL --beta B --epsilon Q` rechecks a saved
+  stochastic-game SAT model using exact discounted values and deviations.
 
 Z3 and cvc5 are optional dependencies: `uv sync --extra solvers`. The adapters prefer
 command-line executables and fall back to the official Python bindings. Statuses are

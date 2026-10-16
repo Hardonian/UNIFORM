@@ -8,6 +8,7 @@ import re
 import shutil
 import subprocess
 import time
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,6 +17,8 @@ from typing import Any, Literal
 from .quitting import QuittingGame
 from .rational import Q, rational_text
 from .smt import independently_check_model, parse_solver_model
+from .stochastic import StochasticGame
+from .stochastic_smt import independently_check_stochastic_model
 
 SolverStatus = Literal["sat", "unsat", "unknown", "timeout", "error", "missing"]
 
@@ -279,6 +282,7 @@ class SolverArtifact:
     claim_scope: str
     period: int | None
     epsilon: Q | None
+    parameters: Mapping[str, str]
     run: SolverRun
     model_rational_values: int
     model_unparsed_values: tuple[str, ...]
@@ -299,6 +303,7 @@ class SolverArtifact:
                 "claim_scope": self.claim_scope,
                 "period": self.period,
                 "epsilon": None if self.epsilon is None else rational_text(self.epsilon),
+                "parameters": dict(self.parameters),
             },
             "run": self.run.to_dict(include_raw=include_raw),
             "model": {
@@ -325,6 +330,73 @@ def build_solver_artifact(
     period: int | None = None,
     epsilon: Q | None = None,
 ) -> SolverArtifact:
+    checker: Callable[[str], bool] | None = None
+    if game is not None and period is not None and epsilon is not None:
+        def exact_checker(text: str) -> bool:
+            return independently_check_model(game, period, epsilon, text)[2]
+
+        checker = exact_checker
+    return _build_solver_artifact(
+        path,
+        solver,
+        timeout=timeout,
+        produce_proof=produce_proof,
+        period=period,
+        epsilon=epsilon,
+        parameters={
+            "strategy_class": "independent-periodic",
+            **({"period": str(period)} if period is not None else {}),
+            **({"epsilon": rational_text(epsilon)} if epsilon is not None else {}),
+        },
+        game_payload=None if game is None else game.to_dict(),
+        checker=checker,
+        check_note="exact Fraction re-evaluation of all encoded same-period deviations",
+    )
+
+
+def build_stochastic_solver_artifact(
+    path: str | Path,
+    solver: str,
+    *,
+    game: StochasticGame,
+    beta: Q,
+    epsilon: Q,
+    timeout: float = 60.0,
+    produce_proof: bool = False,
+) -> SolverArtifact:
+    return _build_solver_artifact(
+        path,
+        solver,
+        timeout=timeout,
+        produce_proof=produce_proof,
+        period=None,
+        epsilon=epsilon,
+        parameters={
+            "strategy_class": "independent-stationary-discounted",
+            "beta": rational_text(beta),
+            "epsilon": rational_text(epsilon),
+        },
+        game_payload=game.to_dict(),
+        checker=lambda text: independently_check_stochastic_model(
+            game, beta, epsilon, text
+        )[2],
+        check_note="exact Fraction re-evaluation of all deterministic stationary deviations",
+    )
+
+
+def _build_solver_artifact(
+    path: str | Path,
+    solver: str,
+    *,
+    timeout: float,
+    produce_proof: bool,
+    period: int | None,
+    epsilon: Q | None,
+    parameters: Mapping[str, str],
+    game_payload: Mapping[str, Any] | None,
+    checker: Callable[[str], bool] | None,
+    check_note: str,
+) -> SolverArtifact:
     query_path = Path(path)
     query = query_path.read_bytes()
     run = run_solver(query_path, solver, timeout=timeout, produce_proof=produce_proof)
@@ -333,26 +405,30 @@ def build_solver_artifact(
     note: str
     if run.status != "sat":
         verification, note = "not-applicable", f"solver status is {run.status}"
-    elif parsed.algebraic_or_unknown:
-        verification = "unverified-algebraic"
-        note = "model contains values not parsed as independent rationals"
-    elif game is None or period is None or epsilon is None:
-        verification = "not-applicable"
-        note = "game, period, and epsilon were not all supplied"
+    elif checker is None:
+        if parsed.algebraic_or_unknown:
+            verification = "unverified-algebraic"
+            note = "model contains values not parsed as independent rationals"
+        else:
+            verification = "not-applicable"
+            note = "no independent checker was supplied"
     else:
         try:
-            _, _, valid = independently_check_model(game, period, epsilon, run.stdout)
+            valid = checker(run.stdout)
             verification = "passed" if valid else "failed"
-            note = "exact Fraction re-evaluation of all encoded same-period deviations"
-        except (KeyError, TypeError, ValueError, ZeroDivisionError) as exc:
-            verification = "failed"
+            note = check_note
+        except (ArithmeticError, KeyError, TypeError, ValueError) as exc:
+            if parsed.algebraic_or_unknown and "independently rational" in str(exc):
+                verification = "unverified-algebraic"
+            else:
+                verification = "failed"
             note = f"independent checker rejected model: {type(exc).__name__}: {exc}"
     scope_match = re.search(r"(?m)^; SCOPE:\s*(.+)$", query.decode("utf-8"))
     scope = scope_match.group(1).strip() if scope_match else "unspecified bounded SMT query"
     game_hash = None
-    if game is not None:
+    if game_payload is not None:
         canonical_game = json.dumps(
-            game.to_dict(), sort_keys=True, separators=(",", ":")
+            game_payload, sort_keys=True, separators=(",", ":")
         ).encode("utf-8")
         game_hash = hashlib.sha256(canonical_game).hexdigest()
     return SolverArtifact(
@@ -364,6 +440,7 @@ def build_solver_artifact(
         scope,
         period,
         epsilon,
+        parameters,
         run,
         len(parsed.rationals),
         tuple(sorted(parsed.algebraic_or_unknown)),

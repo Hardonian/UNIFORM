@@ -1,8 +1,9 @@
 """Exact rational V-polytopes for the essential APS operator.
 
 The representation is a finite union of convex hulls.  Half-space clipping retains
-all old feasible generators and all pairwise boundary intersections.  This may keep
-redundant points, but its convex hull is exact and no continuum is discarded.
+all old feasible generators and all pairwise boundary intersections.  Exact rational
+convex-hull membership removes redundant generators, so fixed-point comparisons do
+not depend on incidental interior points.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from fractions import Fraction
+from itertools import combinations
 from typing import Any
 
 from .absorption import successor_graph
@@ -21,6 +23,70 @@ Point = tuple[Q, ...]
 
 def _dot(left: Sequence[Q], right: Sequence[Q]) -> Q:
     return sum((a * b for a, b in zip(left, right, strict=True)), Fraction(0))
+
+
+def _full_column_rank_solution(
+    matrix: Sequence[Sequence[Q]], rhs: Sequence[Q]
+) -> tuple[Q, ...] | None:
+    """Solve an overdetermined rational system when its columns are independent."""
+
+    if len(matrix) != len(rhs) or not matrix:
+        raise ValueError("invalid linear system dimensions")
+    variables = len(matrix[0])
+    if any(len(row) != variables for row in matrix):
+        raise ValueError("ragged linear system")
+    augmented = [list(row) + [value] for row, value in zip(matrix, rhs, strict=True)]
+    pivot_row = 0
+    pivot_rows: list[int] = []
+    for column in range(variables):
+        pivot = next(
+            (row for row in range(pivot_row, len(augmented)) if augmented[row][column]),
+            None,
+        )
+        if pivot is None:
+            return None
+        augmented[pivot_row], augmented[pivot] = augmented[pivot], augmented[pivot_row]
+        scale = augmented[pivot_row][column]
+        augmented[pivot_row] = [value / scale for value in augmented[pivot_row]]
+        for row in range(len(augmented)):
+            if row == pivot_row:
+                continue
+            scale = augmented[row][column]
+            if scale:
+                augmented[row] = [
+                    augmented[row][entry] - scale * augmented[pivot_row][entry]
+                    for entry in range(variables + 1)
+                ]
+        pivot_rows.append(pivot_row)
+        pivot_row += 1
+    if any(
+        all(row[column] == 0 for column in range(variables)) and row[-1] != 0
+        for row in augmented
+    ):
+        return None
+    return tuple(augmented[row][-1] for row in pivot_rows)
+
+
+def point_in_convex_hull(point: Point, vertices: Sequence[Point]) -> bool:
+    """Decide rational convex-hull membership exactly using Carathéodory simplices."""
+
+    if not vertices:
+        return False
+    dimension = len(point)
+    if any(len(vertex) != dimension for vertex in vertices):
+        raise ValueError("convex-hull dimension mismatch")
+    unique = tuple(sorted(set(vertices)))
+    for size in range(1, min(dimension + 1, len(unique)) + 1):
+        for simplex in combinations(unique, size):
+            matrix = [
+                [simplex[column][axis] for column in range(size)]
+                for axis in range(dimension)
+            ]
+            matrix.append([Fraction(1)] * size)
+            solution = _full_column_rank_solution(matrix, (*point, Fraction(1)))
+            if solution is not None and all(weight >= 0 for weight in solution):
+                return True
+    return False
 
 
 @dataclass(frozen=True)
@@ -37,7 +103,13 @@ class RationalPolytope:
             raise ValueError("polytope generators must have one common positive dimension")
         if any(not isinstance(value, Fraction) for point in self.vertices for value in point):
             raise TypeError("polytope coordinates must be Fractions")
-        object.__setattr__(self, "vertices", tuple(sorted(set(self.vertices))))
+        unique = tuple(sorted(set(self.vertices)))
+        extreme = tuple(
+            point
+            for point in unique
+            if not point_in_convex_hull(point, tuple(other for other in unique if other != point))
+        )
+        object.__setattr__(self, "vertices", extreme)
 
     @property
     def dimension(self) -> int:
@@ -102,9 +174,20 @@ class PolytopeFamily:
 
     def __post_init__(self) -> None:
         unique = {polytope.vertices: polytope for polytope in self.polytopes}
-        object.__setattr__(
-            self, "polytopes", tuple(unique[key] for key in sorted(unique))
+        ordered = tuple(unique[key] for key in sorted(unique))
+        maximal = tuple(
+            polytope
+            for polytope in ordered
+            if not any(
+                polytope != other
+                and all(
+                    point_in_convex_hull(vertex, other.vertices)
+                    for vertex in polytope.vertices
+                )
+                for other in ordered
+            )
         )
+        object.__setattr__(self, "polytopes", maximal)
 
     def union(self, *others: PolytopeFamily) -> PolytopeFamily:
         return PolytopeFamily(
@@ -177,7 +260,7 @@ class APSIteration:
             "schema": "uniform.essential-aps-polytopes/v1",
             "iterations": self.iterations,
             "fixed_point": self.fixed_point,
-            "equality": "exact equality of retained convex-hull generator representations",
+            "equality": "exact equality of canonical rational extreme-point representations",
             "sets": {str(player): family.to_dict() for player, family in self.sets.items()},
         }
 

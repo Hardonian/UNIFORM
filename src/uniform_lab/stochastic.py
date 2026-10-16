@@ -6,8 +6,9 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from fractions import Fraction
 from itertools import product
+from typing import Any
 
-from .rational import Q
+from .rational import Q, rational_text
 
 JointAction = tuple[int, ...]
 StationaryProfile = tuple[tuple[tuple[Q, ...], ...], ...]
@@ -68,6 +69,27 @@ class StochasticGame:
     @property
     def players(self) -> int:
         return len(self.action_counts)
+
+    def to_dict(self) -> dict[str, Any]:
+        def key(state: int, joint: JointAction) -> str:
+            return f"{state}|{','.join(str(action) for action in joint)}"
+
+        ordered = sorted(self.payoffs)
+        return {
+            "schema": "uniform.stochastic-game/v1",
+            "states": self.states,
+            "action_counts": list(self.action_counts),
+            "payoffs": {
+                key(state, joint): [rational_text(value) for value in self.payoffs[state, joint]]
+                for state, joint in ordered
+            },
+            "transitions": {
+                key(state, joint): [
+                    rational_text(value) for value in self.transitions[state, joint]
+                ]
+                for state, joint in ordered
+            },
+        }
 
     def validate_profile(self, profile: StationaryProfile) -> None:
         if len(profile) != self.states:
@@ -137,6 +159,13 @@ class StochasticGame:
     def discounted_stationary_regret(
         self, profile: StationaryProfile, beta: Q
     ) -> tuple[tuple[Q, ...], ...]:
+        """Discounted regret from every state.
+
+        Against stationary opponents, a unilateral best response is a finite discounted
+        MDP and therefore has a deterministic stationary optimum.  Enumerating these
+        policies covers arbitrary behavioral unilateral deviations for this evaluation.
+        """
+
         values = self.discounted_values(profile, beta)
         best = [
             [values[state][player] for player in range(self.players)]

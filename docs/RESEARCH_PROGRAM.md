@@ -44,7 +44,8 @@ before relying on it.
 
 - M1: exact quitting engine, periodic deviations, horizons, tests — implemented.
 - M2: fixed-period QF_NRA with explicit scope — implemented.
-- M3: exact discounted/finite-horizon stochastic validators — implemented.
+- M3: exact discounted/finite-horizon stochastic validators and stationary-profile
+  QF_NRA campaigns with independent rational witness checking — implemented.
 - M4: deterministic Rayon million-game screen and exact handoff — implemented.
 - M5: rational model extraction, reproducible multi-solver artifacts, native proof
   retention, and exact one-generator algebraic witnesses — implemented. Independent

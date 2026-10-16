@@ -16,7 +16,8 @@ The repository currently provides:
   native proof retention, and independent checking of rational SAT witnesses;
 - deterministic exhaustive rational profile grids with exact regret, top-candidate CSV,
   visible completeness status, and disjoint shards for larger searches;
-- exact discounted and finite-horizon validators for small finite stochastic games;
+- exact discounted and finite-horizon validators for small finite stochastic games,
+  plus QF_NRA search for independent stationary discounted equilibria;
 - finite symbolic absorption paths with continuous singleton hazards and product-form
   discrete jumps, plus AKRS sequential-perfectness checks;
 - the 2026 successor graph, the original diagnostic point operator, and an exact
@@ -46,6 +47,7 @@ uv run uniform solve-campaign examples/one_player_zero.json --period 1 --epsilon
 uv run uniform path-check examples/one_player_zero.json examples/paths/one_player_continuous.json
 uv run uniform aps-polytopes examples/one_player_zero.json examples/aps/one_player_seed.json --steps 2
 uv run uniform stochastic examples/stochastic/one_state_control.json examples/stochastic/one_state_half_profile.json
+uv run uniform stochastic-solve-campaign examples/stochastic/two_state_control.json --beta 1/2 --epsilon 0 --output-dir solver-output/stochastic
 ```
 
 Build and run the deterministic parallel scan:

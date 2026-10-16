@@ -20,6 +20,10 @@
         "claim_scope": {"type": "string"},
         "period": {"type": ["integer", "null"], "minimum": 1},
         "epsilon": {"type": ["string", "null"]},
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
         "path": {"type": "string"}
       },
       "additionalProperties": true

@@ -112,10 +112,11 @@ a full segment. The point implementation returns its endpoints and flags that fa
 The polytope implementation replaces that restriction for finite rational polyhedral
 inputs. Each set is a finite union of convex hulls. It constructs
 `conv({R_i} union E)`, clips it to player `i`'s zero-payoff hyperplane, and then clips
-to the nonnegative orthant using exact rational segment intersections. The retained
-generators may be redundant, but their convex hull is exact. Iteration detects exact
-equality of this representation. Curved, non-polyhedral, or irrational sets remain
-outside this finite representation.
+to the nonnegative orthant using exact rational segment intersections. Carathéodory's
+theorem reduces exact convex-hull membership to finitely many rational simplex systems;
+interior generators and polytopes contained in another family member are removed.
+Iteration therefore compares canonical extreme-point representations. Curved,
+non-polyhedral, or irrational sets remain outside this finite representation.
 
 ## General stochastic games
 
@@ -128,6 +129,17 @@ For a fixed stationary profile, the normalized discounted value solves
 by exact Gaussian elimination. Stationary regret enumerates all deterministic
 stationary policies for one player. Finite-horizon regret uses full backward induction
 and therefore permits time-dependent Markov deviations over that finite horizon.
+
+Against stationary opponents, each player's discounted best-response problem is a
+finite discounted Markov decision process. Such a problem has a deterministic
+stationary optimal policy, so the enumeration also bounds arbitrary behavioral
+unilateral deviations for the normalized discounted evaluation. The stochastic QF_NRA
+export declares each statewise mixed action, asserts the Bellman evaluation equations,
+and adds the value equations and inequalities for every such deterministic policy from
+every initial state. Rational SAT profiles are reconstructed and re-evaluated by the
+exact engine. UNSAT excludes independent stationary equilibrium profiles at the stated
+`beta` and `epsilon`; it does not address nonstationary equilibrium profiles or uniform
+equilibrium.
 
 ## Trusted components
 

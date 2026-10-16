@@ -12,6 +12,8 @@
   Solan–Vieille period-two profile with exactly zero bounded-period regret;
 - add deterministic exact grid enumeration with caps, shards, JSON, and CSV output;
 - add exact small stochastic-game discounted and finite-horizon validators;
+- add discounted stationary stochastic-game QF_NRA campaigns whose rational witnesses
+  are independently re-evaluated from every state;
 - add finite symbolic continuous/jump absorption paths and exact rational-polytope APS;
 - transcribe the published Solan–Vieille four-player example with provenance;
 - add deterministic Rayon screening, a checked-in million-game run, and exact Python
@@ -23,9 +25,9 @@
 
 - `uv run ruff check .`
 - `uv run mypy`
-- `uv run python -m pytest -q` — 31 passed
+- `uv run python -m pytest -q` — 37 passed
 - `uv build` — wheel and sdist built
-- 0.2.0 wheel inspection — all solver/algebraic/grid/polytope modules and 9 schemas
+- 0.3.0 wheel inspection — all solver/algebraic/grid/polytope modules and 10 schemas
 - `cargo fmt --check`, `cargo clippy -D warnings`, release tests — 2 passed
 - `lake build` — 3,139 jobs completed
 - Z3 5.3.1 and cvc5 1.4.2 rational SAT models independently rechecked
