@@ -1,0 +1,30 @@
+{
+  "schema": "uniform.quitting-game/v1",
+  "title": "Solan-Vieille four-player period-two example",
+  "players": 4,
+  "continuation": ["0", "0", "0", "0"],
+  "payoffs": {
+    "1": ["1", "4", "0", "0"],
+    "2": ["4", "1", "0", "0"],
+    "3": ["1", "1", "1", "1"],
+    "4": ["0", "0", "1", "4"],
+    "5": ["1", "1", "1", "0"],
+    "6": ["0", "1", "1", "1"],
+    "7": ["1", "0", "0", "0"],
+    "8": ["0", "0", "4", "1"],
+    "9": ["1", "0", "1", "1"],
+    "10": ["1", "1", "0", "1"],
+    "11": ["0", "1", "0", "0"],
+    "12": ["1", "1", "1", "1"],
+    "13": ["0", "0", "0", "1"],
+    "14": ["0", "0", "1", "0"],
+    "15": ["-1", "-1", "-1", "-1"]
+  },
+  "provenance": {
+    "kind": "published-example",
+    "source": "E. Solan and N. Vieille, Quitting games - an example, International Journal of Game Theory 31, 365-381",
+    "source_url": "https://www.math.tau.ac.il/~eilons/notequitting4.pdf",
+    "location": "Figure 2, printed page 370",
+    "transcription": "Player 1=row, player 2=column, player 3=top/bottom pair, player 4=left/right pair; continue is top/left. Internal mask bit i means player i+1 quits."
+  }
+}

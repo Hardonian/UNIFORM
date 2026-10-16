@@ -1,0 +1,8 @@
+{
+  "schema": "uniform.quitting-game/v1",
+  "title": "One-player zero-payoff AP sanity fixture",
+  "players": 1,
+  "continuation": ["0"],
+  "payoffs": {"1": ["0"]},
+  "provenance": {"kind": "test-fixture", "not_a_published_example": true}
+}

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "uniform-lab"
+version = "0.1.0"
+description = "Exact and explicitly scoped experiments for multiplayer quitting and stochastic games"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "UNIFORM Lab contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "pytest-cov>=6", "mypy>=1.13", "ruff>=0.9"]
+solvers = ["z3-solver>=4.13", "cvc5>=1.2"]
+
+[project.scripts]
+uniform = "uniform_lab.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/uniform_lab"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["lean/.lake"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/uniform_lab"]
