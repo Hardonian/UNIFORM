@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/stochastic-game-v1.schema.json",
+  "title": "UNIFORM finite stochastic game",
+  "type": "object",
+  "required": ["schema", "states", "action_counts", "payoffs", "transitions"],
+  "properties": {
+    "schema": {"const": "uniform.stochastic-game/v1"},
+    "states": {"type": "integer", "minimum": 1},
+    "action_counts": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+    "payoffs": {"type": "object"},
+    "transitions": {"type": "object"}
+  }
+}

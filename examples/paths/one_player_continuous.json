@@ -1,0 +1,6 @@
+{
+  "schema": "uniform.absorption-path/v1",
+  "pieces": [
+    {"kind": "continuous", "start": "0", "end": "1", "density": {"1": "1"}}
+  ]
+}

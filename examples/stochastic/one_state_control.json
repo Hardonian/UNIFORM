@@ -1,0 +1,14 @@
+{
+  "schema": "uniform.stochastic-game/v1",
+  "title": "One-state one-player control sanity fixture",
+  "states": 1,
+  "action_counts": [2],
+  "payoffs": {
+    "0|0": ["0"],
+    "0|1": ["2"]
+  },
+  "transitions": {
+    "0|0": ["1"],
+    "0|1": ["1"]
+  }
+}

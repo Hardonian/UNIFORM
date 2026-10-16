@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/absorption-path-v1.schema.json",
+  "title": "UNIFORM finite symbolic absorption path",
+  "type": "object",
+  "required": ["schema", "pieces"],
+  "properties": {
+    "schema": {"const": "uniform.absorption-path/v1"},
+    "pieces": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["kind", "start", "end", "density"],
+            "properties": {
+              "kind": {"const": "continuous"},
+              "start": {"$ref": "quitting-game-v1.schema.json#/$defs/rational"},
+              "end": {"$ref": "quitting-game-v1.schema.json#/$defs/rational"},
+              "density": {"type": "object"}
+            }
+          },
+          {
+            "type": "object",
+            "required": ["kind", "at", "quit_probabilities"],
+            "properties": {
+              "kind": {"const": "jump"},
+              "at": {"$ref": "quitting-game-v1.schema.json#/$defs/rational"},
+              "quit_probabilities": {"type": "array"}
+            }
+          }
+        ]
+      }
+    }
+  }
+}

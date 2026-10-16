@@ -1,0 +1,13 @@
+{
+  "schema": "uniform.periodic-profile/v1",
+  "status": "rational approximation to an algebraic period-two equilibrium; not an exact equilibrium certificate",
+  "profile": [
+    ["2539025418087003/10000000000000000", "0", "2654747088302300/10000000000000000", "0"],
+    ["0", "2539025418087003/10000000000000000", "0", "2654747088302300/10000000000000000"]
+  ],
+  "algebraic_definition": {
+    "z_interval": ["26547470883022/100000000000000", "26547470883024/100000000000000"],
+    "z_polynomial": "27*z^4 - 121*z^3 + 179*z^2 - 96*z + 15",
+    "x_from_z": "(27*z^4 - 526*z^3 + 941*z^2 - 87*z)/132"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/quitting-game-v1.schema.json",
+  "title": "UNIFORM exact quitting game",
+  "type": "object",
+  "required": ["schema", "players", "continuation", "payoffs"],
+  "properties": {
+    "schema": {"const": "uniform.quitting-game/v1"},
+    "title": {"type": "string"},
+    "players": {"type": "integer", "minimum": 1},
+    "continuation": {"type": "array", "items": {"$ref": "#/$defs/rational"}},
+    "payoffs": {
+      "type": "object",
+      "additionalProperties": {"type": "array", "items": {"$ref": "#/$defs/rational"}}
+    },
+    "provenance": {"type": "object"}
+  },
+  "$defs": {
+    "rational": {
+      "oneOf": [
+        {"type": "integer"},
+        {"type": "string", "pattern": "^-?[0-9]+(?:/[1-9][0-9]*)?$"}
+      ]
+    }
+  }
+}
