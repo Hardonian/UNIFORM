@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/solver-artifact-v1.schema.json",
+  "title": "UNIFORM stamped SMT solver artifact",
+  "type": "object",
+  "required": ["schema", "created_utc", "query", "run", "model", "trust_boundary"],
+  "properties": {
+    "schema": {"const": "uniform.solver-artifact/v1"},
+    "created_utc": {"type": "string", "format": "date-time"},
+    "query": {
+      "type": "object",
+      "required": ["sha256", "bytes", "claim_scope"],
+      "properties": {
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "game_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "claim_scope": {"type": "string"},
+        "period": {"type": ["integer", "null"], "minimum": 1},
+        "epsilon": {"type": ["string", "null"]},
+        "path": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "run": {
+      "type": "object",
+      "required": ["solver", "version", "status", "returncode", "elapsed_seconds"],
+      "properties": {
+        "solver": {"enum": ["z3", "cvc5"]},
+        "status": {"enum": ["sat", "unsat", "unknown", "timeout", "error", "missing"]},
+        "version": {"type": "string"},
+        "returncode": {"type": "integer"},
+        "elapsed_seconds": {"type": "number", "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "model": {"type": "object"},
+    "trust_boundary": {"type": "object"}
+  },
+  "additionalProperties": true
+}

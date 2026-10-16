@@ -56,7 +56,32 @@ are retained as unverified text; they are never rounded and promoted to certific
 
 Solver SAT means “a candidate exists in the encoded class.” Solver UNSAT means only
 “no candidate exists in the encoded class,” and is not a formal proof unless an
-independently checkable proof trace is also retained.
+independently checkable proof trace is also retained. Solver artifacts hash the exact
+query, record backend/version/status/runtime, preserve raw streams separately, and
+state whether a rational SAT model passed the independent checker. A retained native
+solver proof is labelled as native evidence until a separate proof checker validates it.
+
+## Exact algebraic profile certificate
+
+For a selected real root `alpha`, the algebraic engine stores elements as rational
+coefficient vectors in `Q[alpha]`, reduced by the supplied defining polynomial. A
+rational open interval is accepted only when a Sturm sequence proves that it contains
+exactly one root and the defining polynomial is square-free. Polynomial gcd detects
+zero at that root; otherwise rational interval refinement decides the sign exactly.
+
+The ordinary periodic evaluator then runs over this ordered algebraic domain. All
+probability bounds, cycle denominators, values, deviations, maxima, and regrets are
+therefore symbolic. The checked-in Solan–Vieille certificate reduces every regret to
+the zero element. Its scope is still all deterministic unilateral policies of period
+two from every starting phase, not arbitrary history-dependent strategies.
+
+## Exhaustive rational grids
+
+For denominator `d`, each coordinate ranges exactly over `{0, 1/d, ..., 1}`. The
+search enumerates `(d+1)^(n*p)` profiles in deterministic product order and evaluates
+each using the exact periodic checker. A result distinguishes a complete global grid,
+a complete disjoint shard, and a shard stopped by `max_profiles`. Thus a capped run
+cannot be mistaken for an exhaustive negative result.
 
 ## Absorption paths
 
@@ -74,7 +99,7 @@ on continuous pieces. With constant density, each conditional payoff coordinate 
 linear-fractional function with constant-sign derivative, so exact endpoint checks
 cover the complete interval.
 
-The point-cloud essential APS operator implements
+The diagnostic point-cloud essential APS operator implements
 
 ```
 S_i = {j : R[j,i] < 0 < R[i,j]}
@@ -82,9 +107,15 @@ F_i(E) = ({R_i} if nonnegative) union T_i(union_(j in S_i) E_j).
 ```
 
 When both endpoints already lie in player `i`'s zero-payoff hyperplane, `T_i` contains
-a full segment. The implementation returns its endpoints and sets
-`has_unrepresented_segments=true`; point iteration must not be presented as the full
-set-valued operator in that case.
+a full segment. The point implementation returns its endpoints and flags that fact.
+
+The polytope implementation replaces that restriction for finite rational polyhedral
+inputs. Each set is a finite union of convex hulls. It constructs
+`conv({R_i} union E)`, clips it to player `i`'s zero-payoff hyperplane, and then clips
+to the nonnegative orthant using exact rational segment intersections. The retained
+generators may be redundant, but their convex hull is exact. Iteration detects exact
+equality of this representation. Curved, non-polyhedral, or irrational sets remain
+outside this finite representation.
 
 ## General stochastic games
 
@@ -101,9 +132,9 @@ and therefore permits time-dependent Markov deviations over that finite horizon.
 ## Trusted components
 
 The trusted computing base for exact certificates is CPython integer arithmetic,
-`fractions.Fraction`, the small algorithms in `src/uniform_lab`, the parsed game, and
-the test suite. Rust output is screening evidence only until re-read by Python. Z3,
-cvc5, numerical optimizers, and language models are candidate generators, not trusted
-proof oracles. Lean files, when built, reduce the trusted theorem layer to Lean's kernel
-and the stated Mathlib imports; unavailable build logs must be reported as unavailable.
-
+`fractions.Fraction`, the small algorithms in `src/uniform_lab`, the parsed game, the
+test suite, and the Sturm/polynomial algorithms for algebraic certificates. Rust output
+is screening evidence only until re-read by Python. Z3, cvc5, numerical optimizers, and
+language models are candidate generators, not trusted proof oracles. Lean files, when
+built, reduce the trusted theorem layer to Lean's kernel and the stated Mathlib imports;
+unavailable build logs must be reported as unavailable.

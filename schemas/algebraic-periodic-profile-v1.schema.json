@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/algebraic-periodic-profile-v1.schema.json",
+  "title": "UNIFORM exact univariate algebraic periodic profile",
+  "type": "object",
+  "required": ["schema", "generator", "profile"],
+  "properties": {
+    "schema": {"const": "uniform.algebraic-periodic-profile/v1"},
+    "title": {"type": "string"},
+    "generator": {
+      "type": "object",
+      "required": ["defining_polynomial_coefficients", "isolating_interval"],
+      "properties": {
+        "symbol": {"type": "string"},
+        "coefficient_order": {"const": "ascending"},
+        "defining_polynomial_coefficients": {
+          "type": "array",
+          "minItems": 2,
+          "items": {"$ref": "#/$defs/rational"}
+        },
+        "isolating_interval": {
+          "type": "array",
+          "prefixItems": [
+            {"$ref": "#/$defs/rational"},
+            {"$ref": "#/$defs/rational"}
+          ],
+          "items": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "profile": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/rational"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "rational": {
+      "oneOf": [
+        {"type": "integer"},
+        {"type": "string", "pattern": "^-?[0-9]+(?:/[1-9][0-9]*)?$"}
+      ]
+    }
+  },
+  "additionalProperties": true
+}

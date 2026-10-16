@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .absorption import AbsorptionPath, ContinuousHazard, DiscreteJump
+from .polytopes import PolytopeFamily, RationalPolytope
 from .quitting import QuittingGame
 from .rational import Q, parse_rational, vector
 from .stochastic import StationaryProfile, StochasticGame
@@ -19,7 +20,9 @@ def load_json(path: str | Path) -> Any:
 def dump_json(value: Any, path: str | Path | None = None) -> str:
     text = json.dumps(value, indent=2, sort_keys=True) + "\n"
     if path is not None:
-        Path(path).write_text(text, encoding="utf-8", newline="\n")
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8", newline="\n")
     return text
 
 
@@ -31,6 +34,42 @@ def load_quitting_game(path: str | Path) -> QuittingGame:
     if schema not in (None, "uniform.quitting-game/v1"):
         raise ValueError(f"unsupported game schema {schema!r}")
     return QuittingGame.from_dict(data)
+
+
+def load_polytope_families(
+    game: QuittingGame, path: str | Path
+) -> dict[int, PolytopeFamily]:
+    data = load_json(path)
+    if not isinstance(data, Mapping) or data.get("schema") != "uniform.essential-aps-input/v1":
+        raise ValueError("unsupported essential-APS input schema")
+    raw_sets = data.get("sets")
+    if not isinstance(raw_sets, Mapping):
+        raise TypeError("sets must be an object keyed by player index")
+    result: dict[int, PolytopeFamily] = {}
+    for raw_player, raw_family in raw_sets.items():
+        player = int(raw_player)
+        if not 0 <= player < game.players:
+            raise ValueError(f"player index {player} is outside the game")
+        if not isinstance(raw_family, list):
+            raise TypeError(f"sets[{player}] must be an array of polytopes")
+        polytopes: list[RationalPolytope] = []
+        for polytope_index, raw_polytope in enumerate(raw_family):
+            if not isinstance(raw_polytope, Mapping):
+                raise TypeError(f"sets[{player}][{polytope_index}] must be an object")
+            raw_vertices = raw_polytope.get("vertices")
+            if not isinstance(raw_vertices, list):
+                raise TypeError(f"sets[{player}][{polytope_index}].vertices must be an array")
+            vertices = tuple(
+                vector(
+                    raw_vertex,
+                    length=game.players,
+                    field=f"sets[{player}][{polytope_index}].vertices[{vertex_index}]",
+                )
+                for vertex_index, raw_vertex in enumerate(raw_vertices)
+            )
+            polytopes.append(RationalPolytope(vertices))
+        result[player] = PolytopeFamily(tuple(polytopes))
+    return result
 
 
 def load_absorption_path(game: QuittingGame, path: str | Path) -> AbsorptionPath:

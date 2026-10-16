@@ -1,0 +1,10 @@
+{
+  "schema": "uniform.essential-aps-input/v1",
+  "sets": {
+    "0": [
+      {
+        "vertices": [["0"], ["1"]]
+      }
+    ]
+  }
+}

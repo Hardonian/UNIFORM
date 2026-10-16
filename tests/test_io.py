@@ -3,6 +3,7 @@ from pathlib import Path
 
 from uniform_lab.io import (
     load_absorption_path,
+    load_polytope_families,
     load_quitting_game,
     load_stationary_profile,
     load_stochastic_game,
@@ -24,3 +25,9 @@ def test_stochastic_json_loaders() -> None:
         game, ROOT / "examples" / "stochastic" / "one_state_half_profile.json"
     )
     assert game.discounted_values(profile, Fraction(9, 10)) == ((Fraction(1),),)
+
+
+def test_polytope_family_loader() -> None:
+    game = load_quitting_game(ROOT / "examples" / "one_player_zero.json")
+    families = load_polytope_families(game, ROOT / "examples" / "aps" / "one_player_seed.json")
+    assert families[0].polytopes[0].vertices == ((Fraction(0),), (Fraction(1),))

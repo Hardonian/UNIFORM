@@ -1,0 +1,22 @@
+{
+  "equality": "exact equality of retained convex-hull generator representations",
+  "fixed_point": true,
+  "iterations": 2,
+  "schema": "uniform.essential-aps-polytopes/v1",
+  "sets": {
+    "0": {
+      "polytopes": [
+        {
+          "dimension": 1,
+          "representation": "convex-hull-generators",
+          "vertices": [
+            [
+              "0"
+            ]
+          ]
+        }
+      ],
+      "representation": "finite-union-of-rational-v-polytopes"
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "best": [
+    {
+      "maximum_regret": "0",
+      "profile": [
+        [
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "0",
+      "profile": [
+        [
+          "1/2"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "0",
+      "profile": [
+        [
+          "1"
+        ]
+      ]
+    }
+  ],
+  "complete_global_grid": true,
+  "complete_shard": true,
+  "denominator": 2,
+  "elapsed_seconds": 0.00016260000120382756,
+  "evaluated_profiles": 3,
+  "global_game_claim": false,
+  "period": 1,
+  "players": 1,
+  "schema": "uniform.periodic-grid-search/v1",
+  "scope": "all independent periodic profiles on the stated rational grid; regret covers deterministic unilateral policies of the same period",
+  "shard": {
+    "count": 1,
+    "index": 0,
+    "profiles": 3
+  },
+  "total_profiles": 3
+}

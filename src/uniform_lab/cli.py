@@ -3,18 +3,25 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import shutil
 import sys
+from collections.abc import Mapping
 from fractions import Fraction
+from importlib.util import find_spec
 from pathlib import Path
 
+from .algebraic import certify_algebraic_profile, load_algebraic_profile
+from .grid import periodic_grid_search, write_grid_csv
 from .io import (
     dump_json,
     load_absorption_path,
     load_json,
+    load_polytope_families,
     load_quitting_game,
     load_stationary_profile,
     load_stochastic_game,
 )
+from .polytopes import iterate_essential_aps
 from .quitting import (
     Profile,
     QuittingGame,
@@ -25,7 +32,11 @@ from .quitting import (
 from .rational import parse_rational, rational_text
 from .screening import verify_screen_document
 from .smt import export_periodic_qfnra, independently_check_model
-from .solver import run_solver
+from .solver import (
+    build_solver_artifact,
+    campaign_summary,
+    persist_solver_artifact,
+)
 
 
 def _profile(game_path: str, profile_path: str) -> tuple[QuittingGame, Profile]:
@@ -48,6 +59,24 @@ def _parser() -> argparse.ArgumentParser:
     periodic.add_argument("profile")
     periodic.add_argument("--output")
 
+    algebraic = sub.add_parser(
+        "algebraic-periodic", help="certify a periodic profile over one exact algebraic root"
+    )
+    algebraic.add_argument("game")
+    algebraic.add_argument("profile")
+    algebraic.add_argument("--output")
+
+    grid = sub.add_parser("grid", help="exhaustively search an exact rational profile grid")
+    grid.add_argument("game")
+    grid.add_argument("--denominator", type=int, required=True)
+    grid.add_argument("--period", type=int, required=True)
+    grid.add_argument("--keep", type=int, default=10)
+    grid.add_argument("--max-profiles", type=int)
+    grid.add_argument("--shard-index", type=int, default=0)
+    grid.add_argument("--shard-count", type=int, default=1)
+    grid.add_argument("--output")
+    grid.add_argument("--csv")
+
     horizon = sub.add_parser("horizon", help="compute an exact finite-horizon certificate")
     horizon.add_argument("game")
     horizon.add_argument("profile")
@@ -64,6 +93,22 @@ def _parser() -> argparse.ArgumentParser:
     solve.add_argument("smt_file")
     solve.add_argument("--solver", choices=("z3", "cvc5"), required=True)
     solve.add_argument("--timeout", type=float, default=60.0)
+    solve.add_argument("--proof", action="store_true")
+    solve.add_argument("--game")
+    solve.add_argument("--period", type=int)
+    solve.add_argument("--epsilon", default="0")
+    solve.add_argument("--output-dir")
+
+    campaign = sub.add_parser(
+        "solve-campaign", help="export, run, stamp, and cross-check a bounded solver campaign"
+    )
+    campaign.add_argument("game")
+    campaign.add_argument("--period", type=int, required=True)
+    campaign.add_argument("--epsilon", default="0")
+    campaign.add_argument("--solvers", choices=("z3", "cvc5"), nargs="+", default=["z3", "cvc5"])
+    campaign.add_argument("--timeout", type=float, default=60.0)
+    campaign.add_argument("--proof", action="store_true")
+    campaign.add_argument("--output-dir", required=True)
 
     check = sub.add_parser("check-model", help="independently check a rational SAT model")
     check.add_argument("game")
@@ -78,6 +123,14 @@ def _parser() -> argparse.ArgumentParser:
     path_check.add_argument("game")
     path_check.add_argument("path")
     path_check.add_argument("--epsilon", default="0")
+
+    aps = sub.add_parser(
+        "aps-polytopes", help="iterate the exact rational-polytope essential APS operator"
+    )
+    aps.add_argument("game")
+    aps.add_argument("sets")
+    aps.add_argument("--steps", type=int, default=1)
+    aps.add_argument("--output")
 
     stochastic = sub.add_parser(
         "stochastic", help="exact discounted and finite-horizon stochastic-game checks"
@@ -114,9 +167,37 @@ def main(argv: list[str] | None = None) -> int:
         if args.output is None:
             print(text, end="")
         return 0
+    if args.command == "algebraic-periodic":
+        game = load_quitting_game(args.game)
+        data = load_json(args.profile)
+        if not isinstance(data, Mapping):
+            raise TypeError("algebraic profile file must contain an object")
+        field, algebraic_profile = load_algebraic_profile(game, data)
+        algebraic_certificate = certify_algebraic_profile(game, field, algebraic_profile)
+        text = dump_json(algebraic_certificate.to_dict(), args.output)
+        if args.output is None:
+            print(text, end="")
+        return 0 if algebraic_certificate.exact_equilibrium_in_scope else 2
+    if args.command == "grid":
+        game = load_quitting_game(args.game)
+        grid_result = periodic_grid_search(
+            game,
+            args.denominator,
+            args.period,
+            keep=args.keep,
+            max_profiles=args.max_profiles,
+            shard_index=args.shard_index,
+            shard_count=args.shard_count,
+        )
+        if args.csv is not None:
+            write_grid_csv(grid_result, args.csv)
+        text = dump_json(grid_result.to_dict(), args.output)
+        if args.output is None:
+            print(text, end="")
+        return 0
     if args.command == "horizon":
         game, profile = _profile(args.game, args.profile)
-        certificate = finite_horizon_certificate(
+        horizon_certificate = finite_horizon_certificate(
             game, profile, args.horizon, start_phase=args.start_phase
         )
         print(
@@ -124,14 +205,14 @@ def main(argv: list[str] | None = None) -> int:
                 {
                     "schema": "uniform.horizon-certificate/v1",
                     "evaluation": "absorption payoff by H; continuation payoff at boundary",
-                    "horizon": certificate.horizon,
-                    "start_phase": certificate.start_phase,
-                    "value": [rational_text(x) for x in certificate.value],
+                    "horizon": horizon_certificate.horizon,
+                    "start_phase": horizon_certificate.start_phase,
+                    "value": [rational_text(x) for x in horizon_certificate.value],
                     "best_deviation_value": [
-                        rational_text(x) for x in certificate.best_deviation_value
+                        rational_text(x) for x in horizon_certificate.best_deviation_value
                     ],
-                    "regret": [rational_text(x) for x in certificate.regret],
-                    "maximum_regret": rational_text(certificate.maximum_regret),
+                    "regret": [rational_text(x) for x in horizon_certificate.regret],
+                    "maximum_regret": rational_text(horizon_certificate.maximum_regret),
                 }
             ),
             end="",
@@ -146,21 +227,50 @@ def main(argv: list[str] | None = None) -> int:
         print(args.output)
         return 0
     if args.command == "solve":
-        result = run_solver(args.smt_file, args.solver, timeout=args.timeout)
-        print(
-            dump_json(
-                {
-                    "solver": result.solver,
-                    "executable": result.executable,
-                    "version": result.version,
-                    "returncode": result.returncode,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                }
-            ),
-            end="",
+        optional_game = load_quitting_game(args.game) if args.game is not None else None
+        if optional_game is not None and args.period is None:
+            raise ValueError("--period is required when --game is supplied")
+        artifact = build_solver_artifact(
+            args.smt_file,
+            args.solver,
+            timeout=args.timeout,
+            produce_proof=args.proof,
+            game=optional_game,
+            period=args.period,
+            epsilon=parse_rational(args.epsilon, field="epsilon"),
         )
-        return result.returncode
+        if args.output_dir is not None:
+            persist_solver_artifact(artifact, args.output_dir)
+        print(dump_json(artifact.to_dict(include_raw=args.output_dir is None)), end="")
+        return 0 if artifact.run.status in {"sat", "unsat", "unknown"} else 2
+    if args.command == "solve-campaign":
+        game = load_quitting_game(args.game)
+        epsilon = parse_rational(args.epsilon, field="epsilon")
+        output = Path(args.output_dir)
+        output.mkdir(parents=True, exist_ok=True)
+        query = output / "query.smt2"
+        query.write_text(
+            export_periodic_qfnra(game, args.period, epsilon), encoding="utf-8", newline="\n"
+        )
+        artifacts = [
+            build_solver_artifact(
+                query,
+                solver,
+                timeout=args.timeout,
+                produce_proof=args.proof,
+                game=game,
+                period=args.period,
+                epsilon=epsilon,
+            )
+            for solver in dict.fromkeys(args.solvers)
+        ]
+        for artifact in artifacts:
+            persist_solver_artifact(artifact, output)
+        summary = campaign_summary(artifacts)
+        summary_path = output / "campaign.json"
+        dump_json(summary, summary_path)
+        print(dump_json(summary), end="")
+        return 0 if all(artifact.run.status != "error" for artifact in artifacts) else 2
     if args.command == "check-model":
         game = load_quitting_game(args.game)
         text = Path(args.model).read_text(encoding="utf-8")
@@ -215,6 +325,14 @@ def main(argv: list[str] | None = None) -> int:
             end="",
         )
         return 0 if structural.valid and sequential.valid else 2
+    if args.command == "aps-polytopes":
+        game = load_quitting_game(args.game)
+        initial = load_polytope_families(game, args.sets)
+        aps_result = iterate_essential_aps(game, initial, args.steps)
+        text = dump_json(aps_result.to_dict(), args.output)
+        if args.output is None:
+            print(text, end="")
+        return 0
     if args.command == "stochastic":
         stochastic_game = load_stochastic_game(args.game)
         stationary_profile = load_stationary_profile(stochastic_game, args.profile)
@@ -251,6 +369,13 @@ def main(argv: list[str] | None = None) -> int:
                     "python": sys.version,
                     "implementation": platform.python_implementation(),
                     "platform": platform.platform(),
+                    "solvers": {
+                        solver: {
+                            "command_line": shutil.which(solver),
+                            "python_binding": find_spec(solver) is not None,
+                        }
+                        for solver in ("z3", "cvc5")
+                    },
                 },
                 indent=2,
             )

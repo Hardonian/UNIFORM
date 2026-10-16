@@ -11,7 +11,7 @@ from uniform_lab.smt import (
     parse_solver_model,
     profile_from_model,
 )
-from uniform_lab.solver import run_solver
+from uniform_lab.solver import build_solver_artifact, persist_solver_artifact, run_solver
 
 
 def test_export_is_honestly_scoped_and_qfnra() -> None:
@@ -49,3 +49,29 @@ def test_optional_solver_binding_round_trip(solver: str, tmp_path: Path) -> None
     model = parse_solver_model(run.stdout)
     profile = profile_from_model(game, 1, model)
     assert periodic_regret_certificate(game, profile).maximum_regret == 0
+
+
+def test_solver_artifact_hash_and_independent_check(tmp_path: Path) -> None:
+    if find_spec("z3") is None:
+        pytest.skip("optional z3 binding is not installed")
+    game = QuittingGame(1, {1: (Fraction(0),)}, (Fraction(0),))
+    query = tmp_path / "query.smt2"
+    query.write_text(export_periodic_qfnra(game, 1, Fraction(0)), encoding="utf-8")
+    artifact = build_solver_artifact(
+        query, "z3", game=game, period=1, epsilon=Fraction(0)
+    )
+    assert artifact.run.status == "sat"
+    assert artifact.independent_verification == "passed"
+    path = persist_solver_artifact(artifact, tmp_path / "artifact")
+    assert path.exists()
+    assert len(artifact.query_sha256) == 64
+
+
+def test_z3_native_unsat_proof_is_retained_when_requested(tmp_path: Path) -> None:
+    if find_spec("z3") is None:
+        pytest.skip("optional z3 binding is not installed")
+    query = tmp_path / "unsat.smt2"
+    query.write_text("(set-logic QF_LRA)\n(assert false)\n(check-sat)\n", encoding="utf-8")
+    run = run_solver(query, "z3", produce_proof=True)
+    assert run.status == "unsat"
+    assert run.proof
