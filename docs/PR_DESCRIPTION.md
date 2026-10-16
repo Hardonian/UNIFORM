@@ -23,8 +23,9 @@
 
 - `uv run ruff check .`
 - `uv run mypy`
-- `uv run python -m pytest -q` — 28 passed
+- `uv run python -m pytest -q` — 31 passed
 - `uv build` — wheel and sdist built
+- 0.2.0 wheel inspection — all solver/algebraic/grid/polytope modules and 9 schemas
 - `cargo fmt --check`, `cargo clippy -D warnings`, release tests — 2 passed
 - `lake build` — 3,139 jobs completed
 - Z3 5.3.1 and cvc5 1.4.2 rational SAT models independently rechecked

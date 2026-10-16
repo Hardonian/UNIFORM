@@ -6,7 +6,6 @@ import csv
 import time
 from dataclasses import dataclass
 from fractions import Fraction
-from itertools import islice, product
 from pathlib import Path
 from typing import Any
 
@@ -97,13 +96,18 @@ def periodic_grid_search(
         if shard_index >= total_profiles
         else (total_profiles - 1 - shard_index) // shard_count + 1
     )
-    selected = islice(product(values, repeat=coordinates), shard_index, None, shard_count)
     best: list[GridCandidate] = []
     evaluated = 0
     started = time.monotonic()
-    for flat in selected:
+    for profile_index in range(shard_index, total_profiles, shard_count):
         if max_profiles is not None and evaluated >= max_profiles:
             break
+        remaining = profile_index
+        flat_values = [Fraction(0)] * coordinates
+        for coordinate in range(coordinates - 1, -1, -1):
+            remaining, digit = divmod(remaining, len(values))
+            flat_values[coordinate] = values[digit]
+        flat = tuple(flat_values)
         profile = tuple(
             tuple(flat[phase * game.players : (phase + 1) * game.players])
             for phase in range(period)

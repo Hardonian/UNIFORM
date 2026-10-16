@@ -2,6 +2,8 @@ import json
 from fractions import Fraction
 from pathlib import Path
 
+import pytest
+
 from uniform_lab.algebraic import (
     AlgebraicField,
     RationalPolynomial,
@@ -22,6 +24,14 @@ def test_sturm_isolation_and_exact_field_arithmetic() -> None:
     assert a * a == 2
     assert 1 < a < 2
     assert (a + 1) / (a + 1) == 1
+
+
+def test_root_interval_rejects_multiple_roots_and_endpoint_roots() -> None:
+    polynomial = RationalPolynomial.from_values([-1, 0, 1])
+    with pytest.raises(ValueError, match="exactly one root"):
+        AlgebraicField(polynomial, Fraction(-2), Fraction(2))
+    with pytest.raises(ValueError, match="endpoints"):
+        AlgebraicField(polynomial, Fraction(1), Fraction(2))
 
 
 def test_exact_solan_vieille_algebraic_period_two_certificate() -> None:

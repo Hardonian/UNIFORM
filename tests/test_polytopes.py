@@ -31,6 +31,27 @@ def test_exact_polytope_section_retains_full_segment_generators() -> None:
     }
 
 
+def test_polytope_operator_computes_new_rational_section_endpoints() -> None:
+    game = QuittingGame(
+        2,
+        {
+            1: (Fraction(-1), Fraction(0)),
+            2: (Fraction(0), Fraction(0)),
+            3: (Fraction(0), Fraction(0)),
+        },
+        (Fraction(0), Fraction(0)),
+    )
+    continuation = RationalPolytope(
+        ((Fraction(1), Fraction(1)), (Fraction(1), Fraction(3)))
+    )
+    image = t_i_polytope(game, 0, continuation)
+    assert image is not None
+    assert set(image.vertices) == {
+        (Fraction(0), Fraction(1, 2)),
+        (Fraction(0), Fraction(3, 2)),
+    }
+
+
 def test_essential_aps_includes_nonnegative_single_quit_rows() -> None:
     game = QuittingGame(
         1, {1: (Fraction(3),)}, (Fraction(0),)

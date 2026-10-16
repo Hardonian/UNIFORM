@@ -22,6 +22,9 @@ uniform = "uniform_lab.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/uniform_lab"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"schemas" = "uniform_lab/schemas"
+
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]

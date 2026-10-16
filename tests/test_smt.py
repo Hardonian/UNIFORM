@@ -62,6 +62,7 @@ def test_solver_artifact_hash_and_independent_check(tmp_path: Path) -> None:
     )
     assert artifact.run.status == "sat"
     assert artifact.independent_verification == "passed"
+    assert artifact.game_sha256 is not None and len(artifact.game_sha256) == 64
     path = persist_solver_artifact(artifact, tmp_path / "artifact")
     assert path.exists()
     assert len(artifact.query_sha256) == 64

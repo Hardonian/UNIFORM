@@ -20,3 +20,11 @@ def test_grid_sharding_is_disjoint_by_count() -> None:
     right = periodic_grid_search(game, 4, 1, shard_index=1, shard_count=2)
     assert left.evaluated_profiles + right.evaluated_profiles == 5
     assert not left.complete_global_grid
+
+
+def test_capped_grid_is_never_marked_complete() -> None:
+    game = QuittingGame(1, {1: (Fraction(0),)}, (Fraction(0),))
+    result = periodic_grid_search(game, 10, 1, max_profiles=3)
+    assert result.evaluated_profiles == 3
+    assert not result.complete_shard
+    assert not result.complete_global_grid
