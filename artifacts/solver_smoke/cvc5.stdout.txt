@@ -1,7 +1,0 @@
-sat
-(
-(define-fun q_0_0 () Real (/ 1 2))
-(define-fun v_0_0 () Real 0.0)
-(define-fun d_0_0_0 () Real 0.0)
-(define-fun d_0_1_0 () Real 0.0)
-)
