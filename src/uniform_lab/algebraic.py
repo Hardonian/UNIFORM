@@ -210,6 +210,64 @@ def polynomial_interval(polynomial: RationalPolynomial, lower: Q, upper: Q) -> t
     return result
 
 
+def isolate_real_roots(
+    polynomial: RationalPolynomial,
+    lower: Q | None = None,
+    upper: Q | None = None,
+) -> list[tuple[Q, Q]]:
+    """Isolate all real roots of a square-free polynomial into disjoint open intervals.
+
+    Returns intervals sorted in ascending numerical order.
+    """
+    gcd = polynomial_gcd(polynomial, polynomial.derivative())
+    sqfree = polynomial.divmod(gcd)[0]
+    poly = sqfree.monic()
+    if lower is None or upper is None:
+        leading = abs(poly.leading)
+        max_coeff = max((abs(c) for c in poly.coefficients[:-1]), default=Fraction(0))
+        bound = Fraction(1) + max_coeff / leading
+        # Add buffer to ensure endpoints are not roots
+        while poly.evaluate(-bound) == 0:
+            bound += 1
+        while poly.evaluate(bound) == 0:
+            bound += 1
+        if lower is None:
+            lower = -bound
+        if upper is None:
+            upper = bound
+
+    # Subdivide intervals recursively
+    intervals: list[tuple[Q, Q]] = []
+    stack = [(lower, upper)]
+    while stack:
+        a, b = stack.pop()
+        count = roots_in_open_interval(poly, a, b)
+        if count == 0:
+            continue
+        if count == 1:
+            intervals.append((a, b))
+            continue
+        mid = (a + b) / 2
+        # Ensure midpoint is not a root
+        offset = (b - a) / 8
+        trial = 0
+        while poly.evaluate(mid) == 0 and trial < 7:
+            trial += 1
+            mid = a + (trial * offset)
+        if poly.evaluate(mid) == 0:
+            # mid is an exact root! Isolate mid with a small delta
+            delta = (b - a) / 16
+            intervals.append((mid - delta, mid + delta))
+            stack.append((mid + delta, b))
+            stack.append((a, mid - delta))
+        else:
+            stack.append((mid, b))
+            stack.append((a, mid))
+
+    intervals.sort(key=lambda item: (item[0] + item[1]) / 2)
+    return intervals
+
+
 @dataclass(frozen=True)
 class AlgebraicField:
     """A selected real root and exact arithmetic in its polynomial quotient."""
@@ -265,6 +323,38 @@ class AlgebraicField:
             else:
                 lower = midpoint
         raise ArithmeticError("could not decide algebraic sign after 4096 refinements")
+
+    def refine_interval(self, max_width: Q) -> tuple[Q, Q]:
+        """Refine the isolating interval until its width is strictly less than max_width."""
+        lower, upper = self.lower, self.upper
+        while (upper - lower) >= max_width:
+            midpoint = (lower + upper) / 2
+            if self.polynomial.evaluate(midpoint) == 0:
+                # Midpoint is an exact rational root; nudge bounds symmetrically
+                delta = (upper - lower) / 8
+                return midpoint - delta, midpoint + delta
+            if roots_in_open_interval(self.polynomial, lower, midpoint) == 1:
+                upper = midpoint
+            else:
+                lower = midpoint
+        return lower, upper
+
+    @classmethod
+    def from_root_index(
+        cls,
+        polynomial: RationalPolynomial,
+        root_index: int = 0,
+        symbol: str = "alpha",
+    ) -> AlgebraicField:
+        """Construct an AlgebraicField by isolating the i-th real root in ascending order."""
+        intervals = isolate_real_roots(polynomial)
+        if not intervals:
+            raise ValueError("polynomial has no real roots")
+        if not 0 <= root_index < len(intervals):
+            msg = f"root index {root_index} out of range (found {len(intervals)} real roots)"
+            raise IndexError(msg)
+        lower, upper = intervals[root_index]
+        return cls(polynomial.monic(), lower, upper, symbol=symbol)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -350,6 +440,19 @@ class Algebraic:
     def __hash__(self) -> int:
         return hash((self.field, self.polynomial))
 
+    def to_float(self) -> float:
+        """Return a floating-point approximation by interval midpoint evaluation."""
+        midpoint = (self.field.lower + self.field.upper) / 2
+        return float(self.polynomial.evaluate(midpoint))
+
+    def to_decimal_approx(self, decimals: int = 15) -> str:
+        """Return a verified decimal approximation string."""
+        max_width = Fraction(1, 10 ** (decimals + 3))
+        lower, upper = self.field.refine_interval(max_width)
+        midpoint = (lower + upper) / 2
+        val = float(self.polynomial.evaluate(midpoint))
+        return f"{val:.{decimals}f}"
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "basis": [
@@ -361,6 +464,7 @@ class Algebraic:
             ],
             "coefficients": self.polynomial.to_list(),
             "sign": self.sign(),
+            "decimal_approx": self.to_decimal_approx(decimals=14),
         }
 
 
@@ -390,9 +494,7 @@ class AlgebraicPeriodicCertificate:
             "generator": self.field.to_dict(),
             "profile": matrix(self.profile),
             "values_by_start_phase": matrix(self.certificate.values),
-            "best_deviation_values_by_start_phase": matrix(
-                self.certificate.best_deviation_values
-            ),
+            "best_deviation_values_by_start_phase": matrix(self.certificate.best_deviation_values),
             "regrets_by_start_phase": matrix(self.certificate.regrets),
             "maximum_regret": maximum.to_dict(),
             "exact_equilibrium_in_scope": self.exact_equilibrium_in_scope,
@@ -431,9 +533,7 @@ def load_algebraic_profile(
         phase: list[Algebraic] = []
         for player, raw_element in enumerate(raw_phase):
             if not isinstance(raw_element, list):
-                raise TypeError(
-                    f"profile[{phase_index}][{player}] must be a coefficient array"
-                )
+                raise TypeError(f"profile[{phase_index}][{player}] must be a coefficient array")
             element = field.element(raw_element)
             if not 0 <= element <= 1:
                 raise ValueError(f"profile[{phase_index}][{player}] is outside [0,1]")

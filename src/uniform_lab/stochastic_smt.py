@@ -49,9 +49,7 @@ def _value_system(
     joints = tuple(product(*(range(count) for count in game.action_counts)))
     equations: list[str] = []
     for state in range(game.states):
-        probabilities = {
-            joint: _joint_probability(variables[state], joint) for joint in joints
-        }
+        probabilities = {joint: _joint_probability(variables[state], joint) for joint in joints}
         reward = _sum(
             f"(* {probabilities[joint]} {_q(game.payoffs[state, joint][player])})"
             for joint in joints
@@ -67,15 +65,12 @@ def _value_system(
             continuation_terms.append(f"(* {transition_probability} {names[target]})")
         continuation = _sum(continuation_terms)
         equations.append(
-            f"(= {names[state]} (+ (* {_q(1 - beta)} {reward}) "
-            f"(* {_q(beta)} {continuation})))"
+            f"(= {names[state]} (+ (* {_q(1 - beta)} {reward}) (* {_q(beta)} {continuation})))"
         )
     return names, equations
 
 
-def export_discounted_stationary_qfnra(
-    game: StochasticGame, beta: Q, epsilon: Q
-) -> str:
+def export_discounted_stationary_qfnra(game: StochasticGame, beta: Q, epsilon: Q) -> str:
     """Encode independent stationary profiles and deterministic stationary deviations."""
 
     if not 0 <= beta < 1:
@@ -94,9 +89,7 @@ def export_discounted_stationary_qfnra(
     for state in range(game.states):
         state_variables: list[list[str]] = []
         for player, action_count in enumerate(game.action_counts):
-            action_variables = [
-                f"x_{state}_{player}_{action}" for action in range(action_count)
-            ]
+            action_variables = [f"x_{state}_{player}_{action}" for action in range(action_count)]
             state_variables.append(action_variables)
             for name in action_variables:
                 lines.append(f"(declare-fun {name} () Real)")
@@ -133,9 +126,7 @@ def export_discounted_stationary_qfnra(
     return "\n".join(lines) + "\n"
 
 
-def stationary_profile_from_model(
-    game: StochasticGame, model: ParsedModel
-) -> StationaryProfile:
+def stationary_profile_from_model(game: StochasticGame, model: ParsedModel) -> StationaryProfile:
     profile: list[tuple[tuple[Q, ...], ...]] = []
     for state in range(game.states):
         state_profile: list[tuple[Q, ...]] = []

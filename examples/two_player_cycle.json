@@ -1,0 +1,10 @@
+{
+  "schema": "uniform.quitting-game/v1",
+  "players": 2,
+  "continuation": [0, 0],
+  "payoffs": {
+    "1": [1, -1],
+    "2": [-1, 1],
+    "3": [-2, -2]
+  }
+}

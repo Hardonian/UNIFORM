@@ -36,9 +36,7 @@ def load_quitting_game(path: str | Path) -> QuittingGame:
     return QuittingGame.from_dict(data)
 
 
-def load_polytope_families(
-    game: QuittingGame, path: str | Path
-) -> dict[int, PolytopeFamily]:
+def load_polytope_families(game: QuittingGame, path: str | Path) -> dict[int, PolytopeFamily]:
     data = load_json(path)
     if not isinstance(data, Mapping) or data.get("schema") != "uniform.essential-aps-input/v1":
         raise ValueError("unsupported essential-APS input schema")

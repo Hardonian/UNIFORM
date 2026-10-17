@@ -134,9 +134,7 @@ def periodic_grid_search(
 
 def write_grid_csv(result: GridSearchResult, path: str | Path) -> None:
     columns = [
-        f"q_{phase}_{player}"
-        for phase in range(result.period)
-        for player in range(result.players)
+        f"q_{phase}_{player}" for phase in range(result.period) for player in range(result.players)
     ]
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -150,7 +148,5 @@ def write_grid_csv(result: GridSearchResult, path: str | Path) -> None:
             }
             for phase in range(result.period):
                 for player in range(result.players):
-                    row[f"q_{phase}_{player}"] = rational_text(
-                        candidate.profile[phase][player]
-                    )
+                    row[f"q_{phase}_{player}"] = rational_text(candidate.profile[phase][player])
             writer.writerow(row)

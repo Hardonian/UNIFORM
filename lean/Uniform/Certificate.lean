@@ -48,4 +48,29 @@ theorem weightedDeviationBound
     (1 - q) * continueValue + q * quitValue ≤ mixedValue + epsilon := by
   nlinarith
 
+theorem regret_transitivity_le
+    (payoff candidate best : ℚ) (eps1 eps2 : ℚ)
+    (h1 : regret payoff candidate ≤ eps1)
+    (h2 : regret candidate best ≤ eps2) :
+    regret payoff best ≤ eps1 + eps2 := by
+  unfold regret at *
+  linarith
+
+theorem finite_horizon_backward_induction_step
+    (vOld vNew payoff best_action bound : ℚ)
+    (h_val : vOld ≤ payoff)
+    (h_best : best_action ≤ vNew + bound) :
+    regret payoff best_action ≤ regret vOld vNew + bound := by
+  unfold regret
+  linarith
+
+theorem discounted_bellman_gap_le
+    (val bestAction beta delta : ℚ)
+    (_hBeta0 : 0 ≤ beta) (_hBeta1 : beta < 1)
+    (hGap : bestAction - val ≤ delta) :
+    regret val bestAction ≤ delta := by
+  unfold regret
+  linarith
+
 end Uniform
+

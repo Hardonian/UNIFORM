@@ -57,9 +57,7 @@ def test_solver_artifact_hash_and_independent_check(tmp_path: Path) -> None:
     game = QuittingGame(1, {1: (Fraction(0),)}, (Fraction(0),))
     query = tmp_path / "query.smt2"
     query.write_text(export_periodic_qfnra(game, 1, Fraction(0)), encoding="utf-8")
-    artifact = build_solver_artifact(
-        query, "z3", game=game, period=1, epsilon=Fraction(0)
-    )
+    artifact = build_solver_artifact(query, "z3", game=game, period=1, epsilon=Fraction(0))
     assert artifact.run.status == "sat"
     assert artifact.independent_verification == "passed"
     assert artifact.game_sha256 is not None and len(artifact.game_sha256) == 64

@@ -105,9 +105,11 @@ def run_solver(
         )
         elapsed = time.monotonic() - started
         proof = None
-        if produce_proof and _status(
-            completed.stdout, timed_out=False, returncode=completed.returncode
-        ) == "unsat":
+        if (
+            produce_proof
+            and _status(completed.stdout, timed_out=False, returncode=completed.returncode)
+            == "unsat"
+        ):
             proof = _run_command_line_proof(executable, solver, query, timeout)
         return SolverRun(
             solver,
@@ -286,9 +288,7 @@ class SolverArtifact:
     run: SolverRun
     model_rational_values: int
     model_unparsed_values: tuple[str, ...]
-    independent_verification: Literal[
-        "passed", "failed", "unverified-algebraic", "not-applicable"
-    ]
+    independent_verification: Literal["passed", "failed", "unverified-algebraic", "not-applicable"]
     verification_note: str
 
     def to_dict(self, *, include_raw: bool = True) -> dict[str, Any]:
@@ -332,6 +332,7 @@ def build_solver_artifact(
 ) -> SolverArtifact:
     checker: Callable[[str], bool] | None = None
     if game is not None and period is not None and epsilon is not None:
+
         def exact_checker(text: str) -> bool:
             return independently_check_model(game, period, epsilon, text)[2]
 
@@ -377,9 +378,7 @@ def build_stochastic_solver_artifact(
             "epsilon": rational_text(epsilon),
         },
         game_payload=game.to_dict(),
-        checker=lambda text: independently_check_stochastic_model(
-            game, beta, epsilon, text
-        )[2],
+        checker=lambda text: independently_check_stochastic_model(game, beta, epsilon, text)[2],
         check_note="exact Fraction re-evaluation of all deterministic stationary deviations",
     )
 
@@ -427,9 +426,9 @@ def _build_solver_artifact(
     scope = scope_match.group(1).strip() if scope_match else "unspecified bounded SMT query"
     game_hash = None
     if game_payload is not None:
-        canonical_game = json.dumps(
-            game_payload, sort_keys=True, separators=(",", ":")
-        ).encode("utf-8")
+        canonical_game = json.dumps(game_payload, sort_keys=True, separators=(",", ":")).encode(
+            "utf-8"
+        )
         game_hash = hashlib.sha256(canonical_game).hexdigest()
     return SolverArtifact(
         datetime.now(UTC).isoformat(),
@@ -459,12 +458,8 @@ def persist_solver_artifact(artifact: SolverArtifact, directory: str | Path) -> 
         encoding="utf-8",
         newline="\n",
     )
-    (output / f"{stem}.stdout.txt").write_text(
-        artifact.run.stdout, encoding="utf-8", newline="\n"
-    )
-    (output / f"{stem}.stderr.txt").write_text(
-        artifact.run.stderr, encoding="utf-8", newline="\n"
-    )
+    (output / f"{stem}.stdout.txt").write_text(artifact.run.stdout, encoding="utf-8", newline="\n")
+    (output / f"{stem}.stderr.txt").write_text(artifact.run.stderr, encoding="utf-8", newline="\n")
     if artifact.run.proof is not None:
         (output / f"{stem}.native-proof.txt").write_text(
             artifact.run.proof, encoding="utf-8", newline="\n"

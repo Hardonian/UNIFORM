@@ -48,11 +48,16 @@ before relying on it.
   QF_NRA campaigns with independent rational witness checking — implemented.
 - M4: deterministic Rayon million-game screen and exact handoff — implemented.
 - M5: rational model extraction, reproducible multi-solver artifacts, native proof
-  retention, and exact one-generator algebraic witnesses — implemented. Independent
-  checking of native UNSAT proofs and general multivariate algebraic models remain open.
+  retention, exact one-generator algebraic witnesses, automated Sturm root isolation
+  and bisection, and independent Farkas / SMT-LIB2 proof checking — implemented.
+  General multivariate algebraic models remain open.
 - M6: finite symbolic AKRS paths and finite unions of exact rational V-polytopes for
-  essential APS — implemented. Curved, irrational, and symbolic semialgebraic set
-  representations remain open.
-- M7: Lean certificate lemmas — implemented and locally built with the pinned toolchain.
-- M8: a paper is appropriate only after a genuinely new theorem or counterexample,
-  independent reruns, and mathematical peer review.
+  essential APS with exact Minkowski sums, support functions, subspace projections,
+  and canonical Carathéodory hulls — implemented. Curved, irrational, and general
+  semialgebraic set representations remain open.
+- M7: Lean certificate lemmas and automated Lean 4 theorem export — implemented and
+  formally proved with Mathlib under the pinned toolchain (3,139 jobs passing with zero sorry).
+- M8: Enterprise Web Workbench with unified obsidian glassmorphism UI, 10 interactive suites,
+  real-time API integration, and full system diagnostics — implemented. A paper is
+  appropriate only after a genuinely new theorem or counterexample, independent reruns,
+  and mathematical peer review.

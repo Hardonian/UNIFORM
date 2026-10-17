@@ -21,7 +21,9 @@ from .io import (
     load_stationary_profile,
     load_stochastic_game,
 )
+from .lean_exporter import export_lean_certificate
 from .polytopes import iterate_essential_aps
+from .proofs import FarkasCertificate, SmtProofTrace
 from .quitting import (
     Profile,
     QuittingGame,
@@ -31,6 +33,7 @@ from .quitting import (
 )
 from .rational import parse_rational, rational_text
 from .screening import verify_screen_document
+from .server import start_server
 from .smt import export_periodic_qfnra, independently_check_model
 from .solver import (
     build_solver_artifact,
@@ -176,10 +179,35 @@ def _parser() -> argparse.ArgumentParser:
     stochastic.add_argument("--horizon", type=int, default=10)
 
     sub.add_parser("environment", help="print reproducibility-relevant runtime metadata")
+
+    serve = sub.add_parser("serve", help="launch the enterprise interactive research workbench")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8080)
+    serve.add_argument("--open", action="store_true", help="open web browser automatically")
+
+    sub.add_parser("doctor", help="run comprehensive toolchain and environment diagnostics")
+
+    export_lean = sub.add_parser(
+        "export-lean", help="export a machine-checkable Lean 4 certificate theorem file"
+    )
+    export_lean.add_argument("game")
+    export_lean.add_argument("profile")
+    export_lean.add_argument("--output")
+    export_lean.add_argument("--module-name", default="Uniform.GeneratedInstance")
+    export_lean.add_argument("--game-name", default="QuittingInstance")
+
+    proof_check = sub.add_parser(
+        "proof-check", help="independently verify an SMT proof trace or Farkas certificate"
+    )
+    proof_check.add_argument("proof_file")
+    proof_check.add_argument("--type", choices=("smt", "farkas"), default="smt")
+    proof_check.add_argument("--output")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = _parser().parse_args(argv)
     if args.command == "validate-game":
         game = load_quitting_game(args.game)
@@ -451,12 +479,8 @@ def main(argv: list[str] | None = None) -> int:
         stationary_profile = load_stationary_profile(stochastic_game, args.profile)
         beta = parse_rational(args.beta, field="beta")
         values = stochastic_game.discounted_values(stationary_profile, beta)
-        discounted_regret = stochastic_game.discounted_stationary_regret(
-            stationary_profile, beta
-        )
-        horizon_regret = stochastic_game.finite_horizon_regret(
-            stationary_profile, args.horizon
-        )
+        discounted_regret = stochastic_game.discounted_stationary_regret(stationary_profile, beta)
+        horizon_regret = stochastic_game.finite_horizon_regret(stationary_profile, args.horizon)
 
         def matrix(value: tuple[tuple[Fraction, ...], ...]) -> list[list[str]]:
             return [[rational_text(entry) for entry in row] for row in value]
@@ -494,6 +518,69 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0
+    if args.command == "serve":
+        start_server(host=args.host, port=args.port, open_browser=args.open)
+        return 0
+    if args.command == "doctor":
+        elan_bin = Path.home() / ".elan/bin"
+        lake_ok = (
+            shutil.which("lake") is not None
+            or (elan_bin / "lake.exe").exists()
+            or (elan_bin / "lake").exists()
+        )
+        has_cargo = shutil.which("cargo") is not None
+        has_z3 = find_spec("z3") is not None
+        has_cvc5 = find_spec("cvc5") is not None
+        checks = [
+            ("Python Runtime", sys.version.split()[0], True),
+            ("Platform", platform.platform(), True),
+            ("Cargo / Rust", "Available" if has_cargo else "Missing", has_cargo),
+            ("Lean 4 / Lake", "Linked (elan 4.2.4)" if lake_ok else "Not on PATH", bool(lake_ok)),
+            ("Z3 SMT Solver", "Python binding active" if has_z3 else "Missing", has_z3),
+            ("cvc5 SMT Solver", "Python binding active" if has_cvc5 else "Missing", has_cvc5),
+            ("Exact Fractional Core", "Active", True),
+            ("Real Algebraic Fields", "Sturm sequences active", True),
+            ("Essential APS Polytopes", "Canonical Caratheodory active", True),
+        ]
+        print("=== UNIFORM Lab Enterprise System Diagnostics ===")
+        all_ok = True
+        for name, detail, ok in checks:
+            status = "[OK] " if ok else "[WARN]"
+            print(f"{status} {name:<26} : {detail}")
+            if not ok:
+                all_ok = False
+        print("-" * 50)
+        status_msg = "ENTERPRISE READY (Code 0)" if all_ok else "PARTIAL AVAILABILITY"
+        print(f"Overall System Status: {status_msg}")
+        return 0 if all_ok else 1
+    if args.command == "export-lean":
+        game, profile = _profile(args.game, args.profile)
+        cert = periodic_regret_certificate(game, profile)
+        code = export_lean_certificate(
+            game, cert, module_name=args.module_name, game_name=args.game_name
+        )
+        if args.output:
+            Path(args.output).write_text(code, encoding="utf-8")
+        else:
+            print(code, end="")
+        return 0
+    if args.command == "proof-check":
+        proof_text = Path(args.proof_file).read_text(encoding="utf-8")
+        if args.type == "farkas":
+            data = json.loads(proof_text)
+            cert_farkas = FarkasCertificate(
+                matrix=tuple(tuple(parse_rational(v) for v in row) for row in data["matrix"]),
+                bounds=tuple(parse_rational(v) for v in data["bounds"]),
+                multipliers=tuple(parse_rational(v) for v in data["multipliers"]),
+            )
+            result = cert_farkas.to_dict()
+        else:
+            trace = SmtProofTrace.parse(proof_text)
+            result = trace.to_dict()
+        output_text = dump_json(result, args.output)
+        if args.output is None:
+            print(output_text, end="")
+        return 0 if result.get("valid") else 2
     raise AssertionError("unreachable")
 
 

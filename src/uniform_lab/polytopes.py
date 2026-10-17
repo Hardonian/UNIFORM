@@ -60,8 +60,7 @@ def _full_column_rank_solution(
         pivot_rows.append(pivot_row)
         pivot_row += 1
     if any(
-        all(row[column] == 0 for column in range(variables)) and row[-1] != 0
-        for row in augmented
+        all(row[column] == 0 for column in range(variables)) and row[-1] != 0 for row in augmented
     ):
         return None
     return tuple(augmented[row][-1] for row in pivot_rows)
@@ -79,8 +78,7 @@ def point_in_convex_hull(point: Point, vertices: Sequence[Point]) -> bool:
     for size in range(1, min(dimension + 1, len(unique)) + 1):
         for simplex in combinations(unique, size):
             matrix = [
-                [simplex[column][axis] for column in range(size)]
-                for axis in range(dimension)
+                [simplex[column][axis] for column in range(size)] for axis in range(dimension)
             ]
             matrix.append([Fraction(1)] * size)
             solution = _full_column_rank_solution(matrix, (*point, Fraction(1)))
@@ -150,19 +148,92 @@ class RationalPolytope:
             if result is None:
                 return None
             normal = tuple(
-                Fraction(-1) if index == axis else Fraction(0)
-                for index in range(self.dimension)
+                Fraction(-1) if index == axis else Fraction(0) for index in range(self.dimension)
             )
             result = result.clip_halfspace(normal, Fraction(0))
         return result
+
+    def contains_point(self, point: Point) -> bool:
+        """Decide exact membership in this convex polytope."""
+        return point_in_convex_hull(point, self.vertices)
+
+    def support_function(self, direction: Sequence[Q]) -> tuple[Q, Point]:
+        """Compute the exact support function h_P(u) = max_{v in V} u dot v and an argmax vertex."""
+        if len(direction) != self.dimension:
+            raise ValueError("direction vector dimension mismatch")
+        best_val: Q | None = None
+        best_vertex: Point | None = None
+        for v in self.vertices:
+            val = _dot(direction, v)
+            if best_val is None or val > best_val:
+                best_val = val
+                best_vertex = v
+        assert best_val is not None and best_vertex is not None
+        return best_val, best_vertex
+
+    def minkowski_sum(self, other: RationalPolytope) -> RationalPolytope:
+        """Compute the exact Minkowski sum P + Q = conv({u + v : u in P, v in Q})."""
+        if self.dimension != other.dimension:
+            raise ValueError("Minkowski sum requires matching dimensions")
+        sum_vertices = [
+            tuple(a + b for a, b in zip(u, v, strict=True))
+            for u in self.vertices
+            for v in other.vertices
+        ]
+        return RationalPolytope(tuple(sum_vertices))
+
+    def project(self, axes: Sequence[int]) -> RationalPolytope:
+        """Project onto a subset of coordinate axes."""
+        if not axes:
+            raise ValueError("axes must be non-empty")
+        if any(not 0 <= ax < self.dimension for ax in axes):
+            raise IndexError("axis index out of range")
+        projected = [tuple(v[ax] for ax in axes) for v in self.vertices]
+        return RationalPolytope(tuple(projected))
+
+    def center_of_mass(self) -> Point:
+        """Compute the arithmetic mean of extreme vertices."""
+        n = Fraction(len(self.vertices))
+        return tuple(
+            sum((v[i] for v in self.vertices), Fraction(0)) / n for i in range(self.dimension)
+        )
+
+    def h_representation_2d(self) -> list[tuple[Point, Q]]:
+        """Compute exact halfspace inequalities normal dot x <= bound for a 2D polytope."""
+        if self.dimension != 2:
+            raise ValueError("h_representation_2d requires dimension 2")
+        if len(self.vertices) < 3:
+            return []
+        cx, cy = self.center_of_mass()
+        # Sort vertices counter-clockwise
+        import math
+
+        sorted_verts = sorted(
+            self.vertices,
+            key=lambda v: math.atan2(float(v[1] - cy), float(v[0] - cx)),
+        )
+        inequalities: list[tuple[Point, Q]] = []
+        for i in range(len(sorted_verts)):
+            p1 = sorted_verts[i]
+            p2 = sorted_verts[(i + 1) % len(sorted_verts)]
+            # Outward normal for CCW edge: (dy, -dx)
+            dx = p2[0] - p1[0]
+            dy = p2[1] - p1[1]
+            normal: Point = (dy, -dx)
+            bound = _dot(normal, p1)
+            # Verify centroid is on the inner side (normal dot c <= bound)
+            if _dot(normal, (cx, cy)) > bound:
+                normal = (-normal[0], -normal[1])
+                bound = -bound
+            inequalities.append((normal, bound))
+        return inequalities
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "representation": "convex-hull-generators",
             "dimension": self.dimension,
-            "vertices": [
-                [rational_text(value) for value in point] for point in self.vertices
-            ],
+            "vertices": [[rational_text(value) for value in point] for point in self.vertices],
+            "center_of_mass": [rational_text(value) for value in self.center_of_mass()],
         }
 
 
@@ -181,8 +252,7 @@ class PolytopeFamily:
             if not any(
                 polytope != other
                 and all(
-                    point_in_convex_hull(vertex, other.vertices)
-                    for vertex in polytope.vertices
+                    point_in_convex_hull(vertex, other.vertices) for vertex in polytope.vertices
                 )
                 for other in ordered
             )
@@ -208,16 +278,12 @@ def t_i_polytope(
         raise ValueError("continuation polytope has the wrong dimension")
     quit_row = game.payoffs[1 << player]
     hull = RationalPolytope((quit_row, *continuation.vertices))
-    normal = tuple(
-        Fraction(1) if axis == player else Fraction(0) for axis in range(game.players)
-    )
+    normal = tuple(Fraction(1) if axis == player else Fraction(0) for axis in range(game.players))
     section = hull.clip_hyperplane(normal, Fraction(0))
     return None if section is None else section.nonnegative_part()
 
 
-def t_i_family(
-    game: QuittingGame, player: int, continuations: PolytopeFamily
-) -> PolytopeFamily:
+def t_i_family(game: QuittingGame, player: int, continuations: PolytopeFamily) -> PolytopeFamily:
     output: list[RationalPolytope] = []
     for continuation in continuations.polytopes:
         image = t_i_polytope(game, player, continuation)

@@ -231,3 +231,59 @@ class StochasticGame:
             )
             for state in range(self.states)
         )
+
+    def exact_stationary_bellman_residual(
+        self, profile: StationaryProfile, beta: Q
+    ) -> tuple[tuple[Q, ...], ...]:
+        """Compute the exact Bellman residual T(v)(s, i) - v(s, i) for each player and state."""
+        if not 0 <= beta < 1:
+            raise ValueError("beta must lie in [0,1)")
+        self.validate_profile(profile)
+        values = self.discounted_values(profile, beta)
+        residuals: list[list[Q]] = [
+            [Fraction(0) for _ in range(self.players)] for _ in range(self.states)
+        ]
+        for state in range(self.states):
+            for player in range(self.players):
+                action_values: list[Q] = []
+                for action in range(self.action_counts[player]):
+                    val = Fraction(0)
+                    other_ranges = [
+                        range(self.action_counts[p]) if p != player else (action,)
+                        for p in range(self.players)
+                    ]
+                    for joint in product(*other_ranges):
+                        prob = Fraction(1)
+                        for other, chosen in enumerate(joint):
+                            if other != player:
+                                prob *= profile[state][other][chosen]
+                        key = (state, joint)
+                        discounted_next = sum(
+                            self.transitions[key][target] * values[target][player]
+                            for target in range(self.states)
+                        )
+                        stage_reward = (1 - beta) * self.payoffs[key][player]
+                        val += prob * (stage_reward + beta * discounted_next)
+                    action_values.append(val)
+                best_action_val = max(action_values)
+                residuals[state][player] = best_action_val - values[state][player]
+        return tuple(tuple(row) for row in residuals)
+
+    def vanishing_discount_analysis(
+        self, profile: StationaryProfile, betas: Sequence[Q]
+    ) -> list[dict[str, Any]]:
+        """Evaluate exact value and regret trajectories across a sequence of discount factors."""
+        results: list[dict[str, Any]] = []
+        for beta in betas:
+            values = self.discounted_values(profile, beta)
+            regret = self.discounted_stationary_regret(profile, beta)
+            residual = self.exact_stationary_bellman_residual(profile, beta)
+            results.append(
+                {
+                    "beta": rational_text(beta),
+                    "values": [[rational_text(v) for v in row] for row in values],
+                    "regret": [[rational_text(r) for r in row] for row in regret],
+                    "bellman_residual": [[rational_text(b) for b in row] for row in residual],
+                }
+            )
+        return results

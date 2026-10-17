@@ -24,7 +24,14 @@ The repository currently provides:
   finite-union-of-rational-polytopes essential APS operator that retains continua;
 - a deterministic Rayon scanner that screens more than one million four-player games
   and hands complete candidates back to the exact Python verifier;
-- a source-transcribed version of the Solan–Vieille four-player period-two example.
+- independent SMT-LIB2 / Alethe proof trace parser and exact Farkas certificate checker;
+- automated Lean 4 formal verification exporter converting game instances and rational
+  certificates into verifiable Mathlib theorem modules;
+- enterprise system diagnostics (`uniform doctor`) validating the complete toolchain;
+- standalone Enterprise Web Workbench (`uniform serve`) with unified obsidian glassmorphism
+  design and 10 interactive suites (quitting game studio, periodic simulator, Solan–Vieille
+  algebraic studio, essential APS polytope geometry, stochastic games, scanner analytics,
+  SMT solver campaigns, Lean 4 export, and live system diagnostics).
 
 It does **not** claim a solution to arbitrary four-player quitting games or arbitrary
 finite multiplayer stochastic games. Fixed-period UNSAT, a finite grid minimum, and a
@@ -35,9 +42,14 @@ failed local search remain restricted evidence.
 Python 3.11+ and Rust 1.85+ are supported.
 
 ```powershell
-uv sync --extra dev
-# Add --extra solvers to enable local Z3 and cvc5 Python bindings.
+uv sync --extra dev --extra solvers
+uv run uniform doctor
 uv run pytest -q
+
+# Enterprise Web Workbench
+uv run uniform serve --port 8000 --open
+
+# Core verification
 uv run uniform validate-game examples/solan_vieille_2002.json
 uv run uniform periodic examples/solan_vieille_2002.json examples/profiles/solan_vieille_period2_rational_approx.json
 uv run uniform algebraic-periodic examples/solan_vieille_2002.json examples/profiles/solan_vieille_period2_exact_algebraic.json
@@ -48,6 +60,10 @@ uv run uniform path-check examples/one_player_zero.json examples/paths/one_playe
 uv run uniform aps-polytopes examples/one_player_zero.json examples/aps/one_player_seed.json --steps 2
 uv run uniform stochastic examples/stochastic/one_state_control.json examples/stochastic/one_state_half_profile.json
 uv run uniform stochastic-solve-campaign examples/stochastic/two_state_control.json --beta 1/2 --epsilon 0 --output-dir solver-output/stochastic
+
+# Formal verification export & independent proof checking
+uv run uniform export-lean examples/solan_vieille_2002.json examples/profiles/solan_vieille_period2_rational_approx.json --output lean/Uniform/ExportedGame.lean
+uv run uniform proof-check solver-output/smoke/z3.proof.txt --type smt
 ```
 
 Build and run the deterministic parallel scan:

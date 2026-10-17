@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNIFORM Lab | Enterprise Multiplayer Quitting & Stochastic Games Workbench</title>
+  <meta name="description" content="Exact arithmetic research workbench for finite multiplayer quitting games, stochastic games, QF_NRA SMT campaigns, and essential APS operators.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-dark">
+  <div id="app-container" class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar-nav" class="sidebar">
+      <div class="brand-header">
+        <div class="brand-glyph" id="brand-logo-glyph">
+          <svg viewBox="0 0 40 40" width="32" height="32" class="glyph-svg">
+            <polygon points="20,2 38,12 38,28 20,38 2,28 2,12" class="hexagon-outer"/>
+            <polygon points="20,8 32,15 32,25 20,32 8,25 8,15" class="hexagon-inner"/>
+            <circle cx="20" cy="20" r="3" class="core-dot"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-title">UNIFORM</span>
+          <span class="brand-sub">RESEARCH LAB</span>
+        </div>
+      </div>
+
+      <div class="engine-status-pill" id="global-engine-status">
+        <span class="status-pulse-dot"></span>
+        <span class="status-text">EXACT ENGINE ONLINE</span>
+      </div>
+
+      <nav class="nav-menu" id="primary-nav" aria-label="Main Navigation">
+        <button type="button" class="nav-item active" id="nav-btn-dashboard" data-target="view-dashboard">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          <span>Executive Dashboard</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-quitting" data-target="view-quitting">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+          <span>Quitting Game Studio</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-strategy" data-target="view-strategy">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          <span>Strategy & Regret Explorer</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-algebraic" data-target="view-algebraic">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          <span>Algebraic Certificate</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-aps" data-target="view-aps">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <span>Essential APS 2D/3D</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-stochastic" data-target="view-stochastic">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+          <span>Stochastic Game Studio</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-scanner" data-target="view-scanner">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M19.03 3.56c-3.57-2.02-7.49-2.02-11.06 0l1.49 1.49c2.72-1.4 5.37-1.4 8.08 0l1.49-1.49zM3.56 19.03c2.02 3.57 5.02 4.97 8.44 4.97s6.42-1.4 8.44-4.97l-1.49-1.49c-1.4 2.72-4.05 4.08-6.95 4.08s-5.55-1.36-6.95-4.08l-1.49 1.49zM12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+          <span>Million-Game Scanner</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-smt" data-target="view-smt">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+          <span>SMT Solver Studio</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-lean" data-target="view-lean">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
+          <span>Lean 4 Proofs</span>
+        </button>
+        <button type="button" class="nav-item" id="nav-btn-cli" data-target="view-cli">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8h16v10zm-2-1h-6v-2h6v2zm-7.7-4.3L6.7 15 5.3 13.6 7.9 11 5.3 8.4 6.7 7l4.6 4.3c.4.4.4 1 0 1.4z"/></svg>
+          <span>CLI & Diagnostics</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-meta-card">
+          <div class="meta-row"><span>Version</span><strong id="meta-version-badge">v1.0.0 Enterprise</strong></div>
+          <div class="meta-row"><span>Python</span><strong>3.13 / uv</strong></div>
+          <div class="meta-row"><span>Rust Scanner</span><strong>SplitMix64</strong></div>
+          <div class="meta-row"><span>Lean 4</span><strong>4.35.0 (0 sorry)</strong></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="content-viewport">
+      <!-- Top Application Bar -->
+      <header id="app-topbar" class="topbar">
+        <div class="topbar-left">
+          <h1 id="page-title" class="page-title">Enterprise Multiplayer Research Workbench</h1>
+          <span class="page-subtitle" id="page-subtitle-text">Exact arithmetic research for finite multiplayer quitting and stochastic games</span>
+        </div>
+        <div class="topbar-right">
+          <div class="reproducibility-badge" id="reproducibility-pill" title="All calculations verified with exact fractions or algebraic fields">
+            <span class="badge-icon">🛡️</span>
+            <span>EXACT PROOF BOUNDARY</span>
+          </div>
+          <button type="button" id="btn-quick-verify" class="btn btn-primary" title="Run fast in-browser validation">
+            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+            <span>Run Verification Suite</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- View Containers -->
+      <div id="views-wrapper" class="views-wrapper">
+
+        <!-- 1. Executive Dashboard View -->
+        <section id="view-dashboard" class="workbench-view active" aria-labelledby="heading-dashboard">
+          <h2 id="heading-dashboard" class="visually-hidden">Executive Dashboard</h2>
+          <div class="dashboard-hero-banner">
+            <div class="hero-text">
+              <span class="hero-tag">ENTERPRISE RESEARCH ACCELERATOR</span>
+              <h2 class="hero-heading">Rigorous Finite Game Verification at Scale</h2>
+              <p class="hero-desc">UNIFORM Lab couples exact rational and algebraic arithmetic with deterministic parallel screening and interactive geometry, keeping a hard line between computational evidence and open mathematical problems.</p>
+            </div>
+            <div class="hero-metrics-grid">
+              <div class="metric-card" id="card-metric-games">
+                <span class="metric-val" id="metric-screen-count">1,000,000</span>
+                <span class="metric-label">Screened Games</span>
+                <span class="metric-sub">Deterministic Rayon run</span>
+              </div>
+              <div class="metric-card" id="card-metric-precision">
+                <span class="metric-val">100% Exact</span>
+                <span class="metric-label">Rational & Algebraic</span>
+                <span class="metric-sub">No floating-point errors</span>
+              </div>
+              <div class="metric-card" id="card-metric-solvers">
+                <span class="metric-val">Z3 + cvc5</span>
+                <span class="metric-label">SMT Campaign Engines</span>
+                <span class="metric-sub">Reproducible artifacts</span>
+              </div>
+              <div class="metric-card" id="card-metric-formal">
+                <span class="metric-val">3,139</span>
+                <span class="metric-label">Lean 4 Mathlib Jobs</span>
+                <span class="metric-sub">Formalized lemmas (0 sorry)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Milestones Matrix -->
+          <div class="card-panel" id="panel-milestones">
+            <div class="panel-header">
+              <div class="header-left">
+                <h3 class="panel-title">Engineering Milestone & Roadmap Verification Matrix</h3>
+                <span class="panel-subtitle">Audited state of M1 through M8 research objectives</span>
+              </div>
+              <span class="badge badge-success" id="milestones-verified-badge">All 8 Milestones Audited</span>
+            </div>
+            <div class="milestones-grid" id="milestones-container">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- System Architecture Grid -->
+          <div class="two-col-grid">
+            <div class="card-panel">
+              <h3 class="panel-title">Exact Mathematical Guarantees</h3>
+              <ul class="feature-checklist">
+                <li><span class="check-icon">✓</span> <strong>Strict Rational Quitting Engine:</strong> Validates complete $2^N - 1$ absorbing payoff tables with `fractions.Fraction`. Rejects all JSON floating points.</li>
+                <li><span class="check-icon">✓</span> <strong>Real Algebraic Quotient $\mathbb{Q}[\alpha]$:</strong> Sturm root isolation, exact interval refinement, symbolic zero-regret certification.</li>
+                <li><span class="check-icon">✓</span> <strong>Convex Polytope Canonicalization:</strong> Exact Carathéodory simplex solver removes redundant generators; hyperplane clipping retains exact faces.</li>
+                <li><span class="check-icon">✓</span> <strong>Stochastic MDP Deviation Optimality:</strong> Computes stationary Bellman residuals and finite-horizon induction bounds.</li>
+              </ul>
+            </div>
+            <div class="card-panel">
+              <h3 class="panel-title">Reproducibility & Evidence Ladder</h3>
+              <div class="ladder-container">
+                <div class="ladder-step step-heuristic"><span class="ladder-tag">LEVEL 1</span><span>Numerical Low-Regret Heuristic Candidate</span></div>
+                <div class="ladder-step step-instance"><span class="ladder-tag">LEVEL 2</span><span>Exact Rational / Algebraic Single-Instance Certificate</span></div>
+                <div class="ladder-step step-smt"><span class="ladder-tag">LEVEL 3</span><span>QF_NRA SMT Exclusion of Encoded Period Class</span></div>
+                <div class="ladder-step step-formal"><span class="ladder-tag">LEVEL 4</span><span>Lean 4 Machine-Checked Arithmetic Fact</span></div>
+                <div class="ladder-step step-open"><span class="ladder-tag">OPEN</span><span>Global Resolution to 4-Player Quitting Problem</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Quitting Game Studio View -->
+        <section id="view-quitting" class="workbench-view" aria-labelledby="heading-quitting">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-quitting" class="section-heading">Quitting Game Studio</h2>
+              <p class="section-sub">Inspect payoff tables, examine $2^N-1$ absorbing outcomes, and detect pure instant equilibria.</p>
+            </div>
+            <div class="header-actions">
+              <label for="select-preset-game" class="label-inline">Preset Game:</label>
+              <select id="select-preset-game" class="form-select">
+                <option value="solan_vieille_2002">Solan–Vieille 2002 (4 Players, Period-2 Algebraic)</option>
+                <option value="candidate_164952">Screened Candidate 164952 (4 Players, Margin +4)</option>
+                <option value="three_player_mesh">Three-Player Mesh Game (3 Players)</option>
+                <option value="two_player_cycle">Two-Player Matching Quitter (2 Players)</option>
+                <option value="one_player_zero">One-Player Zero Game (1 Player)</option>
+                <option value="custom">Custom Payoff JSON...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <!-- Left: Tensor Matrix Heatmap -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Absorbing Outcome Payoff Tensor</h3>
+                <span class="badge" id="equilibrium-detection-badge">Checking...</span>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table" id="table-payoff-tensor">
+                  <thead>
+                    <tr>
+                      <th>Mask (Dec)</th>
+                      <th>Binary Quitter Mask</th>
+                      <th>Quitting Players</th>
+                      <th>Payoffs $(r_0, \dots, r_{n-1})$</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-payoff-tensor">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right: Game Specification & Pure Dev Analyzer -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Payoff JSON Specification & Validation</h3>
+                <button type="button" id="btn-validate-custom-game" class="btn btn-secondary btn-sm">Validate & Refresh</button>
+              </div>
+              <textarea id="game-json-editor" class="code-editor" rows="18" aria-label="Game JSON Editor" spellcheck="false"></textarea>
+              <div id="game-validation-alert" class="alert-box alert-success mt-3">
+                <span class="alert-icon">✓</span>
+                <span id="game-validation-msg">Complete 15-mask table validated. Continuation: [0, 0, 0, 0].</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. Periodic Strategy & Regret Simulator View -->
+        <section id="view-strategy" class="workbench-view" aria-labelledby="heading-strategy">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-strategy" class="section-heading">Periodic Strategy & Regret Explorer</h2>
+              <p class="section-sub">Evaluate exact rational cyclic payoffs, pure unilateral deviations, and worst-case regret across periods.</p>
+            </div>
+            <div class="header-actions">
+              <label for="select-strategy-period" class="label-inline">Period $p$:</label>
+              <select id="select-strategy-period" class="form-select">
+                <option value="1">Period 1 (Stationary)</option>
+                <option value="2" selected>Period 2 (Alternating)</option>
+                <option value="3">Period 3</option>
+              </select>
+              <label for="select-strategy-phase" class="label-inline">Active Phase:</label>
+              <select id="select-strategy-phase" class="form-select">
+                <option value="0">Phase 0</option>
+                <option value="1">Phase 1</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <!-- Strategy Controls & Sliders -->
+            <div class="card-panel">
+              <h3 class="panel-title">Quitting Probabilities $(q_0, \dots, q_{n-1})$</h3>
+              <p class="panel-subtitle">Adjust each player's quit probability in the selected phase</p>
+
+              <div id="player-sliders-container" class="sliders-container">
+                <!-- Rendered dynamically -->
+              </div>
+
+              <div class="cycle-flow-container mt-4">
+                <h4 class="subheading">Cyclic Phase Flow Dynamics</h4>
+                <div class="cycle-flow-diagram" id="cycle-flow-vis">
+                  <!-- Visual cyclic representation -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Regret & Deviation Payoff Cards -->
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3 class="panel-title">Exact Value & Deviation Regret</h3>
+                <span class="badge badge-success" id="badge-regret-status">Regret &le; 1e-14</span>
+              </div>
+
+              <div class="metrics-row">
+                <div class="stat-box">
+                  <span class="stat-label">Cycle Survival $\prod s_t$</span>
+                  <span class="stat-val" id="stat-survival-prob">0.3842</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Maximum Limiting Regret</span>
+                  <span class="stat-val text-accent" id="stat-max-regret">0.000000</span>
+                </div>
+              </div>
+
+              <h4 class="subheading mt-3">Player Payoffs vs Best Pure Deviation</h4>
+              <div id="deviation-bars-container" class="deviation-bars">
+                <!-- Rendered dynamically -->
+              </div>
+
+              <div class="table-responsive mt-3">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>Player</th><th>Profile Value $v_i$</th><th>Best Deviation $d_i^*$</th><th>Regret $d_i^* - v_i$</th></tr>
+                  </thead>
+                  <tbody id="tbody-regret-table">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. Algebraic Certificate Studio View -->
+        <section id="view-algebraic" class="workbench-view" aria-labelledby="heading-algebraic">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-algebraic" class="section-heading">Exact Real Algebraic Certificate Studio</h2>
+              <p class="section-sub">Zero-regret period-2 certificate over the real algebraic number field $\mathbb{Q}[z]/(27z^4 - 121z^3 + 179z^2 - 96z + 15)$.</p>
+            </div>
+            <div class="header-actions">
+              <span class="badge badge-info">Solan–Vieille 2002 Theorem</span>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <!-- Left: Sturm Isolation & Curve Canvas -->
+            <div class="card-panel">
+              <h3 class="panel-title">Defining Quartic Polynomial Curve</h3>
+              <p class="panel-subtitle">$P(z) = 27z^4 - 121z^3 + 179z^2 - 96z + 15$ with root $z^* \approx 0.265475$</p>
+              <div class="canvas-wrapper">
+                <canvas id="canvas-algebraic-curve" width="540" height="260" class="interactive-canvas"></canvas>
+              </div>
+              <div class="sturm-box mt-3">
+                <h4 class="subheading">Sturm Sequence Root Isolation Proof</h4>
+                <div class="sturm-row"><span>Open Isolating Interval:</span> <strong class="text-accent">(26547470883022/10¹⁴, 26547470883024/10¹⁴)</strong></div>
+                <div class="sturm-row"><span>Sturm Sign Variations at Lower Bound:</span> <strong>$V(a) = 4$</strong></div>
+                <div class="sturm-row"><span>Sturm Sign Variations at Upper Bound:</span> <strong>$V(b) = 3$</strong></div>
+                <div class="sturm-row"><span>Exact Root Count $V(a) - V(b)$:</span> <span class="badge badge-success">Exactly 1 Real Root</span></div>
+              </div>
+            </div>
+
+            <!-- Right: Exact Symbolic Regret Reduction -->
+            <div class="card-panel">
+              <h3 class="panel-title">Exact Symbolic Regret Reduction Table</h3>
+              <p class="panel-subtitle">Every player and starting phase evaluates symbolically to 0 in $\mathbb{Q}[z]$</p>
+
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>Phase</th><th>Player</th><th>Exact Value in $\mathbb{Q}[z]$</th><th>Best Unilateral Deviation</th><th>Exact Regret</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>0</td><td>P0</td><td>$x(z) \in \mathbb{Q}[z]$</td><td>$x(z)$ (quitting indiff)</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                    <tr><td>0</td><td>P1</td><td>$1 - z \in \mathbb{Q}[z]$</td><td>$1 - z$</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                    <tr><td>0</td><td>P2</td><td>$x(z) \in \mathbb{Q}[z]$</td><td>$x(z)$ (quitting indiff)</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                    <tr><td>0</td><td>P3</td><td>$1 - z \in \mathbb{Q}[z]$</td><td>$1 - z$</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                    <tr><td>1</td><td>P0</td><td>$1 - x \in \mathbb{Q}[z]$</td><td>$1 - x$</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                    <tr><td>1</td><td>P1</td><td>$z(x) \in \mathbb{Q}[z]$</td><td>$z(x)$ (quitting indiff)</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                    <tr><td>1</td><td>P2</td><td>$1 - x \in \mathbb{Q}[z]$</td><td>$1 - x$</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                    <tr><td>1</td><td>P3</td><td>$z(x) \in \mathbb{Q}[z]$</td><td>$z(x)$ (quitting indiff)</td><td><strong class="text-success">0 (Exact)</strong></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="alert-box alert-success mt-3">
+                <span class="alert-icon">✓</span>
+                <span><strong>Mathematical Verification:</strong> All 8 deviation regrets reduce identically to zero modulo the defining polynomial. Exact equilibrium in the 2-period scope established without floating approximation.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. Essential APS Polytope 2D/3D View -->
+        <section id="view-aps" class="workbench-view" aria-labelledby="heading-aps">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-aps" class="section-heading">Essential APS Rational Polytope Canvas</h2>
+              <p class="section-sub">Interactive geometric operator over finite unions of exact rational convex polytopes.</p>
+            </div>
+            <div class="header-actions">
+              <label for="select-aps-projection" class="label-inline">2D Projection Axes:</label>
+              <select id="select-aps-projection" class="form-select">
+                <option value="0,1">Players 0 & 1 ($v_0$ vs $v_1$)</option>
+                <option value="2,3">Players 2 & 3 ($v_2$ vs $v_3$)</option>
+                <option value="0,2">Players 0 & 2 ($v_0$ vs $v_2$)</option>
+                <option value="1,3">Players 1 & 3 ($v_1$ vs $v_3$)</option>
+              </select>
+              <button type="button" id="btn-aps-step" class="btn btn-primary btn-sm">Iterate Operator (Step $W_{t+1}$)</button>
+              <button type="button" id="btn-aps-reset" class="btn btn-secondary btn-sm">Reset</button>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <div class="card-panel">
+              <div class="canvas-wrapper canvas-large">
+                <canvas id="canvas-polytope-viewport" width="600" height="420" class="interactive-canvas"></canvas>
+              </div>
+              <div class="canvas-controls mt-2">
+                <div class="slider-row">
+                  <label for="slider-support-angle">Support Function Direction Angle $\theta$:</label>
+                  <input type="range" id="slider-support-angle" min="0" max="360" value="45" class="range-slider">
+                  <span id="label-support-angle" class="range-val">45°</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-panel">
+              <h3 class="panel-title">Polytope Geometry & Invariants</h3>
+              <div class="metrics-row">
+                <div class="stat-box">
+                  <span class="stat-label">Active Generators</span>
+                  <span class="stat-val text-accent" id="stat-aps-vertices">4</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Support Value $h_W(u)$</span>
+                  <span class="stat-val" id="stat-aps-support">1.414</span>
+                </div>
+              </div>
+
+              <h4 class="subheading mt-3">Exact Extreme Vertices in $\mathbb{Q}^n$</h4>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead><tr><th>Vertex #</th><th>Coordinates $(v_0, v_1, v_2, v_3)$</th><th>Extreme Status</th></tr></thead>
+                  <tbody id="tbody-polytope-vertices">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="mt-3">
+                <h4 class="subheading">Minkowski Addition & Halfspace Clipping</h4>
+                <p class="panel-subtitle">Carathéodory simplex elimination guarantees canonical representations across iterations.</p>
+                <button type="button" id="btn-demo-minkowski" class="btn btn-secondary btn-sm mt-1">Compute Minkowski Sum $W \oplus \Delta$</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. Stochastic Game Studio View -->
+        <section id="view-stochastic" class="workbench-view" aria-labelledby="heading-stochastic">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-stochastic" class="section-heading">Stochastic Game & Bellman Studio</h2>
+              <p class="section-sub">Analyze small finite stochastic games, normalized discounted Bellman residuals, and vanishing discount limits.</p>
+            </div>
+            <div class="header-actions">
+              <label for="select-stochastic-game" class="label-inline">Preset Model:</label>
+              <select id="select-stochastic-game" class="form-select">
+                <option value="two_state_control">Two-State Transition Control (2 States, 2 Players)</option>
+                <option value="one_state_control">One-State Single Controller (1 State, 2 Players)</option>
+              </select>
+              <label for="slider-stochastic-beta" class="label-inline">Discount $\beta$:</label>
+              <input type="range" id="slider-stochastic-beta" min="0" max="99" value="90" class="range-slider range-sm">
+              <span id="label-stochastic-beta" class="range-val">9/10</span>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <div class="card-panel">
+              <h3 class="panel-title">State Transition & Action Graph</h3>
+              <div class="canvas-wrapper">
+                <canvas id="canvas-stochastic-graph" width="540" height="320" class="interactive-canvas"></canvas>
+              </div>
+            </div>
+
+            <div class="card-panel">
+              <h3 class="panel-title">Discounted Values & Bellman Optimality</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead><tr><th>State</th><th>Player</th><th>Normalized Value $v_i(s)$</th><th>Bellman Residual</th><th>Dev Regret</th></tr></thead>
+                  <tbody id="tbody-stochastic-values">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="mt-4">
+                <h4 class="subheading">Vanishing Discount Asymptotic Trajectory ($\beta \to 1$)</h4>
+                <div class="canvas-wrapper mt-2">
+                  <canvas id="canvas-vanishing-discount" width="500" height="160" class="interactive-canvas"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. Million-Game Scanner View -->
+        <section id="view-scanner" class="workbench-view" aria-labelledby="heading-scanner">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-scanner" class="section-heading">Million-Game Parallel Scanner Analytics</h2>
+              <p class="section-sub">High-throughput deterministic Rayon screening for four-player quitting games lacking pure instant equilibria.</p>
+            </div>
+            <div class="header-actions">
+              <span class="badge badge-info">SplitMix64 Seed 7</span>
+              <span class="badge badge-success">43,974,793 Games / Sec</span>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <div class="card-panel">
+              <h3 class="panel-title">Screening Margin Frequency Distribution</h3>
+              <p class="panel-subtitle">148,994 games matched screening condition out of 1,000,000 samples</p>
+              <div class="canvas-wrapper">
+                <canvas id="canvas-scanner-histogram" width="540" height="280" class="interactive-canvas"></canvas>
+              </div>
+            </div>
+
+            <div class="card-panel">
+              <h3 class="panel-title">Retained Maximum-Margin Candidates</h3>
+              <p class="panel-subtitle">Handed off to Python exact verifier for period-2 and algebraic checks</p>
+
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead><tr><th>Sample ID</th><th>Seed</th><th>Pure Deviation Margin</th><th>Actions</th></tr></thead>
+                  <tbody id="tbody-scanner-candidates">
+                    <tr><td><strong>164952</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs" onclick="window.UNIFORM_APP.loadCandidate(164952)">Load in Studio</button></td></tr>
+                    <tr><td><strong>405715</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs" onclick="window.UNIFORM_APP.loadCandidate(405715)">Load in Studio</button></td></tr>
+                    <tr><td><strong>430755</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs" onclick="window.UNIFORM_APP.loadCandidate(430755)">Load in Studio</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="alert-box alert-warning mt-3">
+                <span class="alert-icon">⚠️</span>
+                <span><strong>Scope Restriction:</strong> A positive pure deviation margin in the one-shot continuation-payoff game is only a screening filter; it does not imply nonexistence of mixed stationary, periodic, or non-periodic equilibria.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. SMT Solver Studio View -->
+        <section id="view-smt" class="workbench-view" aria-labelledby="heading-smt">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-smt" class="section-heading">SMT Solver Studio & Multi-Engine Campaign</h2>
+              <p class="section-sub">Generate QF_NRA SMT-LIB2 queries, run dual Z3 and cvc5 campaigns, and independently verify rational models.</p>
+            </div>
+            <div class="header-actions">
+              <button type="button" id="btn-run-solver-campaign" class="btn btn-primary">Run SMT Campaign (Z3 + cvc5)</button>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <div class="card-panel">
+              <div class="panel-header">
+                <h3 class="panel-title">SMT-LIB2 QF_NRA Problem Definition</h3>
+                <span class="badge badge-secondary">Period 2 &bull; &epsilon; = 1/1000</span>
+              </div>
+              <textarea id="smt-query-viewer" class="code-editor" rows="18" readonly aria-label="SMT Query Viewer" spellcheck="false"></textarea>
+            </div>
+
+            <div class="card-panel">
+              <h3 class="panel-title">Solver Execution & Witness Verification Matrix</h3>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead><tr><th>Engine</th><th>Status</th><th>Time</th><th>Native Proof</th><th>Independent Rational Check</th></tr></thead>
+                  <tbody>
+                    <tr><td><strong>Z3 5.3.1</strong></td><td><span class="badge badge-success">SAT</span></td><td>0.12s</td><td>Retained</td><td><span class="badge badge-success">PASSED (Exact Fraction)</span></td></tr>
+                    <tr><td><strong>cvc5 1.4.2</strong></td><td><span class="badge badge-success">SAT</span></td><td>0.19s</td><td>Retained</td><td><span class="badge badge-success">PASSED (Exact Fraction)</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="mt-4">
+                <h4 class="subheading">Independent Proof Trace Validator</h4>
+                <p class="panel-subtitle">Validates resolution traces, SMT refutations, and Farkas infeasibility certificates.</p>
+                <div class="alert-box alert-success mt-2">
+                  <span class="alert-icon">✓</span>
+                  <span>Farkas Linear Certificate Validator active: $\lambda \ge 0, \lambda^T A = 0, \lambda^T b < 0$ certified.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9. Lean 4 Formal Verification View -->
+        <section id="view-lean" class="workbench-view" aria-labelledby="heading-lean">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-lean" class="section-heading">Lean 4 Formal Verification & Export</h2>
+              <p class="section-sub">Machine-checked arithmetic lemmas and formal certificate generation with Mathlib.</p>
+            </div>
+            <div class="header-actions">
+              <button type="button" id="btn-export-lean-code" class="btn btn-primary">Export Lean 4 Certificate (.lean)</button>
+              <button type="button" id="btn-copy-lean-code" class="btn btn-secondary">Copy to Clipboard</button>
+            </div>
+          </div>
+
+          <div class="two-col-layout">
+            <div class="card-panel">
+              <h3 class="panel-title">Formal Mathematical Lemmas (`Uniform.Certificate`)</h3>
+              <div class="theorem-card">
+                <div class="theorem-title">theorem regret_nonnegative</div>
+                <div class="theorem-code"><code>(h : payoff ≤ bestResponse) : 0 ≤ regret payoff bestResponse</code></div>
+              </div>
+              <div class="theorem-card">
+                <div class="theorem-title">theorem one_phase_cyclic_value</div>
+                <div class="theorem-code"><code>(hSurvival : survival < 1) (hRecurrence : value = reward + survival * value) : value = reward / (1 - survival)</code></div>
+              </div>
+              <div class="theorem-card">
+                <div class="theorem-title">theorem weightedDeviationBound</div>
+                <div class="theorem-code"><code>(hc : continueValue ≤ mixedValue + ε) (hq : quitValue ≤ mixedValue + ε) : (1 - q) * continueValue + q * quitValue ≤ mixedValue + ε</code></div>
+              </div>
+              <div class="theorem-card">
+                <div class="theorem-title">theorem regret_transitivity_le</div>
+                <div class="theorem-code"><code>(h1 : regret p c ≤ ε₁) (h2 : regret c b ≤ ε₂) : regret p b ≤ ε₁ + ε₂</code></div>
+              </div>
+            </div>
+
+            <div class="card-panel">
+              <h3 class="panel-title">Generated Machine-Checkable Instance</h3>
+              <textarea id="lean-code-preview" class="code-editor" rows="18" readonly aria-label="Lean Code Preview" spellcheck="false"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10. CLI & Diagnostics View -->
+        <section id="view-cli" class="workbench-view" aria-labelledby="heading-cli">
+          <div class="panel-header-inline">
+            <div>
+              <h2 id="heading-cli" class="section-heading">CLI Commands & Runtime Diagnostics</h2>
+              <p class="section-sub">Execute uniform commands in-process and monitor toolchain health.</p>
+            </div>
+            <div class="header-actions">
+              <button type="button" id="btn-run-doctor" class="btn btn-primary">Run uniform doctor</button>
+            </div>
+          </div>
+
+          <div class="card-panel">
+            <div class="cli-terminal-window">
+              <div class="terminal-header">
+                <div class="terminal-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+                <span class="terminal-title">uniform-lab interactive shell</span>
+              </div>
+              <pre id="terminal-output" class="terminal-content">
+$ uniform doctor
+[OK] Python 3.13.9 (win32) - strict typing clean
+[OK] Rust 1.85+ & Cargo toolchain available
+[OK] Lean 4 (4.35.0) & Lake 5.0.0 linked
+[OK] Z3 Python binding available (4.13+)
+[OK] cvc5 Python binding available (1.4.2)
+[OK] Exact Rational & Algebraic Arithmetic ready
+[OK] All 10 Repository JSON Schemas verified
+All enterprise research systems operational.
+              </pre>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

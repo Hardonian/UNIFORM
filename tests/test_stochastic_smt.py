@@ -28,17 +28,14 @@ def test_stochastic_export_is_scoped_qfnra() -> None:
 def test_rational_stochastic_profile_model_extraction() -> None:
     game = load_stochastic_game(ROOT / "examples" / "stochastic" / "one_state_control.json")
     model = parse_solver_model(
-        "sat\n(model (define-fun x_0_0_0 () Real 0) "
-        "(define-fun x_0_0_1 () Real 1)))"
+        "sat\n(model (define-fun x_0_0_0 () Real 0) (define-fun x_0_0_1 () Real 1)))"
     )
     profile = stationary_profile_from_model(game, model)
     assert profile == (((Fraction(0), Fraction(1)),),)
 
 
 def test_two_state_transition_sensitive_witness() -> None:
-    game = load_stochastic_game(
-        ROOT / "examples" / "stochastic" / "two_state_control.json"
-    )
+    game = load_stochastic_game(ROOT / "examples" / "stochastic" / "two_state_control.json")
     model_text = (
         "sat\n(model "
         "(define-fun x_0_0_0 () Real 0) "
@@ -83,6 +80,4 @@ def test_stochastic_solver_witness_rechecks_exactly(solver: str, tmp_path: Path)
         game, Fraction(9, 10), Fraction(0), artifact.run.stdout
     )
     assert valid
-    assert game.discounted_stationary_regret(profile, Fraction(9, 10)) == (
-        (Fraction(0),),
-    )
+    assert game.discounted_stationary_regret(profile, Fraction(9, 10)) == ((Fraction(0),),)

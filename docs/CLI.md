@@ -49,6 +49,17 @@ normalized to `sat`, `unsat`, `unknown`, `timeout`, `error`, or `missing`.
 - `uniform aps-polytopes GAME SETS [--steps N]` iterates the successor-restricted
   operator over finite unions of exact rational V-polytopes.
 
+## Formal verification, proofs, and enterprise workbench
+
+- `uniform doctor` performs comprehensive enterprise diagnostics across all runtimes,
+  compilers, SMT backends, and exact arithmetic engines.
+- `uniform export-lean GAME PROFILE [--output FILE]` translates an arbitrary quitting game
+  and rational profile into a formal Lean 4 theorem file verified against Mathlib.
+- `uniform proof-check PROOF_FILE [--type smt|farkas]` verifies an independent Farkas
+  infeasibility certificate or SMT-LIB2 / Alethe proof trace.
+- `uniform serve [--host HOST] [--port PORT] [--open]` launches the standalone Enterprise
+  Web Workbench with 10 interactive research suites and real-time backend API integration.
+
 ## Exit behavior and trust boundary
 
 Certificate commands return 0 when their requested scoped check passes and 2 when a
