@@ -144,7 +144,6 @@ def test_cli_aps_polytopes(capsys) -> None:
     assert '"iterations": 1' in captured.out
 
 
-
 def test_cli_stochastic(capsys) -> None:
     code = main(
         [
@@ -263,6 +262,7 @@ def test_cli_stochastic_check_model(tmp_path, capsys) -> None:
     captured = capsys.readouterr()
     assert '"independently_valid": true' in captured.out
 
+
 def test_cli_bivariate_prune(tmp_path, capsys) -> None:
     out_file = tmp_path / "biv_cert.json"
     code = main(
@@ -282,4 +282,3 @@ def test_cli_bivariate_prune(tmp_path, capsys) -> None:
     assert out_file.exists()
     data = json.loads(out_file.read_text(encoding="utf-8"))
     assert data["schema"] == "uniform.bivariate-exclusion-certificate/v1"
-

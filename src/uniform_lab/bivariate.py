@@ -253,6 +253,4 @@ def prune_quitting_game(
             RationalInterval(Fraction(1, 100), Fraction(99, 100)),
         )
     p1, p2 = extract_bivariate_resultants(game)
-    return branch_and_prune_2d(
-        p1, p2, domain, max_evaluations=max_evaluations, min_width=min_width
-    )
+    return branch_and_prune_2d(p1, p2, domain, max_evaluations=max_evaluations, min_width=min_width)

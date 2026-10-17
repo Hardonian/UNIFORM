@@ -114,7 +114,6 @@ def test_direct_python_binding_direct_cvc5(tmp_path: Path) -> None:
     assert run.status == "sat"
 
 
-
 def test_solver_hard_timeout_enforced(tmp_path: Path) -> None:
     if find_spec("z3") is None:
         pytest.skip("optional z3 binding is not installed")
@@ -131,5 +130,3 @@ def test_solver_hard_timeout_enforced(tmp_path: Path) -> None:
     assert run.timed_out is True
     assert run.status == "timeout"
     assert run.elapsed_seconds < 4.0
-
-

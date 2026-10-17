@@ -33,7 +33,6 @@ def _status(stdout: str, *, timed_out: bool, returncode: int) -> SolverStatus:
     return "missing" if returncode == 127 else "error"
 
 
-
 @dataclass(frozen=True)
 class SolverRun:
     solver: str
@@ -258,7 +257,6 @@ def _run_python_binding(
             is_timeout,
             "python-binding-subprocess",
         )
-
 
 
 def _run_python_binding_direct(

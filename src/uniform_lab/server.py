@@ -41,7 +41,6 @@ def _doctor_diagnostics() -> dict[str, Any]:
     }
 
 
-
 class WorkbenchHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = True

@@ -1,13 +1,13 @@
 {
-  "elapsed_seconds": 119.7305,
-  "generated_at_epoch": 1792209470.909083,
+  "elapsed_seconds": 106.0478,
+  "generated_at_epoch": 1792209816.935877,
   "lean": {
     "build": {
       "command": [
         "C:\\Users\\scott\\.elan\\bin\\lake.exe",
         "build"
       ],
-      "elapsed_seconds": 10.406,
+      "elapsed_seconds": 9.8407,
       "status": "passed",
       "stdout_tail": [
         "Build completed successfully (3145 jobs)."
@@ -43,7 +43,7 @@
         ]
       ],
       "denominator": 2,
-      "elapsed_seconds": 33.68761,
+      "elapsed_seconds": 30.86245,
       "evaluated_profiles": 6561,
       "minimum_observed_regret": "1",
       "period": 2,
@@ -65,7 +65,7 @@
         ]
       ],
       "denominator": 2,
-      "elapsed_seconds": 33.6389,
+      "elapsed_seconds": 31.10689,
       "evaluated_profiles": 6561,
       "minimum_observed_regret": "4/21",
       "period": 2,
@@ -117,7 +117,7 @@
         "-D",
         "warnings"
       ],
-      "elapsed_seconds": 0.3941,
+      "elapsed_seconds": 0.3843,
       "status": "passed",
       "stdout_tail": []
     },
@@ -130,7 +130,7 @@
         "--",
         "--check"
       ],
-      "elapsed_seconds": 0.3159,
+      "elapsed_seconds": 0.3018,
       "status": "passed",
       "stdout_tail": []
     },
@@ -142,7 +142,7 @@
         "rust-scanner/Cargo.toml",
         "--release"
       ],
-      "elapsed_seconds": 6.4971,
+      "elapsed_seconds": 0.4044,
       "status": "passed",
       "stdout_tail": [
         "test tests::solan_vieille_mixed_grid_regret_is_positive ... ok",
@@ -158,7 +158,7 @@
         "-m",
         "mypy"
       ],
-      "elapsed_seconds": 0.6118,
+      "elapsed_seconds": 0.816,
       "status": "passed",
       "stdout_tail": [
         "Success: no issues found in 22 source files"
@@ -173,14 +173,14 @@
         "--cov=uniform_lab",
         "--cov-fail-under=80"
       ],
-      "elapsed_seconds": 31.8237,
+      "elapsed_seconds": 30.103,
       "status": "passed",
       "stdout_tail": [
         "src\\uniform_lab\\stochastic_smt.py      97      6     42      6    91%   31, 34, 77, 79, 138, 152",
         "-------------------------------------------------------------------------------",
         "TOTAL                                3120    468   1152    250    81%",
         "Required test coverage of 80% reached. Total coverage: 81.04%",
-        "95 passed in 30.51s"
+        "95 passed in 28.83s"
       ]
     },
     "ruff": {
@@ -191,7 +191,7 @@
         "check",
         "."
       ],
-      "elapsed_seconds": 0.2557,
+      "elapsed_seconds": 0.2235,
       "status": "passed",
       "stdout_tail": [
         "All checks passed!"
@@ -205,7 +205,7 @@
         28
       ],
       "characteristic_polynomial_degree": null,
-      "elapsed_seconds": 1.11936,
+      "elapsed_seconds": 1.07899,
       "interior_candidate_status": "reduced_not_solved",
       "isolated_eliminant_root_intervals": 0,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
@@ -216,7 +216,7 @@
         27
       ],
       "characteristic_polynomial_degree": null,
-      "elapsed_seconds": 0.74564,
+      "elapsed_seconds": 0.70228,
       "interior_candidate_status": "reduced_not_solved",
       "isolated_eliminant_root_intervals": 0,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
@@ -224,7 +224,7 @@
     "three_player_mesh.json": {
       "bivariate_degrees": null,
       "characteristic_polynomial_degree": 12,
-      "elapsed_seconds": 0.0329,
+      "elapsed_seconds": 0.03164,
       "interior_candidate_status": "eliminant_roots_found",
       "isolated_eliminant_root_intervals": 4,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
@@ -232,7 +232,7 @@
     "two_player_cycle.json": {
       "bivariate_degrees": null,
       "characteristic_polynomial_degree": 1,
-      "elapsed_seconds": 0.00057,
+      "elapsed_seconds": 0.00049,
       "interior_candidate_status": "confirmed",
       "isolated_eliminant_root_intervals": 1,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"

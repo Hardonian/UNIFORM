@@ -62,6 +62,7 @@ def audit_json_schemas(repo_root: Path) -> dict[str, Any]:
         hashes[path.name] = compute_sha256(path)
 
     from referencing import Registry, Resource
+
     reg: Registry = Registry()
     for fname, sch in schemas.items():
         res = Resource.from_contents(sch)
@@ -182,8 +183,7 @@ def run_full_replication() -> None:
     print("[1/5] JSON Schema meta-validation and example validation", flush=True)
     schemas = audit_json_schemas(repo_root)
     print(
-        f"      passed: {schemas['schema_count']} schemas, "
-        f"{schemas['validated_examples']} examples"
+        f"      passed: {schemas['schema_count']} schemas, {schemas['validated_examples']} examples"
     )
 
     print("[2/5] Exact symbolic elimination benchmarks", flush=True)

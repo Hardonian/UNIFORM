@@ -117,6 +117,7 @@ def test_branch_and_prune_detects_common_root() -> None:
         assert b.x.contains(Fraction(1, 2))
         assert b.y.contains(Fraction(1, 2))
 
+
 def test_extract_bivariate_resultants_and_prune() -> None:
     import json
 
@@ -139,4 +140,3 @@ def test_extract_bivariate_resultants_and_prune() -> None:
         game_1p = QuittingGame.from_dict(json.load(f))
     with pytest.raises(ValueError, match="require exactly 4 players"):
         extract_bivariate_resultants(game_1p)
-
