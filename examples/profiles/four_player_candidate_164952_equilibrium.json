@@ -1,0 +1,7 @@
+{
+  "schema": "uniform.periodic-profile/v1",
+  "period": 1,
+  "profile": [
+    ["0", "0", "0", "1/4"]
+  ]
+}
