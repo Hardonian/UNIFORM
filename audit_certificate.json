@@ -1,70 +1,242 @@
 {
-  "title": "UNIFORM Scientific Replication & Mathematical Audit Certificate",
-  "timestamp_epoch": 1792206098.3252,
-  "total_audit_seconds": 6.5233,
-  "schemas": {
-    "total_schemas": 11,
-    "hashes": {
-      "absorption-path-v1.schema.json": "4cedfa3c7ab43e04ae953048c2c85e8b93411d6c28f7297db248bdccb17d0034",
-      "algebraic-elimination-v1.schema.json": "d12a759be0c21318ddc5f717568c38d9e3d4b5a944b3c1eff9c2345f6b1e70f3",
-      "algebraic-periodic-certificate-v1.schema.json": "06e884d7de2176dbc737d4641139e79685f374de663744fd66943edbf5c8b225",
-      "algebraic-periodic-profile-v1.schema.json": "0542d7d8806df0cc486d169362b172ef7d31a16e39bc37236a43c764328d8e15",
-      "essential-aps-input-v1.schema.json": "142bcd864a9d008bc02d8c4f03bf163a87b0aa56a37ed7ca63abb94eeeba8d26",
-      "essential-aps-polytopes-v1.schema.json": "2fccefb04803810eaf56d41a7dff07b6cc3c8c1c2e8ddc0fbb1909a1f36f8c27",
-      "periodic-grid-search-v1.schema.json": "b1dc6bba58b6dc1934179d217bd741c4638d378b51cb9cb469766f55466ca4db",
-      "quitting-game-v1.schema.json": "69a3d0f1aa897bfd0b36235ec689606b2ad9641d43bd8d8f1ae57ebf1919510e",
-      "solver-artifact-v1.schema.json": "d607529bb4c4db5f2da4e915becf1ab3b213591755d66e868b52b2f3d3f12f22",
-      "stochastic-game-v1.schema.json": "bd96072e61edb9147f593549d9f1883127d2b23073646fc1f3016f32af572468",
-      "stochastic-model-check-v1.schema.json": "220e2e338e0410d98dcb95a275b3696961f4ff3c6750d091c812abf5ab71f637"
+  "elapsed_seconds": 106.0478,
+  "generated_at_epoch": 1792209816.935877,
+  "lean": {
+    "build": {
+      "command": [
+        "C:\\Users\\scott\\.elan\\bin\\lake.exe",
+        "build"
+      ],
+      "elapsed_seconds": 9.8407,
+      "status": "passed",
+      "stdout_tail": [
+        "Build completed successfully (3145 jobs)."
+      ]
     },
-    "status": "VERIFIED"
-  },
-  "lean4_proofs": {
-    "verified_files": 6,
-    "sorry_debt": 0,
-    "axioms_added": 0,
     "file_hashes": {
-      "AdversarialCandidate46876.lean": "d8a0ee2e9c57e8a88856c8f31abaad95c8015aa286eeb3d8f9bd3b3b5c17180b",
+      "AdversarialCandidate46876.lean": "403ab4c5810158aa4c5b25341cb3d6b79bcaa8f155ff9743dd7cce64fec26f71",
       "Certificate.lean": "a75b3a43efde73b258fc3c04f5ea6c79e48c02540976893c95ac08804ea307cd",
       "FourPlayerCandidate.lean": "27445621c4fa7ec08334e54c4efa62e751bfb185d99540dcffc952432a5e365e",
+      "Indifference.lean": "ee1d2171e1113b5097afcd1e7e4a711737337c4470a626a6be709ccdfdefbb19",
       "OnePlayerZero.lean": "6ffe10ba8ef86cef96482de7e6a2ba1aaf5c81f4d53e98aba78cc56c279fc764",
       "ThreePlayerMesh.lean": "5296b6e3fc96915706d7a874c740566951b676d6cd6b7262a70fbe9f4e6c4955",
       "TwoPlayerCycle.lean": "e21ef807be60a4d15acdf4a843c5822d35081265bd2f1593cd3e79c8452158dc"
     },
-    "status": "VERIFIED_0_SORRY"
+    "sorry_placeholders": 0,
+    "source_files": 7,
+    "status": "lake_build_passed"
+  },
+  "period_two_grids": {
+    "adversarial_candidate_46876.json": {
+      "best_profile": [
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ],
+      "denominator": 2,
+      "elapsed_seconds": 30.86245,
+      "evaluated_profiles": 6561,
+      "minimum_observed_regret": "1",
+      "period": 2,
+      "scope": "complete finite rational grid; no continuous-domain claim"
+    },
+    "solan_vieille_2002.json": {
+      "best_profile": [
+        [
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2"
+        ],
+        [
+          "1/2",
+          "1/2",
+          "1/2",
+          "1/2"
+        ]
+      ],
+      "denominator": 2,
+      "elapsed_seconds": 31.10689,
+      "evaluated_profiles": 6561,
+      "minimum_observed_regret": "4/21",
+      "period": 2,
+      "scope": "complete finite rational grid; no continuous-domain claim"
+    }
+  },
+  "schema": "uniform.release-audit/v1",
+  "schemas": {
+    "hashes": {
+      "absorption-path-check-v1.schema.json": "4f58ec215afa3d2c8d9af05b7a6746b9a3600cd0075a92e94ed967a2f7079e0d",
+      "absorption-path-v1.schema.json": "4cedfa3c7ab43e04ae953048c2c85e8b93411d6c28f7297db248bdccb17d0034",
+      "algebraic-elimination-v1.schema.json": "d12a759be0c21318ddc5f717568c38d9e3d4b5a944b3c1eff9c2345f6b1e70f3",
+      "algebraic-elimination-v2.schema.json": "39947420735f181f0c8a376b7e1e2972f3265cc1b5f9689e0ffa5a0af6601926",
+      "algebraic-periodic-certificate-v1.schema.json": "06e884d7de2176dbc737d4641139e79685f374de663744fd66943edbf5c8b225",
+      "algebraic-periodic-profile-v1.schema.json": "0542d7d8806df0cc486d169362b172ef7d31a16e39bc37236a43c764328d8e15",
+      "bivariate-exclusion-certificate-v1.schema.json": "8282a037fdd4efcaa07c8ed480e9ec63b41b0e555245235ba311c06d3f099606",
+      "essential-aps-input-v1.schema.json": "142bcd864a9d008bc02d8c4f03bf163a87b0aa56a37ed7ca63abb94eeeba8d26",
+      "essential-aps-polytopes-v1.schema.json": "2fccefb04803810eaf56d41a7dff07b6cc3c8c1c2e8ddc0fbb1909a1f36f8c27",
+      "farkas-certificate-v1.schema.json": "6e1065266e0bfbdda396c60c66cf36b8e27250fff48b3d1ec37c0c99deb4a13d",
+      "horizon-certificate-v1.schema.json": "1c8667dd72117162e9e64e3c2b07c9aec759c622b2eb9d79947630449a83c123",
+      "periodic-grid-search-v1.schema.json": "b1dc6bba58b6dc1934179d217bd741c4638d378b51cb9cb469766f55466ca4db",
+      "periodic-profile-v1.schema.json": "a4ceedfdd07e371ca9c8299cdfeaada308c5afb8c93598d2fddad06f698db927",
+      "periodic-regret-certificate-v1.schema.json": "b2832ebde7b5dbbd26f70d61168ae785cfcbd414a0135131785db0c46394a0c7",
+      "quitting-game-v1.schema.json": "69a3d0f1aa897bfd0b36235ec689606b2ad9641d43bd8d8f1ae57ebf1919510e",
+      "rust-screen-v1.schema.json": "2cfbfc2407d41a0a1ed3f6a14ded50046c9c6b21240928c40252cc85abe443ba",
+      "screen-verification-v1.schema.json": "f00170bfcec08cd04702c9eecac039481bec458d4865d0e174257a428e49ac6e",
+      "smt-proof-structure-v1.schema.json": "8b3733cf71548885bd75cbfeafcf57f5876be8b5f8b07228c338e062e42b0b71",
+      "solver-artifact-v1.schema.json": "d607529bb4c4db5f2da4e915becf1ab3b213591755d66e868b52b2f3d3f12f22",
+      "solver-campaign-v1.schema.json": "03293b6b944114ce5c374a654020b280ac9367e14b933798497b9d6cf31eb378",
+      "stationary-profile-v1.schema.json": "44a493edd4a2acafa48cfe01e8af4811f2d03c87a3f81de58cedf96b4caea12b",
+      "stochastic-certificate-v1.schema.json": "3eeb8f9e767d5f849f4ca9c3fb5ec4cb7e76060956227c26e048e9798927ae74",
+      "stochastic-game-v1.schema.json": "bd96072e61edb9147f593549d9f1883127d2b23073646fc1f3016f32af572468",
+      "stochastic-model-check-v1.schema.json": "220e2e338e0410d98dcb95a275b3696961f4ff3c6750d091c812abf5ab71f637"
+    },
+    "schema_count": 24,
+    "status": "draft_2020_12_meta_validated",
+    "validated_examples": 20
+  },
+  "scope": "software release checks and the explicitly enumerated finite experiments; not a proof of the general uniform-equilibrium conjecture",
+  "software": {
+    "cargo_clippy": {
+      "command": [
+        "C:\\Users\\scott\\.cargo\\bin\\cargo.EXE",
+        "clippy",
+        "--manifest-path",
+        "rust-scanner/Cargo.toml",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "elapsed_seconds": 0.3843,
+      "status": "passed",
+      "stdout_tail": []
+    },
+    "cargo_fmt": {
+      "command": [
+        "C:\\Users\\scott\\.cargo\\bin\\cargo.EXE",
+        "fmt",
+        "--manifest-path",
+        "rust-scanner/Cargo.toml",
+        "--",
+        "--check"
+      ],
+      "elapsed_seconds": 0.3018,
+      "status": "passed",
+      "stdout_tail": []
+    },
+    "cargo_test": {
+      "command": [
+        "C:\\Users\\scott\\.cargo\\bin\\cargo.EXE",
+        "test",
+        "--manifest-path",
+        "rust-scanner/Cargo.toml",
+        "--release"
+      ],
+      "elapsed_seconds": 0.4044,
+      "status": "passed",
+      "stdout_tail": [
+        "test tests::solan_vieille_mixed_grid_regret_is_positive ... ok",
+        "test tests::candidate_46876_periodic_regret_matches_python ... ok",
+        "",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+        ""
+      ]
+    },
+    "mypy": {
+      "command": [
+        "C:\\Users\\scott\\GitHub\\UNIFORM\\.venv\\Scripts\\python.exe",
+        "-m",
+        "mypy"
+      ],
+      "elapsed_seconds": 0.816,
+      "status": "passed",
+      "stdout_tail": [
+        "Success: no issues found in 22 source files"
+      ]
+    },
+    "pytest": {
+      "command": [
+        "C:\\Users\\scott\\GitHub\\UNIFORM\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "--cov=uniform_lab",
+        "--cov-fail-under=80"
+      ],
+      "elapsed_seconds": 30.103,
+      "status": "passed",
+      "stdout_tail": [
+        "src\\uniform_lab\\stochastic_smt.py      97      6     42      6    91%   31, 34, 77, 79, 138, 152",
+        "-------------------------------------------------------------------------------",
+        "TOTAL                                3120    468   1152    250    81%",
+        "Required test coverage of 80% reached. Total coverage: 81.04%",
+        "95 passed in 28.83s"
+      ]
+    },
+    "ruff": {
+      "command": [
+        "C:\\Users\\scott\\GitHub\\UNIFORM\\.venv\\Scripts\\python.exe",
+        "-m",
+        "ruff",
+        "check",
+        "."
+      ],
+      "elapsed_seconds": 0.2235,
+      "status": "passed",
+      "stdout_tail": [
+        "All checks passed!"
+      ]
+    }
   },
   "symbolic_elimination": {
-    "three_player_mesh": {
-      "characteristic_polynomial_degree": 12,
-      "isolated_interior_roots": 4,
-      "elapsed_seconds": 0.03691,
-      "status": "EXACT_ROOTS_ISOLATED"
-    },
-    "solan_vieille_2002": {
-      "bivariate_degrees": [
-        23,
-        27
-      ],
-      "elapsed_seconds": 0.786,
-      "status": "BIVARIATE_SYSTEM_DERIVED"
-    },
-    "adversarial_candidate_46876": {
+    "adversarial_candidate_46876.json": {
       "bivariate_degrees": [
         26,
         28
       ],
-      "elapsed_seconds": 1.20854,
-      "status": "BIVARIATE_SYSTEM_DERIVED"
+      "characteristic_polynomial_degree": null,
+      "elapsed_seconds": 1.07899,
+      "interior_candidate_status": "reduced_not_solved",
+      "isolated_eliminant_root_intervals": 0,
+      "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
+    },
+    "solan_vieille_2002.json": {
+      "bivariate_degrees": [
+        23,
+        27
+      ],
+      "characteristic_polynomial_degree": null,
+      "elapsed_seconds": 0.70228,
+      "interior_candidate_status": "reduced_not_solved",
+      "isolated_eliminant_root_intervals": 0,
+      "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
+    },
+    "three_player_mesh.json": {
+      "bivariate_degrees": null,
+      "characteristic_polynomial_degree": 12,
+      "elapsed_seconds": 0.03164,
+      "interior_candidate_status": "eliminant_roots_found",
+      "isolated_eliminant_root_intervals": 4,
+      "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
+    },
+    "two_player_cycle.json": {
+      "bivariate_degrees": null,
+      "characteristic_polynomial_degree": 1,
+      "elapsed_seconds": 0.00049,
+      "interior_candidate_status": "confirmed",
+      "isolated_eliminant_root_intervals": 1,
+      "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
     }
   },
-  "cyclic_grid_resistance": {
-    "solan_vieille_alt_cyclic_regret": "1/5",
-    "solan_vieille_floor": "4/21",
-    "candidate_46876_sample_min_regret": "136/105",
-    "candidate_46876_guaranteed_floor": "1",
-    "cyclic_resistance_ratio": "> 5.25x",
-    "status": "VERIFIED_HIGH_RESISTANCE"
-  },
-  "unit_tests": "54 passed in 3.34s",
-  "verdict": "UNCONDITIONALLY_VERIFIED_AND_REPRODUCIBLE"
+  "verdict": "SCOPED_RELEASE_CHECKS_PASSED"
 }

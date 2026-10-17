@@ -392,6 +392,7 @@
                   <option value="two_player_cycle">Two-Player Matching Quitter (2P, Independent)</option>
                 </select>
                 <button type="button" id="btn-run-elimination" class="btn btn-primary btn-sm">Compute Sylvester Resultant</button>
+                <button type="button" id="btn-run-bivariate-prune" class="btn btn-outline btn-sm">2D Box Pruning (UNSAT Certificate)</button>
               </div>
             </div>
 
@@ -416,7 +417,7 @@
 
             <div class="elim-output-box mt-3" id="elim-output-box">
               <div id="elim-summary-text" class="text-secondary mb-2">Select a game and click &apos;Compute Sylvester Resultant&apos; to eliminate indifference equations over $\mathbb{Q}$.</div>
-              <div class="table-responsive" id="elim-roots-table-wrapper" style="display: none;">
+              <div class="table-responsive" id="elim-roots-table-wrapper">
                 <table class="data-table">
                   <thead>
                     <tr><th>Root #</th><th>Exact Isolating Interval $[a, b] \subset [0, 1]$</th><th>Decimal Value</th><th>Sturm Sign Check</th></tr>
@@ -426,9 +427,10 @@
                   </tbody>
                 </table>
               </div>
-              <div id="elim-poly-display" class="code-preview-box mt-2" style="display: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; overflow-x: auto;">
+              <div id="elim-poly-display" class="code-preview-box mt-2">
                 <!-- Characteristic polynomial coefficients or bivariate reduction details -->
               </div>
+
             </div>
           </div>
         </section>

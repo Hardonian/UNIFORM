@@ -149,14 +149,10 @@ class StochasticGame:
         """Stage rewards/transitions for each pure action against fixed opponents."""
 
         rewards = [
-            [Fraction(0) for _ in range(self.action_counts[player])]
-            for _ in range(self.states)
+            [Fraction(0) for _ in range(self.action_counts[player])] for _ in range(self.states)
         ]
         transitions = [
-            [
-                [Fraction(0) for _ in range(self.states)]
-                for _ in range(self.action_counts[player])
-            ]
+            [[Fraction(0) for _ in range(self.states)] for _ in range(self.action_counts[player])]
             for _ in range(self.states)
         ]
         for state in range(self.states):
@@ -260,8 +256,7 @@ class StochasticGame:
                     actions = [
                         action_rewards[state][action]
                         + sum(
-                            action_transitions[state][action][target]
-                            * best_total[player][target]
+                            action_transitions[state][action][target] * best_total[player][target]
                             for target in range(self.states)
                         )
                         for action in range(self.action_counts[player])

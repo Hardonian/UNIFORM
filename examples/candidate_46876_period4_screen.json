@@ -1,0 +1,318 @@
+{
+  "schema": "uniform.periodic-grid-search/v1",
+  "scope": "all independent periodic profiles on the stated rational grid; regret covers deterministic unilateral policies of the same period",
+  "game_path": "..\\examples\\adversarial_candidate_46876.json",
+  "game_title": "Adversarial 4-Player Candidate 46876 (Discovered via Mixed Grid Scan)",
+  "denominator": 2,
+  "period": 4,
+  "players": 4,
+  "total_profiles": 43046721,
+  "evaluated_profiles": 43046721,
+  "complete_shard": true,
+  "complete_global_grid": true,
+  "elapsed_seconds": 15.3657513,
+  "profiles_per_second": 2801471.9332337496,
+  "min_regret_floor": 1.0,
+  "best": [
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "1/2",
+          "1",
+          "0",
+          "1"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    },
+    {
+      "profile": [
+        [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/2",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ],
+      "maximum_regret": "1.000000",
+      "maximum_regret_float": 1.0
+    }
+  ]
+}

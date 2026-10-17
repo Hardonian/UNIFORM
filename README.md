@@ -39,7 +39,8 @@ Rust and Lean are optional for the Python package. They are required for the com
 | SMT trace audit | Unique IDs, backward premise references, and final contradiction marker | Explicitly not a semantic Alethe proof checker |
 | Lean export | Recomputes reported rational regrets and their common bound | Does not derive values from the game/profile semantics |
 | Elimination | Exact resultants and isolated univariate eliminant roots | Three-/four-player outputs require back-substitution to confirm solutions |
-| Lean library | The checked-in theorem statements compiled by Lake/Mathlib | Only the statements present in `lean/Uniform` are formalized |
+| 2D Bivariate Engine | Exact branch-and-prune box interval UNSAT certificate | Certified absence of roots over rational sub-boxes in $(0, 1)^2$ |
+| Lean library | The checked-in theorem statements compiled by Lake/Mathlib | Includes Affine Decomposition and Indifference Principle without sorry |
 
 ## Common workflows
 
@@ -60,6 +61,9 @@ uniform stochastic-solve-campaign GAME.json --beta 9/10 --epsilon 1/20 \
 
 # Exact symbolic elimination (interior stationary candidates)
 uniform eliminate GAME.json
+
+# Exact 2D bivariate interval branch-and-prune root exclusion
+uniform bivariate-prune GAME.json --max-evaluations 500
 
 # Local browser workbench; loopback is the safe default
 uniform serve --host 127.0.0.1 --port 8080 --open

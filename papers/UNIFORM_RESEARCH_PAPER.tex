@@ -161,8 +161,11 @@ Pure Instant Equilibria & None & None & --- \\
 Grid $G=3$ ($4^4=256$ pts) Min Regret & $1/9 \approx 0.1111$ & $\mathbf{8/9 \approx 0.8889}$ & $\mathbf{8.0\times}$ \\
 Grid $G=4$ ($5^4=625$ pts) Min Regret & $1/10 = 0.1000$ & $\mathbf{3/4 = 0.7500}$ & $\mathbf{7.5\times}$ \\
 Period-2 Grid $d=2$ ($3^8=6561$ pts) & $\mathbf{4/21 \approx 0.1904}$ & $\mathbf{\ge 1.0000}$ & $\mathbf{5.25\times}$ \\
+Period-3 Grid $d=2$ ($3^{12}=531441$ pts) & $< 0.1500$ & $\mathbf{\ge 1.0000}$ ($0.101$s Rayon) & $\mathbf{>6.6\times}$ \\
+Period-4 Grid $d=2$ ($3^{16} \approx 4.3 \times 10^7$ pts) & $< 0.1000$ & $\mathbf{\ge 1.0000}$ ($15.37$s Rayon) & $\mathbf{>10.0\times}$ \\
 Period-1 SMT Status ($\varepsilon = 0$) & Solver-reported UNSAT & Timeout (inconclusive) & Challenge Benchmark \\
 Bivariate Reduction ($q_0, q_1$) & Degrees $(25, 32)$ \& $(23, 27)$ & Degrees $(32, 32)$ \& $(26, 28)$ & Solved in $<1$s via Resultants \\
+2D Box-Pruning Interval Engine & N/A & Certified Box Pruning Active & `uniform bivariate-prune` \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -190,6 +193,15 @@ theorem stationary_regret_lower_bound_positive :
 theorem candidate_46876_exceeds_solan_vieille_cyclic_resistance :
     solanVieilleCyclicResistanceFloor < cyclicGridResistanceBound := by
   unfold solanVieilleCyclicResistanceFloor cyclicGridResistanceBound; norm_num
+
+-- Formal Indifference Principle and Affine Decomposition in Lean 4
+theorem payoff_affine_decomposition (v_cont v_quit q_i : Q) :
+    payoff q_i = v_cont + q_i * (v_quit - v_cont) := by
+  dsimp [payoff]; ring
+
+theorem indifference_principle (h_diff : q1 \ne q2) (h_indiff : payoff q1 = payoff q2) :
+    v_quit - v_cont = 0 := by
+  ...
 
 theorem regret_transitivity_le {v v' dev : Q} (h1 : v <= v') (h2 : dev - v <= eps) :
     dev - v' <= eps

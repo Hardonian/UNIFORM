@@ -7,9 +7,15 @@ All operations strictly adhere to the UNIFORM zero-float exact arithmetic guaran
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Any, Mapping
+from typing import TYPE_CHECKING, Any
+
+from .rational import rational_text
+
+if TYPE_CHECKING:
+    from .quitting import QuittingGame
 
 
 @dataclass(frozen=True)
@@ -92,9 +98,9 @@ class BivariateBox:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "x": [str(self.x.lo), str(self.x.hi)],
-            "y": [str(self.y.lo), str(self.y.hi)],
-            "max_width": str(max(self.x.width, self.y.width)),
+            "x": [rational_text(self.x.lo), rational_text(self.x.hi)],
+            "y": [rational_text(self.y.lo), rational_text(self.y.hi)],
+            "max_width": rational_text(max(self.x.width, self.y.width)),
         }
 
 
@@ -210,3 +216,41 @@ def branch_and_prune_2d(
         boxes_pruned=pruned,
         unresolved_boxes=tuple(unresolved),
     )
+
+
+def extract_bivariate_resultants(
+    game: QuittingGame,
+) -> tuple[BivariatePolynomial, BivariatePolynomial]:
+    """Derive bivariate polynomials S1(q0, q1) and S2(q0, q1) from a 4-player game."""
+    if game.players != 4:
+        raise ValueError(f"Bivariate resultants require exactly 4 players, got {game.players}")
+    from .elimination import indifference_polynomials, prem, resultant
+
+    eqs = indifference_polynomials(game)
+    r12 = resultant(eqs[0], eqs[1], 3)
+    r13 = resultant(eqs[0], eqs[2], 3)
+    rem1 = prem(r12, eqs[3], 2)
+    rem2 = prem(r13, eqs[3], 2)
+    s12 = resultant(rem1, rem2, 2)
+    s0 = resultant(eqs[3], rem1, 2)
+
+    p1 = BivariatePolynomial({(k[0], k[1]): v for k, v in s12.terms.items()})
+    p2 = BivariatePolynomial({(k[0], k[1]): v for k, v in s0.terms.items()})
+    return p1, p2
+
+
+def prune_quitting_game(
+    game: QuittingGame,
+    *,
+    domain: BivariateBox | None = None,
+    max_evaluations: int = 500,
+    min_width: Fraction = Fraction(1, 256),
+) -> BivariateExclusionCertificate:
+    """Exact 2D branch-and-prune root exclusion over the game's bivariate resultants."""
+    if domain is None:
+        domain = BivariateBox(
+            RationalInterval(Fraction(1, 100), Fraction(99, 100)),
+            RationalInterval(Fraction(1, 100), Fraction(99, 100)),
+        )
+    p1, p2 = extract_bivariate_resultants(game)
+    return branch_and_prune_2d(p1, p2, domain, max_evaluations=max_evaluations, min_width=min_width)

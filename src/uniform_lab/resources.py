@@ -22,9 +22,7 @@ def _directory(name: str) -> Traversable:
 def _names(directory: str, suffix: str) -> tuple[str, ...]:
     return tuple(
         sorted(
-            entry.name
-            for entry in _directory(directory).iterdir()
-            if entry.name.endswith(suffix)
+            entry.name for entry in _directory(directory).iterdir() if entry.name.endswith(suffix)
         )
     )
 

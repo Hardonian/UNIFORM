@@ -79,10 +79,12 @@ def test_server_live_endpoints() -> None:
         # Test POST /api/periodic
         req_periodic = urllib.request.Request(
             f"{base_url}/api/periodic",
-            data=json.dumps({
-                "game": game_payload,
-                "profile": [[0, 0]],
-            }).encode(),
+            data=json.dumps(
+                {
+                    "game": game_payload,
+                    "profile": [[0, 0]],
+                }
+            ).encode(),
             headers={"Content-Type": "application/json"},
         )
         with urllib.request.urlopen(req_periodic) as resp:
@@ -104,27 +106,26 @@ def test_server_live_endpoints() -> None:
             assert resp.status == 200
             assert "text/css" in resp.headers["Content-Type"]
 
-
         # Test POST /api/screen
         req_screen = urllib.request.Request(
             f"{base_url}/api/screen",
-            data=json.dumps({
-                "game": game_payload,
-                "denominator": 2,
-                "period": 1,
-                "max_profiles": 10,
-            }).encode(),
+            data=json.dumps(
+                {
+                    "game": game_payload,
+                    "denominator": 2,
+                    "period": 1,
+                    "max_profiles": 10,
+                }
+            ).encode(),
             headers={"Content-Type": "application/json"},
         )
         with urllib.request.urlopen(req_screen) as resp:
             data = json.loads(resp.read().decode())
             assert data["schema"] == "uniform.periodic-grid-search/v1"
 
-
     finally:
         server.shutdown()
         server.server_close()
-
 
 
 def test_server_rejects_unsafe_or_unbounded_requests() -> None:
@@ -160,6 +161,31 @@ def test_server_rejects_unsafe_or_unbounded_requests() -> None:
             urllib.request.urlopen(invalid_grid)
         except HTTPError as exc:
             assert exc.code == 400
+    finally:
+        server.shutdown()
+        server.server_close()
+
+
+def test_server_bivariate_prune_endpoint() -> None:
+    server = ThreadingHTTPServer(("127.0.0.1", 0), WorkbenchRequestHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        with open("examples/adversarial_candidate_46876.json", encoding="utf-8") as f:
+            game_data = json.load(f)
+        payload_bytes = json.dumps(
+            {"game": game_data, "max_evaluations": 10, "min_width": "1/4"}
+        ).encode()
+        req = urllib.request.Request(
+            f"{base_url}/api/bivariate-prune",
+            data=payload_bytes,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode())
+            assert data["schema"] == "uniform.bivariate-exclusion-certificate/v1"
+            assert "boxes_evaluated" in data
     finally:
         server.shutdown()
         server.server_close()

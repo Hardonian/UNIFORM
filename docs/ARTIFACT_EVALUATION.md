@@ -20,6 +20,9 @@ Success produces `audit_certificate.json` with verdict `SCOPED_RELEASE_CHECKS_PA
 | Period-2 denominator-2 minima | `grid.py` + examples | `scripts/reproduce_all.py` | Exact minimum over 6,561 enumerated profiles only |
 | Three-player eliminant roots | `elimination.py` | `uniform eliminate examples/three_player_mesh.json` | Necessary interior candidate coordinates; back-substitution still required |
 | Four-player reduction | `elimination.py` | `uniform eliminate examples/adversarial_candidate_46876.json` | Bivariate necessary conditions; existence is undetermined |
+| 2D Bivariate interval root exclusion | `bivariate.py` + certificate | `uniform bivariate-prune examples/adversarial_candidate_46876.json` | Exact rational box branch-and-prune interval certificate |
+| High-period screening ($P=3, 4$) | `rust-scanner` + output | `uniform-scan --audit-game ... --period 3/4` | Minimum regret $\ge 1.0000$ across $5.3 \times 10^5$ and $4.3 \times 10^7$ profiles |
+| Machine-checked Indifference Principle | `lean/Uniform/Indifference.lean` | `cd lean && lake build` | Payoff Affine Decomposition and Indifference proved without sorry |
 | Solver SAT witness | stamped artifact + model checker | `uniform solve-campaign ...` | Rational assignment passed exact re-evaluation |
 | Solver UNSAT | stamped artifact | same | Solver result for the exact bounded query; native proof not semantically checked here |
 | Farkas contradiction | `proofs.py` | `uniform proof-check FILE --type farkas` | Exact independent linear infeasibility check |
