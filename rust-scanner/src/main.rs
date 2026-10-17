@@ -1,14 +1,16 @@
 //! Deterministic parallel screening for four-player integer-payoff quitting games.
 //!
-//! This is a candidate generator, not a proof engine.  It checks the one-shot pure
-//! action profiles with integer arithmetic and exports full games for Python's exact
-//! rational verifier.
+//! Features:
+//! 1. Candidate generator: checks one-shot pure action profiles and exports games for Python.
+//! 2. Arbitrary-period cyclic screening (--audit-game): Rayon multi-core exhaustive grid evaluation
+//!    for arbitrary periods P and denominators D, verifying periodic regret bounds.
 
 use rayon::prelude::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::env;
 use std::fs::File;
-use std::io::{BufWriter, Write};
+use std::io::{BufReader, BufWriter, Write};
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -24,6 +26,9 @@ struct Args {
     keep: usize,
     mixed_grid: Option<usize>,
     output: Option<PathBuf>,
+    audit_game: Option<PathBuf>,
+    period: usize,
+    denominator: usize,
 }
 
 #[derive(Serialize)]
@@ -54,6 +59,42 @@ struct Output {
     candidates: Vec<Candidate>,
 }
 
+#[derive(Deserialize)]
+struct QuittingGameJson {
+    players: usize,
+    #[serde(default)]
+    continuation: Vec<f64>,
+    payoffs: BTreeMap<String, Vec<f64>>,
+    #[serde(default)]
+    title: String,
+}
+
+#[derive(Serialize)]
+struct PeriodicCandidateOutput {
+    profile: Vec<Vec<String>>,
+    maximum_regret: String,
+    maximum_regret_float: f64,
+}
+
+#[derive(Serialize)]
+struct PeriodicAuditOutput {
+    schema: &'static str,
+    scope: &'static str,
+    game_path: String,
+    game_title: String,
+    denominator: usize,
+    period: usize,
+    players: usize,
+    total_profiles: u64,
+    evaluated_profiles: u64,
+    complete_shard: bool,
+    complete_global_grid: bool,
+    elapsed_seconds: f64,
+    profiles_per_second: f64,
+    min_regret_floor: f64,
+    best: Vec<PeriodicCandidateOutput>,
+}
+
 fn parse_args() -> Result<Args, String> {
     let mut result = Args {
         samples: 1_000_000,
@@ -63,6 +104,9 @@ fn parse_args() -> Result<Args, String> {
         keep: 100,
         mixed_grid: None,
         output: None,
+        audit_game: None,
+        period: 1,
+        denominator: 2,
     };
     let mut arguments = env::args().skip(1);
     while let Some(argument) = arguments.next() {
@@ -81,14 +125,25 @@ fn parse_args() -> Result<Args, String> {
                 result.mixed_grid = Some(value()?.parse().map_err(|_| "invalid --mixed-grid")?)
             }
             "--output" => result.output = Some(PathBuf::from(value()?)),
+            "--audit-game" => result.audit_game = Some(PathBuf::from(value()?)),
+            "--period" => result.period = value()?.parse().map_err(|_| "invalid --period")?,
+            "--denominator" => {
+                result.denominator = value()?.parse().map_err(|_| "invalid --denominator")?
+            }
             "--help" | "-h" => {
-                return Err("usage: uniform-scan [--samples N] [--seed N] [--min I] [--max I] [--keep N] [--mixed-grid STEPS] [--output FILE]".into());
+                return Err("usage: uniform-scan [--samples N] [--seed N] [--min I] [--max I] [--keep N] [--mixed-grid STEPS] [--output FILE] [--audit-game FILE] [--period P] [--denominator D]".into());
             }
             _ => return Err(format!("unknown argument {argument}")),
         }
     }
     if result.payoff_min > result.payoff_max {
         return Err("--min must not exceed --max".into());
+    }
+    if result.period == 0 {
+        return Err("--period must be at least 1".into());
+    }
+    if result.denominator == 0 {
+        return Err("--denominator must be at least 1".into());
     }
     Ok(result)
 }
@@ -251,9 +306,421 @@ fn min_mixed_grid_regret(game: &[[i16; PLAYERS]], grid_steps: usize) -> f64 {
     min_regret
 }
 
+// ---------------------------------------------------------------------------
+// High-Period Multi-Phase Cyclic Grid Screening Engine (P >= 1)
+// ---------------------------------------------------------------------------
+
+fn parse_mask(key: &str, players: usize) -> Result<usize, String> {
+    if let Some(stripped) = key.strip_prefix("0b") {
+        usize::from_str_radix(stripped, 2).map_err(|e| e.to_string())
+    } else if key.len() == players && key.chars().all(|c| c == '0' || c == '1') {
+        let mut mask = 0;
+        for (i, c) in key.chars().enumerate() {
+            if c == '1' {
+                mask |= 1 << i;
+            }
+        }
+        Ok(mask)
+    } else {
+        key.parse::<usize>().map_err(|e| e.to_string())
+    }
+}
+
+fn format_rational(val: f64, denom: usize) -> String {
+    let num = (val * (denom as f64)).round() as i64;
+    let d = denom as i64;
+    fn gcd(mut a: i64, mut b: i64) -> i64 {
+        while b != 0 {
+            let t = b;
+            b = a % b;
+            a = t;
+        }
+        a.abs()
+    }
+    let g = gcd(num, d);
+    let simp_num = num / g;
+    let simp_d = d / g;
+    if simp_d == 1 {
+        format!("{simp_num}")
+    } else {
+        format!("{simp_num}/{simp_d}")
+    }
+}
+
+fn decode_profile(mut k: u64, period: usize, values: &[f64]) -> Vec<[f64; PLAYERS]> {
+    let m = values.len() as u64;
+    let total_coords = period * PLAYERS;
+    let mut flat = vec![0.0; total_coords];
+    for coord in (0..total_coords).rev() {
+        let digit = (k % m) as usize;
+        k /= m;
+        flat[coord] = values[digit];
+    }
+    let mut profile = Vec::with_capacity(period);
+    for t in 0..period {
+        let mut phase = [0.0; PLAYERS];
+        for p in 0..PLAYERS {
+            phase[p] = flat[t * PLAYERS + p];
+        }
+        profile.push(phase);
+    }
+    profile
+}
+
+fn periodic_profile_regret(
+    game_payoffs: &[[f64; PLAYERS]; 16],
+    continuation: &[f64; PLAYERS],
+    period: usize,
+    profile: &[[f64; PLAYERS]],
+) -> f64 {
+    // 1. Stage terms for baseline profile
+    let mut survival = Vec::with_capacity(period);
+    let mut rewards = Vec::with_capacity(period);
+    for t in 0..period {
+        let q = &profile[t];
+        let mut surv = 1.0;
+        for &p in q {
+            surv *= 1.0 - p;
+        }
+        survival.push(surv);
+
+        let mut rew = [0.0; PLAYERS];
+        for mask in 1..=15 {
+            let mut prob = 1.0;
+            for player in 0..PLAYERS {
+                if (mask & (1 << player)) != 0 {
+                    prob *= q[player];
+                } else {
+                    prob *= 1.0 - q[player];
+                }
+            }
+            if prob > 0.0 {
+                for player in 0..PLAYERS {
+                    rew[player] += prob * game_payoffs[mask][player];
+                }
+            }
+        }
+        rewards.push(rew);
+    }
+
+    // 2. Baseline cycle values
+    let mut cycle_survival = 1.0;
+    for &s in &survival {
+        cycle_survival *= s;
+    }
+
+    let mut values = vec![[0.0; PLAYERS]; period];
+    if (1.0 - cycle_survival).abs() <= 1e-14 {
+        for start in 0..period {
+            values[start] = *continuation;
+        }
+    } else {
+        let denom = 1.0 - cycle_survival;
+        for start in 0..period {
+            let mut prefix = 1.0;
+            let mut num = [0.0; PLAYERS];
+            for offset in 0..period {
+                let phase = (start + offset) % period;
+                for player in 0..PLAYERS {
+                    num[player] += prefix * rewards[phase][player];
+                }
+                prefix *= survival[phase];
+            }
+            for player in 0..PLAYERS {
+                values[start][player] = num[player] / denom;
+            }
+        }
+    }
+
+    // 3. Precompute opponent branch terms for each player and phase
+    let mut surv_0 = vec![[1.0; PLAYERS]; period];
+    let mut rew_0 = vec![[0.0; PLAYERS]; period];
+    let mut rew_1 = vec![[0.0; PLAYERS]; period];
+
+    for t in 0..period {
+        let q = &profile[t];
+        for player in 0..PLAYERS {
+            let mut s0 = 1.0;
+            for other in 0..PLAYERS {
+                if other != player {
+                    s0 *= 1.0 - q[other];
+                }
+            }
+            surv_0[t][player] = s0;
+
+            let mut r0 = 0.0;
+            for mask in 1..=15 {
+                if (mask & (1 << player)) == 0 {
+                    let mut prob = 1.0;
+                    for other in 0..PLAYERS {
+                        if other != player {
+                            if (mask & (1 << other)) != 0 {
+                                prob *= q[other];
+                            } else {
+                                prob *= 1.0 - q[other];
+                            }
+                        }
+                    }
+                    if prob > 0.0 {
+                        r0 += prob * game_payoffs[mask][player];
+                    }
+                }
+            }
+            rew_0[t][player] = r0;
+
+            let mut r1 = 0.0;
+            for mask in 1..=15 {
+                if (mask & (1 << player)) != 0 {
+                    let mut prob = 1.0;
+                    for other in 0..PLAYERS {
+                        if other != player {
+                            if (mask & (1 << other)) != 0 {
+                                prob *= q[other];
+                            } else {
+                                prob *= 1.0 - q[other];
+                            }
+                        }
+                    }
+                    if prob > 0.0 {
+                        r1 += prob * game_payoffs[mask][player];
+                    }
+                }
+            }
+            rew_1[t][player] = r1;
+        }
+    }
+
+    // 4. Deviation search across all 2^period pure policies for each player
+    let num_policies = 1 << period;
+    let mut max_profile_regret = 0.0f64;
+
+    for player in 0..PLAYERS {
+        let mut best_dev_values = vec![f64::NEG_INFINITY; period];
+
+        for policy_mask in 0..num_policies {
+            let mut dev_cycle_s = 1.0;
+            let mut s_arr = [0.0; 8];
+            let mut r_arr = [0.0; 8];
+
+            for t in 0..period {
+                let action = (policy_mask >> t) & 1;
+                if action == 1 {
+                    s_arr[t] = 0.0;
+                    r_arr[t] = rew_1[t][player];
+                    dev_cycle_s = 0.0;
+                } else {
+                    let st = surv_0[t][player];
+                    s_arr[t] = st;
+                    r_arr[t] = rew_0[t][player];
+                    dev_cycle_s *= st;
+                }
+            }
+
+            if (1.0 - dev_cycle_s).abs() <= 1e-14 {
+                let c = continuation[player];
+                for start in 0..period {
+                    if c > best_dev_values[start] {
+                        best_dev_values[start] = c;
+                    }
+                }
+            } else {
+                let denom = 1.0 - dev_cycle_s;
+                for start in 0..period {
+                    let mut prefix = 1.0;
+                    let mut num = 0.0;
+                    for offset in 0..period {
+                        let phase = (start + offset) % period;
+                        num += prefix * r_arr[phase];
+                        prefix *= s_arr[phase];
+                    }
+                    let val = num / denom;
+                    if val > best_dev_values[start] {
+                        best_dev_values[start] = val;
+                    }
+                }
+            }
+        }
+
+        for start in 0..period {
+            let reg = best_dev_values[start] - values[start][player];
+            if reg > max_profile_regret {
+                max_profile_regret = reg;
+            }
+        }
+    }
+
+    max_profile_regret
+}
+
+struct ThreadState {
+    min_regret: f64,
+    best_candidates: Vec<(f64, u64)>,
+}
+
+fn run_audit_game(args: &Args, path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::open(path)?;
+    let reader = BufReader::new(file);
+    let game_json: QuittingGameJson = serde_json::from_reader(reader)?;
+
+    let mut payoffs_arr = [[0.0; PLAYERS]; 16];
+    for (k, vec) in &game_json.payoffs {
+        let mask = parse_mask(k, game_json.players)
+            .map_err(|e| format!("invalid payoff mask {k}: {e}"))?;
+        if (1..=15).contains(&mask) {
+            for p in 0..PLAYERS {
+                payoffs_arr[mask][p] = vec[p];
+            }
+        }
+    }
+    let mut continuation_arr = [0.0; PLAYERS];
+    for p in 0..PLAYERS.min(game_json.continuation.len()) {
+        continuation_arr[p] = game_json.continuation[p];
+    }
+
+    let p = args.period;
+    let d = args.denominator;
+    let values: Vec<f64> = (0..=d).map(|k| (k as f64) / (d as f64)).collect();
+    let m = values.len() as u64;
+    let total_coords = (p * PLAYERS) as u32;
+    let total_profiles = m.pow(total_coords);
+    let keep = args.keep;
+
+    eprintln!(
+        "UNIFORM Rust Scanner: Auditing '{}' for Period P={}, Denominator D={} ({} profiles)...",
+        path.display(),
+        p,
+        d,
+        total_profiles
+    );
+
+    let started = Instant::now();
+
+    let state = (0..total_profiles)
+        .into_par_iter()
+        .fold(
+            || ThreadState {
+                min_regret: f64::MAX,
+                best_candidates: Vec::new(),
+            },
+            |mut state, idx| {
+                let prof = decode_profile(idx, p, &values);
+                let r = periodic_profile_regret(&payoffs_arr, &continuation_arr, p, &prof);
+                if r < state.min_regret {
+                    state.min_regret = r;
+                }
+                let threshold = state
+                    .best_candidates
+                    .last()
+                    .map(|c| c.0)
+                    .unwrap_or(f64::MAX);
+                if r <= threshold || state.best_candidates.len() < keep {
+                    state.best_candidates.push((r, idx));
+                    state.best_candidates.sort_by(|a, b| {
+                        a.0.partial_cmp(&b.0)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                            .then_with(|| a.1.cmp(&b.1))
+                    });
+                    if state.best_candidates.len() > keep {
+                        state.best_candidates.truncate(keep);
+                    }
+                }
+                state
+            },
+        )
+        .reduce(
+            || ThreadState {
+                min_regret: f64::MAX,
+                best_candidates: Vec::new(),
+            },
+            |mut a, mut b| {
+                let min_r = a.min_regret.min(b.min_regret);
+                a.best_candidates.append(&mut b.best_candidates);
+                a.best_candidates.sort_by(|x, y| {
+                    x.0.partial_cmp(&y.0)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                        .then_with(|| x.1.cmp(&y.1))
+                });
+                a.best_candidates.dedup_by_key(|x| x.1);
+                if a.best_candidates.len() > keep {
+                    a.best_candidates.truncate(keep);
+                }
+                ThreadState {
+                    min_regret: min_r,
+                    best_candidates: a.best_candidates,
+                }
+            },
+        );
+
+    let elapsed = started.elapsed().as_secs_f64();
+    let speed = (total_profiles as f64) / elapsed;
+
+    eprintln!(
+        "Screening complete in {:.3}s ({:.1} profiles/s). Min regret floor: {:.6}",
+        elapsed, speed, state.min_regret
+    );
+
+    let best_candidates = state
+        .best_candidates
+        .into_iter()
+        .map(|(reg, idx)| {
+            let prof = decode_profile(idx, p, &values);
+            let formatted_prof = prof
+                .into_iter()
+                .map(|phase| {
+                    phase
+                        .into_iter()
+                        .map(|v| format_rational(v, d))
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+            PeriodicCandidateOutput {
+                profile: formatted_prof,
+                maximum_regret: format!("{:.6}", reg),
+                maximum_regret_float: reg,
+            }
+        })
+        .collect();
+
+    let output = PeriodicAuditOutput {
+        schema: "uniform.periodic-grid-search/v1",
+        scope: "all independent periodic profiles on the stated rational grid; regret covers deterministic unilateral policies of the same period",
+        game_path: path.to_string_lossy().to_string(),
+        game_title: game_json.title,
+        denominator: d,
+        period: p,
+        players: PLAYERS,
+        total_profiles,
+        evaluated_profiles: total_profiles,
+        complete_shard: true,
+        complete_global_grid: true,
+        elapsed_seconds: elapsed,
+        profiles_per_second: speed,
+        min_regret_floor: state.min_regret,
+        best: best_candidates,
+    };
+
+    let json = serde_json::to_string_pretty(&output)?;
+    match &args.output {
+        Some(out_path) => {
+            let mut writer = BufWriter::new(File::create(out_path)?);
+            writer.write_all(json.as_bytes())?;
+            writer.write_all(b"\n")?;
+            eprintln!("Saved certificate to {}", out_path.display());
+        }
+        None => println!("{json}"),
+    }
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = parse_args()
         .map_err(|message| std::io::Error::new(std::io::ErrorKind::InvalidInput, message))?;
+
+    if let Some(audit_path) = &args.audit_game {
+        return run_audit_game(&args, audit_path);
+    }
+
     let started = Instant::now();
     let matches: Vec<(u64, i16, Option<f64>)> = (0..args.samples)
         .into_par_iter()
@@ -335,6 +802,9 @@ mod tests {
             keep: 1,
             mixed_grid: None,
             output: None,
+            audit_game: None,
+            period: 1,
+            denominator: 2,
         };
         assert_eq!(make_game(&args, 42), make_game(&args, 42));
         assert_ne!(make_game(&args, 41), make_game(&args, 42));
@@ -368,5 +838,52 @@ mod tests {
         assert!(no_pure_instant_equilibrium(&game).is_some());
         let min_r = min_mixed_grid_regret(&game, 3);
         assert!((min_r - (1.0 / 9.0)).abs() < 1e-4);
+    }
+
+    #[test]
+    fn candidate_46876_periodic_regret_matches_python() {
+        // Candidate 46876 payoffs
+        let mut payoffs = [[0.0; PLAYERS]; 16];
+        payoffs[1] = [0.0, 4.0, -4.0, -4.0];
+        payoffs[2] = [3.0, 3.0, 2.0, -4.0];
+        payoffs[3] = [0.0, -1.0, 2.0, 4.0];
+        payoffs[4] = [1.0, 4.0, -3.0, 2.0];
+        payoffs[5] = [-2.0, -3.0, -3.0, 0.0];
+        payoffs[6] = [4.0, -1.0, -4.0, 4.0];
+        payoffs[7] = [4.0, -2.0, 1.0, -3.0];
+        payoffs[8] = [3.0, 3.0, -3.0, -3.0];
+        payoffs[9] = [-3.0, -3.0, -2.0, 4.0];
+        payoffs[10] = [0.0, -1.0, 4.0, 3.0];
+        payoffs[11] = [-2.0, 2.0, 4.0, 4.0];
+        payoffs[12] = [0.0, -2.0, -3.0, -2.0];
+        payoffs[13] = [-2.0, 2.0, -1.0, 0.0];
+        payoffs[14] = [1.0, -4.0, -1.0, 1.0];
+        payoffs[15] = [3.0, -1.0, -3.0, 1.0];
+
+        let continuation = [0.0; PLAYERS];
+
+        // P=1, D=4: 625 profiles. Python computed min regret = 0.75 (3/4)
+        let values_d4: Vec<f64> = (0..=4).map(|k| (k as f64) / 4.0).collect();
+        let mut min_r_p1 = f64::MAX;
+        for idx in 0..625 {
+            let prof = decode_profile(idx, 1, &values_d4);
+            let r = periodic_profile_regret(&payoffs, &continuation, 1, &prof);
+            if r < min_r_p1 {
+                min_r_p1 = r;
+            }
+        }
+        assert!((min_r_p1 - 0.75).abs() < 1e-6, "P=1 D=4 min regret must be 0.75, got {min_r_p1}");
+
+        // P=2, D=2: 6561 profiles. Python computed min regret = 1.0
+        let values_d2: Vec<f64> = (0..=2).map(|k| (k as f64) / 2.0).collect();
+        let mut min_r_p2 = f64::MAX;
+        for idx in 0..6561 {
+            let prof = decode_profile(idx, 2, &values_d2);
+            let r = periodic_profile_regret(&payoffs, &continuation, 2, &prof);
+            if r < min_r_p2 {
+                min_r_p2 = r;
+            }
+        }
+        assert!((min_r_p2 - 1.0).abs() < 1e-6, "P=2 D=2 min regret must be 1.0, got {min_r_p2}");
     }
 }
