@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/algebraic-elimination-v1.schema.json",
+  "title": "UNIFORM exact algebraic elimination certificate",
+  "type": "object",
+  "required": [
+    "schema",
+    "players",
+    "characteristic_polynomial_coefficients",
+    "isolated_interior_roots",
+    "stationary_equilibrium_possible",
+    "summary"
+  ],
+  "properties": {
+    "schema": {"const": "uniform.algebraic-elimination/v1"},
+    "players": {"type": "integer", "minimum": 1},
+    "characteristic_polynomial_coefficients": {
+      "type": ["array", "null"],
+      "items": {"type": "string"}
+    },
+    "isolated_interior_roots": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {"type": "string"},
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "stationary_equilibrium_possible": {"type": "boolean"},
+    "summary": {"type": "string"}
+  },
+  "additionalProperties": false
+}

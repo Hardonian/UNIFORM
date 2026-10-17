@@ -82,6 +82,7 @@
           <div class="meta-row"><span>Python</span><strong>3.13 / uv</strong></div>
           <div class="meta-row"><span>Rust Scanner</span><strong>SplitMix64</strong></div>
           <div class="meta-row"><span>Lean 4</span><strong>4.35.0 (0 sorry)</strong></div>
+          <div class="meta-row"><span>Schemas</span><strong id="meta-schemas-badge">11 Draft 2020-12</strong></div>
         </div>
       </div>
     </aside>
@@ -191,12 +192,14 @@
               <label for="select-preset-game" class="label-inline">Preset Game:</label>
               <select id="select-preset-game" class="form-select">
                 <option value="solan_vieille_2002">Solan–Vieille 2002 (4 Players, Period-2 Algebraic)</option>
+                <option value="candidate_46876">Adversarial Candidate 46876 (4 Players, Regret &ge; 1 everywhere)</option>
                 <option value="candidate_164952">Screened Candidate 164952 (4 Players, Margin +4)</option>
                 <option value="three_player_mesh">Three-Player Mesh Game (3 Players)</option>
                 <option value="two_player_cycle">Two-Player Matching Quitter (2 Players)</option>
                 <option value="one_player_zero">One-Player Zero Game (1 Player)</option>
                 <option value="custom">Custom Payoff JSON...</option>
               </select>
+              <button type="button" id="btn-quitting-run-elim" class="btn btn-secondary btn-sm" title="Run Exact Sylvester Resultant Elimination on this game">Run Elimination</button>
             </div>
           </div>
 
@@ -371,6 +374,63 @@
               <div class="alert-box alert-success mt-3">
                 <span class="alert-icon">✓</span>
                 <span><strong>Mathematical Verification:</strong> All 8 deviation regrets reduce identically to zero modulo the defining polynomial. Exact equilibrium in the 2-period scope established without floating approximation.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exact Sylvester Resultant Elimination Laboratory -->
+          <div class="card-panel mt-4">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">Exact Sylvester Resultant Elimination Laboratory</h3>
+                <p class="panel-subtitle">Multi-player indifference polynomial resultant elimination over $\mathbb{Q}$ bypassing black-box SMT-CAD timeouts.</p>
+              </div>
+              <div class="header-actions">
+                <label for="select-elim-target" class="label-inline">Target Game:</label>
+                <select id="select-elim-target" class="form-select">
+                  <option value="current">Current Studio Game</option>
+                  <option value="three_player_mesh">Three-Player Mesh Game (3P, Closed-form Eliminant)</option>
+                  <option value="candidate_46876">Adversarial Candidate 46876 (4P, Bivariate Reduction)</option>
+                  <option value="solan_vieille_2002">Solan–Vieille 2002 (4P, Bivariate Reduction)</option>
+                  <option value="two_player_cycle">Two-Player Matching Quitter (2P, Independent)</option>
+                </select>
+                <button type="button" id="btn-run-elimination" class="btn btn-primary btn-sm">Compute Sylvester Resultant</button>
+              </div>
+            </div>
+
+            <div class="metrics-row mt-3">
+              <div class="stat-box">
+                <span class="stat-label">Characteristic Degree</span>
+                <span class="stat-val text-accent" id="stat-elim-degree">--</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Isolated Interior Roots</span>
+                <span class="stat-val" id="stat-elim-roots">--</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Elimination Time</span>
+                <span class="stat-val" id="stat-elim-time">--</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Stationary Equilibrium Status</span>
+                <span class="stat-val" id="stat-elim-verdict">Ready</span>
+              </div>
+            </div>
+
+            <div class="elim-output-box mt-3" id="elim-output-box">
+              <div id="elim-summary-text" class="text-secondary mb-2">Select a game and click &apos;Compute Sylvester Resultant&apos; to eliminate indifference equations over $\mathbb{Q}$.</div>
+              <div class="table-responsive" id="elim-roots-table-wrapper" style="display: none;">
+                <table class="data-table">
+                  <thead>
+                    <tr><th>Root #</th><th>Exact Isolating Interval $[a, b] \subset [0, 1]$</th><th>Decimal Value</th><th>Sturm Sign Check</th></tr>
+                  </thead>
+                  <tbody id="tbody-elim-roots">
+                    <!-- Populated by JS -->
+                  </tbody>
+                </table>
+              </div>
+              <div id="elim-poly-display" class="code-preview-box mt-2" style="display: none; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; overflow-x: auto;">
+                <!-- Characteristic polynomial coefficients or bivariate reduction details -->
               </div>
             </div>
           </div>

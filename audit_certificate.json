@@ -1,0 +1,70 @@
+{
+  "title": "UNIFORM Scientific Replication & Mathematical Audit Certificate",
+  "timestamp_epoch": 1792204836.4162047,
+  "total_audit_seconds": 8.5988,
+  "schemas": {
+    "total_schemas": 11,
+    "hashes": {
+      "absorption-path-v1.schema.json": "4cedfa3c7ab43e04ae953048c2c85e8b93411d6c28f7297db248bdccb17d0034",
+      "algebraic-elimination-v1.schema.json": "d12a759be0c21318ddc5f717568c38d9e3d4b5a944b3c1eff9c2345f6b1e70f3",
+      "algebraic-periodic-certificate-v1.schema.json": "06e884d7de2176dbc737d4641139e79685f374de663744fd66943edbf5c8b225",
+      "algebraic-periodic-profile-v1.schema.json": "0542d7d8806df0cc486d169362b172ef7d31a16e39bc37236a43c764328d8e15",
+      "essential-aps-input-v1.schema.json": "142bcd864a9d008bc02d8c4f03bf163a87b0aa56a37ed7ca63abb94eeeba8d26",
+      "essential-aps-polytopes-v1.schema.json": "2fccefb04803810eaf56d41a7dff07b6cc3c8c1c2e8ddc0fbb1909a1f36f8c27",
+      "periodic-grid-search-v1.schema.json": "b1dc6bba58b6dc1934179d217bd741c4638d378b51cb9cb469766f55466ca4db",
+      "quitting-game-v1.schema.json": "69a3d0f1aa897bfd0b36235ec689606b2ad9641d43bd8d8f1ae57ebf1919510e",
+      "solver-artifact-v1.schema.json": "d607529bb4c4db5f2da4e915becf1ab3b213591755d66e868b52b2f3d3f12f22",
+      "stochastic-game-v1.schema.json": "bd96072e61edb9147f593549d9f1883127d2b23073646fc1f3016f32af572468",
+      "stochastic-model-check-v1.schema.json": "220e2e338e0410d98dcb95a275b3696961f4ff3c6750d091c812abf5ab71f637"
+    },
+    "status": "VERIFIED"
+  },
+  "lean4_proofs": {
+    "verified_files": 6,
+    "sorry_debt": 0,
+    "axioms_added": 0,
+    "file_hashes": {
+      "AdversarialCandidate46876.lean": "d8a0ee2e9c57e8a88856c8f31abaad95c8015aa286eeb3d8f9bd3b3b5c17180b",
+      "Certificate.lean": "a75b3a43efde73b258fc3c04f5ea6c79e48c02540976893c95ac08804ea307cd",
+      "FourPlayerCandidate.lean": "27445621c4fa7ec08334e54c4efa62e751bfb185d99540dcffc952432a5e365e",
+      "OnePlayerZero.lean": "6ffe10ba8ef86cef96482de7e6a2ba1aaf5c81f4d53e98aba78cc56c279fc764",
+      "ThreePlayerMesh.lean": "5296b6e3fc96915706d7a874c740566951b676d6cd6b7262a70fbe9f4e6c4955",
+      "TwoPlayerCycle.lean": "e21ef807be60a4d15acdf4a843c5822d35081265bd2f1593cd3e79c8452158dc"
+    },
+    "status": "VERIFIED_0_SORRY"
+  },
+  "symbolic_elimination": {
+    "three_player_mesh": {
+      "characteristic_polynomial_degree": 12,
+      "isolated_interior_roots": 4,
+      "elapsed_seconds": 0.05106,
+      "status": "EXACT_ROOTS_ISOLATED"
+    },
+    "solan_vieille_2002": {
+      "bivariate_degrees": [
+        23,
+        27
+      ],
+      "elapsed_seconds": 1.15884,
+      "status": "BIVARIATE_SYSTEM_DERIVED"
+    },
+    "adversarial_candidate_46876": {
+      "bivariate_degrees": [
+        26,
+        28
+      ],
+      "elapsed_seconds": 1.70143,
+      "status": "BIVARIATE_SYSTEM_DERIVED"
+    }
+  },
+  "cyclic_grid_resistance": {
+    "solan_vieille_alt_cyclic_regret": "1/5",
+    "solan_vieille_floor": "4/21",
+    "candidate_46876_sample_min_regret": "136/105",
+    "candidate_46876_guaranteed_floor": "1",
+    "cyclic_resistance_ratio": "> 5.25x",
+    "status": "VERIFIED_HIGH_RESISTANCE"
+  },
+  "unit_tests": "54 passed in 4.52s",
+  "verdict": "UNCONDITIONALLY_VERIFIED_AND_REPRODUCIBLE"
+}

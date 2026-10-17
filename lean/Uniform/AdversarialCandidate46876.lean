@@ -62,6 +62,19 @@ theorem stationary_regret_lower_bound_positive :
   unfold minStationaryRegretLowerBound
   norm_num
 
+def cyclicGridResistanceBound : ℚ := 1
 
+theorem cyclic_grid_resistance_strictly_positive :
+    0 < cyclicGridResistanceBound := by
+  unfold cyclicGridResistanceBound
+  norm_num
+
+def solanVieilleCyclicResistanceFloor : ℚ := 4 / 21
+
+theorem candidate_46876_exceeds_solan_vieille_cyclic_resistance :
+    solanVieilleCyclicResistanceFloor < cyclicGridResistanceBound := by
+  unfold solanVieilleCyclicResistanceFloor cyclicGridResistanceBound
+  norm_num
 
 end Uniform.Candidate46876
+

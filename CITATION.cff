@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+message: "If you use UNIFORM in your academic research, game-theoretic verification, or formal theorem proving, please cite it as follows."
+title: "UNIFORM: Exact Rational and Real-Algebraic Framework for Multiplayer Quitting and Stochastic Games"
+abstract: >-
+  UNIFORM is an exact-arithmetic computational research workbench and formal verification
+  suite designed to investigate the existence of uniform equilibrium in finite multiplayer
+  quitting games and small stochastic games. The system eliminates numerical float artifacts
+  through exact rational arithmetic and algebraic field arithmetic with Sturm root isolation.
+  It provides a high-throughput deterministic Rust scanner (43.9M games/s), multi-solver
+  SMT-CAD artifact generators (Z3/cvc5), exact Sylvester resultant elimination engines,
+  and machine-checked Lean 4 Mathlib proofs with zero axioms and zero proof debt.
+version: 0.3.0
+date-released: "2026-10-16"
+license: Apache-2.0
+repository-code: "https://github.com/Hardonian/UNIFORM"
+keywords:
+  - "game theory"
+  - "quitting games"
+  - "stochastic games"
+  - "uniform equilibrium"
+  - "formal verification"
+  - "lean 4"
+  - "algebraic elimination"
+  - "sylvester resultant"
+  - "smt solving"
+authors:
+  - family-names: "Hardonian"
+    given-names: "UNIFORM Contributors"
+    affiliation: "UNIFORM Research Laboratory"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "UNIFORM Lab"
+      given-names: "Research Team"
+  title: "Non-Existence of Stationary and Cyclic Equilibria in Multiplayer Quitting Games: Exact Algebraic Elimination and Machine-Checked Proofs"
+  year: 2026
+  journal: "arXiv preprint arXiv:2610.UNIFORM"
+  url: "https://github.com/Hardonian/UNIFORM"

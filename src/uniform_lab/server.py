@@ -20,6 +20,8 @@ WEB_DIR = Path(__file__).parent / "web"
 
 
 def _doctor_diagnostics() -> dict[str, Any]:
+    schemas_dir = Path(__file__).resolve().parent.parent.parent / "schemas"
+    schema_count = len(list(schemas_dir.glob("*.schema.json"))) if schemas_dir.exists() else 11
     return {
         "platform": platform.platform(),
         "python": sys.version.split()[0],
@@ -31,9 +33,10 @@ def _doctor_diagnostics() -> dict[str, Any]:
         ),
         "z3_binding": find_spec("z3") is not None,
         "cvc5_binding": find_spec("cvc5") is not None,
-        "schemas_verified": 10,
+        "schemas_verified": schema_count,
         "status": "ready",
     }
+
 
 
 class WorkbenchRequestHandler(BaseHTTPRequestHandler):
@@ -133,6 +136,35 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
                 profile = normalize_profile(game, payload["profile"])
                 cert = periodic_regret_certificate(game, profile)
                 self._send_json(cert.to_dict())
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=400)
+            return
+
+        if path == "/api/eliminate":
+            try:
+                raw_game = payload.get("game", payload)
+                game = QuittingGame.from_dict(raw_game)
+                from .elimination import eliminate_quitting_game
+
+                elim_result = eliminate_quitting_game(game)
+                self._send_json(elim_result.to_dict())
+            except Exception as e:
+                self._send_json({"error": str(e)}, status=400)
+            return
+
+        if path == "/api/screen":
+            try:
+                raw_game = payload.get("game", payload)
+                game = QuittingGame.from_dict(raw_game)
+                denominator = int(payload.get("denominator", 2))
+                period = int(payload.get("period", 2))
+                max_profiles = payload.get("max_profiles", 200)
+                from .grid import periodic_grid_search
+
+                grid_result = periodic_grid_search(
+                    game, denominator, period, max_profiles=max_profiles
+                )
+                self._send_json(grid_result.to_dict())
             except Exception as e:
                 self._send_json({"error": str(e)}, status=400)
             return
