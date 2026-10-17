@@ -18,8 +18,9 @@ The **UNIFORM** project resolves these limitations by establishing:
 3. **Discovery of Candidate 46876**: An adversarial four-player quitting game exhibiting an exact global stationary regret lower bound of **$3/4 = 0.75$** across the entire strategy space—**7.5× higher** equilibrium resistance than the historical Solan–Vieille benchmark ($0.10$).
 4. **Two-Period Cyclic Grid Resistance**: Comprehensive evaluation across all 6,561 profiles on $\{0, 1/2, 1\}^8$ demonstrates that Candidate 46876 maintains a minimum regret of **$\ge 1.0000$**, whereas Solan–Vieille collapses to **$4/21 \approx 0.1904$** (5.25× higher resistance to alternating cyclic coordination).
 5. **Exact Symbolic Resultant Elimination Engine**: An exact pseudo-remainder resultant elimination engine (`uniform eliminate`) exploiting the Conditional Termination Indifference Principle to solve 3-player characteristic polynomials in $0.009$s and reduce 4-player games to bivariate systems in $<1$s, bypassing SMT-CAD timeouts.
-6. **Machine-Checked Formal Verification in Lean 4**: Formal proofs in Lean 4 with Mathlib verifying regret transitivity, backward induction, concrete certificate lemmas, and Candidate 46876 pure-action instability (`candidate_46876_no_pure_equilibrium`) across 3,144 compiled jobs with **zero axioms or `sorry` tokens**.
+6. **Machine-Checked Formal Verification in Lean 4**: Formal proofs in Lean 4 with Mathlib verifying regret transitivity, backward induction, concrete certificate lemmas, and Candidate 46876 pure-action instability (`candidate_46876_no_pure_equilibrium`) across 3,138 compiled jobs with **zero axioms or `sorry` tokens**.
 7. **Enterprise Web Workbench**: A zero-dependency local web application (`uniform serve`) providing 10 interactive suites, 2D/3D Canvas polytope visualizers, and REST endpoints.
+8. **1-Click Scientific Replication & Artifact Evaluation**: Comprehensive reproduction manifesto ([`docs/REPRODUCIBILITY.md`](../docs/REPRODUCIBILITY.md)), reviewer checklist ([`docs/ARTIFACT_EVALUATION.md`](../docs/ARTIFACT_EVALUATION.md)), universal audit runner ([`scripts/reproduce_all.py`](../scripts/reproduce_all.py)), and hermetic Docker container.
 
 ---
 
@@ -44,13 +45,13 @@ Running this engine across 50,000 games discovered **Candidate 46876** ([`exampl
                                       v
 +-------------------------------------------------------------------------------+
 | Exact Symbolic Elimination Engine (Sylvester Resultant & Pseudo-Remainders)  |
-| 3-Player Univariates in 0.009s | 4-Player Bivariates in <1.0s                 |
+| 3-Player Univariates in 0.035s | 4-Player Bivariates in <1.8s                 |
 +-------------------------------------------------------------------------------+
                                       |
                                       v
 +-------------------------------------------------------------------------------+
 | Formal Machine-Checked Verification (Lean 4 + Mathlib 4.35)                   |
-| 3,144 Jobs Compiled Cleanly | Candidate 46876 Verified | 0 Sorry Tokens       |
+| 3,138 Jobs Compiled Cleanly | Candidate 46876 Verified | 0 Sorry Tokens       |
 +-------------------------------------------------------------------------------+
 ```
 

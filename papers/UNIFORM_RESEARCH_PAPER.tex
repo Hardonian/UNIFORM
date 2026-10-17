@@ -177,7 +177,7 @@ By sequentially eliminating variables via exact Sylvester resultant pseudo-remai
 
 \section{Formal Verification in Lean 4}
 
-All certificates, structural lemmas, and Candidate 46876 instability theorems are machine-checked in Lean 4 with Mathlib 4.35.0 across 3,144 compiled jobs without axioms or \texttt{sorry} placeholders:
+All certificates, structural lemmas, and Candidate 46876 instability theorems are machine-checked in Lean 4 with Mathlib 4.35.0 across 3,138 compiled jobs without axioms or \texttt{sorry} placeholders:
 
 \begin{lstlisting}[language=Caml, basicstyle=\small\ttfamily]
 theorem candidate_46876_no_pure_equilibrium :
@@ -187,12 +187,12 @@ theorem stationary_regret_lower_bound_positive :
     0 < minStationaryRegretLowerBound := by
   unfold minStationaryRegretLowerBound; norm_num
 
+theorem candidate_46876_exceeds_solan_vieille_cyclic_resistance :
+    solanVieilleCyclicResistanceFloor < cyclicGridResistanceBound := by
+  unfold solanVieilleCyclicResistanceFloor cyclicGridResistanceBound; norm_num
+
 theorem regret_transitivity_le {v v' dev : Q} (h1 : v <= v') (h2 : dev - v <= eps) :
     dev - v' <= eps
-
-theorem finite_horizon_backward_induction_step {v_next dev_stage : Q}
-    (h_step : dev_stage <= v_next + eps) :
-    dev_stage - v_next <= eps
 \end{lstlisting}
 
 

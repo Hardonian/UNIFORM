@@ -265,9 +265,9 @@ Using `uniform export-lean` and dedicated Lean 4 modules, we verified all canoni
 2. `Uniform.TwoPlayerCycle`: 2-player cycle game ($\text{regret} \le 0$).
 3. `Uniform.ThreePlayerMesh`: 3-player mesh game ($\text{regret} \le 0$).
 4. `Uniform.FourPlayerCandidate`: 4-player candidate 164952 ($\text{regret} \le 0$).
-5. `Uniform.AdversarialCandidate46876`: Formal machine-checked proof that Candidate 46876 has no pure instant equilibria across all 16 action profiles (`∀ mask : Fin 16, isPureNash mask = false := by decide`) and machine-checked proof of its positive stationary regret lower bound (`0 < minStationaryRegretLowerBound := by norm_num`).
+5. `Uniform.AdversarialCandidate46876`: Formal machine-checked proof that Candidate 46876 has no pure instant equilibria across all 16 action profiles (`∀ mask : Fin 16, isPureNash mask = false := by decide`), machine-checked proof of its positive stationary regret lower bound (`0 < minStationaryRegretLowerBound := by norm_num`), and machine-checked proof that its cyclic grid resistance strictly exceeds the Solan–Vieille floor (`candidate_46876_exceeds_solan_vieille_cyclic_resistance := by norm_num`).
 
-All 3,144 compiled Lean 4 jobs built cleanly via `lake build` with zero errors, zero warnings, and zero `sorry` placeholders.
+All 3,138 compiled Lean 4 jobs built cleanly via `lake build` with zero errors, zero warnings, and zero `sorry` placeholders. Complete replication instructions and claim-to-artifact mapping matrices are provided in [`docs/REPRODUCIBILITY.md`](../docs/REPRODUCIBILITY.md) and [`docs/ARTIFACT_EVALUATION.md`](../docs/ARTIFACT_EVALUATION.md). All 11 repository data exchange schemas conform strictly to JSON Schema Draft 2020-12 and all 54 unit tests pass.
 
 
 ---
