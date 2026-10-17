@@ -200,6 +200,14 @@ def _parser() -> argparse.ArgumentParser:
         "proof-check", help="independently verify an SMT proof trace or Farkas certificate"
     )
     proof_check.add_argument("proof_file")
+
+    eliminate = sub.add_parser(
+        "eliminate",
+        help="exact symbolic resultant elimination and characteristic polynomial derivation",
+    )
+    eliminate.add_argument("game")
+    eliminate.add_argument("--output")
+
     proof_check.add_argument("--type", choices=("smt", "farkas"), default="smt")
     proof_check.add_argument("--output")
     return parser
@@ -581,6 +589,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.output is None:
             print(output_text, end="")
         return 0 if result.get("valid") else 2
+    if args.command == "eliminate":
+        from .elimination import eliminate_quitting_game
+
+        game = load_quitting_game(args.game)
+        elim_result = eliminate_quitting_game(game)
+        output_text = dump_json(elim_result.to_dict(), args.output)
+        if args.output is None:
+            print(output_text, end="")
+        return 0
     raise AssertionError("unreachable")
 
 
