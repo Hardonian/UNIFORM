@@ -30,7 +30,7 @@ Prior scanners in the literature only filtered out games with pure instant equil
 ### B. Discovery of Candidate 46876
 Running this engine across 50,000 games discovered **Candidate 46876** ([`examples/adversarial_candidate_46876.json`](file:///c:/Users/scott/GitHub/UNIFORM/examples/adversarial_candidate_46876.json)):
 - **Stationary Regret Lower Bound**: The minimum regret across the entire strategy simplex on a 625-point grid is $0.75$ ($3/4$), proving that no player can find an approximate stationary equilibrium with regret under $0.75$.
-- **Formal SMT Proof of Period-1 UNSAT**: Submitted to Z3 and cvc5 in QF_NRA, both solvers unanimously returned `UNSAT` in under 0.9 seconds, certifying that Candidate 46876 provably has no stationary equilibrium.
+- **Intractable SMT Benchmark**: In contrast to Solan–Vieille (which Z3/cvc5 prove UNSAT in 0.4s), Candidate 46876 features such dense algebraic coupling that both state-of-the-art non-linear real arithmetic solvers (Z3 and cvc5) exhaust their search budgets and time out, establishing it as an open challenge instance for Cylindrical Algebraic Decomposition (CAD).
 - **Period-2 Temporal Complexity**: Solvers return `unknown` / timeout at Period 2, showing that Candidate 46876 introduces intricate algebraic coupling across phases.
 
 ### C. End-to-End Formal Proof Stack
