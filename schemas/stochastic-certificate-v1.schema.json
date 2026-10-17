@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/stochastic-certificate-v1.schema.json",
+  "title": "UNIFORM exact stochastic-game evaluation certificate",
+  "type": "object",
+  "required": ["schema", "beta", "discounted_values", "discounted_stationary_regret", "horizon", "finite_horizon_regret"],
+  "properties": {
+    "schema": {"const": "uniform.stochastic-certificate/v1"},
+    "beta": {"type": "string"},
+    "discounted_values": {"$ref": "#/$defs/matrix"},
+    "discounted_stationary_regret": {"$ref": "#/$defs/matrix"},
+    "horizon": {"type": "integer", "minimum": 1},
+    "finite_horizon_regret": {"$ref": "#/$defs/matrix"}
+  },
+  "$defs": {"matrix": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}}},
+  "additionalProperties": false
+}

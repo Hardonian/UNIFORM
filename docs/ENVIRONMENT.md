@@ -1,28 +1,9 @@
-# Reproducibility environment — 2026-10-16
+# Reference verification environment — 2026-10-16
 
-- Base commit: `48f4421c3f8632966922f202cc861a12911b7b3f`
-- Working branch: `feat/full-research-lab`
-- Host OS: Windows, PowerShell
-- CPU: AMD Ryzen AI 9 HX 370 with Radeon 890M, 12 cores / 24 logical processors
-- RAM reported by WMI: 33,949,601,792 bytes
-- GPU reported by WMI: AMD Radeon 890M Graphics; no NVIDIA device or `nvidia-smi`
-- Python: 3.12.10 system; uv-managed project interpreter selected by `uv`
-- uv: available at `C:\Users\scott\.local\bin\uv.exe`
-- Rust: rustc 1.98.1, cargo 1.98.1
-- Elan 4.2.4 and Lean/Lake 4.35.0: installed during the run; pinned Mathlib build
-  completed successfully (`lean/lake-build.log`, 3,139 jobs)
-- Z3 command-line executable: absent; optional Python binding 5.3.1 installed and tested
-- cvc5 command-line executable: absent; optional Python binding 1.4.2 installed and tested
+The release candidate was hardened on Windows with Python 3.12.10, uv 0.9.5, rustc/cargo 1.98.1, Lean 4.35.0/Lake 5.0.0, Z3 Python bindings, and cvc5 Python bindings. CI independently targets Python 3.11, 3.12, and 3.13 on Ubuntu and exercises both solver bindings.
 
-Follow-up package verification built `uniform-lab` 0.3.0 as both wheel and sdist. The
-wheel contains the algebraic, quitting/stochastic solver-campaign, exact-grid, and
-rational-polytope modules plus ten JSON schemas. The expanded suite passes 37 tests;
-Ruff and strict Mypy pass. Z3 and cvc5 produced independently checked rational SAT
-models in both quitting-game and stochastic-game smoke campaigns. Native UNSAT proof
-retention was exercised for both bindings on an inconsistent linear-real fixture. The
-pinned Lean build was rerun explicitly through
-`C:\Users\scott\.elan\bin\lake.exe` and completed 3,139 jobs.
+These versions describe one verification environment, not a hardware or timing requirement. Exact rational outputs and hashes are the reproducible objects. Paths, timestamps, solver timing, Rust throughput, and Lake build-job counts vary by environment.
 
-The checked-in Rust observation scanned 1,000,000 generated games with seed 7. Its
-JSON records elapsed time and throughput. This laptop is not the EPYC/NVIDIA host
-described by the supplied directive, so no EPYC, CUDA, or NVIDIA execution is claimed.
+Run `uniform environment` for machine-readable discovery metadata, `uniform doctor` for component availability, and `python scripts/reproduce_all.py` for the actual release gates. A prior run log is not evidence that the current checkout builds.
+
+The checked-in Rust benchmark records its own seed, sample count, elapsed time, and throughput. Do not transfer that throughput figure to other hosts without rerunning the same command and recording the new environment.

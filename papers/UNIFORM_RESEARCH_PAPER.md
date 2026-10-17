@@ -1,4 +1,10 @@
-# Automated Discovery and Formal Verification in Multiplayer Quitting Games: Exact Arithmetic, Mixed Simplex Screening, and Machine-Checked Certificates
+# Exact Computational Evidence and Scoped Certificates in Multiplayer Quitting Games
+
+> **Release-candidate scope notice.** This is a computational research report, not a
+> proof of non-existence of stationary or uniform equilibrium for Candidate 46876.
+> Grid minima apply only to enumerated finite grids, solver timeouts are inconclusive,
+> and eliminant roots/reductions require back-substitution before they become solutions.
+> The Lean modules prove only their stated declarations.
 
 **Authors:** The UNIFORM Laboratory & Research Collaborative  
 **Target Venue:** Google Research Technical Report / ACM EC / Mathematics of Operations Research  
@@ -11,9 +17,9 @@
 
 Finite multiplayer quitting games—a foundational class of repeated games with absorbing states—have remained an open frontier in mathematical game theory for over two decades. While Solan and Vieille (2001, 2002) resolved existence for two- and three-player games and constructed an isolated four-player counterexample to stationary equilibrium existence via an irreducible degree-4 algebraic root, the broader question of whether every finite quitting game admits an ordinary independent uniform $\varepsilon$-equilibrium remains unresolved. Classical computational investigations have repeatedly stalled due to floating-point rounding errors, non-linear algebraic coupling, and the inability of local search heuristics to distinguish between numerical optimization failure and genuine mathematical non-existence.
 
-In this work, we present **UNIFORM**, an exact-arithmetic computational research workbench, automated discovery engine, and formal verification framework for multiplayer quitting and small stochastic games. UNIFORM strictly eliminates floating-point arithmetic in favor of exact rational computation ($\mathbb{Q}$), univariate real-algebraic field extensions $\mathbb{Q}(\alpha)$ with automated Sturm sequence root isolation, and set-valued Abreu–Pearce–Stacchetti (APS) operators over finite unions of exact rational convex V-polytopes. 
+In this work, we present **UNIFORM**, a computational research workbench for multiplayer quitting and small stochastic games. Its certificate backend rejects floating-point inputs in favor of exact rational computation ($\mathbb{Q}$), univariate real-algebraic field extensions $\mathbb{Q}(\alpha)$ with automated Sturm sequence root isolation, and set-valued Abreu–Pearce–Stacchetti (APS) operators over finite unions of exact rational convex V-polytopes. Browser plots and timing metadata are not certificate arithmetic.
 
-To overcome the blind spots of existing pure-action filters, we engineer a high-throughput parallel mixed-strategy simplex screening engine capable of evaluating non-linear absorption probabilities, continuation payoffs, and unilateral deviation incentives across the full strategy simplex at over 560,000 games per second. Applying this scanner across 50,000 random game instances, we discover **Candidate 46876**, a novel four-player quitting game exhibiting an exact global stationary regret lower bound of $3/4 = 0.75$ across the entire strategy space—over seven times more resistant to mixed equilibria than the Solan–Vieille benchmark ($0.1111$). We formally prove the non-existence of stationary equilibria in Candidate 46876 via dual SMT solvers (Z3 and cvc5) over QF_NRA, producing verified refutation proof traces. Finally, we provide end-to-end formal theorem modules in Lean 4 verified against Mathlib across 3,143 compiled jobs with zero unproved axioms or `sorry` placeholders. We provide an open-source, zero-dependency Enterprise Web Workbench implementing 10 interactive suites for live experimentation.
+To overcome the blind spots of existing pure-action filters, we engineer a parallel mixed-strategy grid scanner and retain **Candidate 46876**, a four-player benchmark with high observed regret on stated rational grids. The exact value $3/4$ is the minimum on a 625-point stationary grid, not a global continuous lower bound. QF_NRA campaigns retain solver status and exact-query hashes, and rational SAT witnesses are re-evaluated independently; timeouts remain inconclusive and native proof text is not semantically checked by this package. Lean 4 modules compile the concrete theorem statements included in the repository, and a local browser workbench supports interactive exploration.
 
 ---
 
@@ -34,11 +40,11 @@ Standard game-theoretic computation packages rely heavily on floating-point arit
 
 ### 1.2 Contributions of This Work
 1. **Exact Mathematical Workbench**: We construct UNIFORM, an exact-arithmetic software platform strictly rejecting floating-point inputs and operating exclusively with exact fractions ($\mathbb{Q}$), symbolic polynomial quotients $\mathbb{Q}[x]/\langle m(x)\rangle$, and Sturm root isolation.
-2. **Parallel Mixed Simplex Screening Engine**: We design a deterministic Rayon-powered screening engine in Rust that evaluates the exact non-linear regret surface over the continuous strategy simplex at $>560,000$ games/sec.
-3. **Discovery of Highly Adversarial Quitting Games**: We isolate **Candidate 46876**, a four-player quitting game whose minimum stationary regret across the strategy simplex is $0.75$, demonstrating that the Solan–Vieille phenomenon is not an isolated mathematical accident but part of a rich landscape of stationary-resistant games.
-4. **Dual SMT-LIB2 Certification**: We encode the bounded periodic equilibrium problem into Quantified-Free Non-linear Real Arithmetic (QF_NRA) and obtain unanimous, machine-checked UNSAT refutations from Z3 and cvc5.
-5. **Machine-Checked Lean 4 Proofs**: We formalize quitting game theory in Lean 4 with Mathlib, establishing machine-checked proofs for general regret transitivity, backward induction, and concrete certificate lemmas for 1-, 2-, 3-, and 4-player games without unproved axioms or `sorry` tokens.
-6. **Enterprise Research Workbench**: We deploy a zero-dependency web interface with 10 interactive suites, 2D/3D Canvas polytope visualizers, and live REST endpoints.
+2. **Parallel Mixed-Grid Screening Engine**: We design a deterministic Rayon-powered screening engine in Rust and record throughput with the benchmark parameters and environment.
+3. **Adversarial Finite-Grid Candidates**: We retain **Candidate 46876**, whose minimum on the stated 625-point stationary grid is $0.75$; this is not a continuous-simplex theorem.
+4. **Dual SMT-LIB2 Campaigns**: We encode bounded periodic equilibrium in quantifier-free nonlinear real arithmetic, stamp Z3/cvc5 results, and independently re-evaluate rational SAT witnesses.
+5. **Machine-Checked Lean 4 Lemmas**: We compile explicit structural and concrete pure-profile theorems with Mathlib without claiming a formalization of the full computational pipeline.
+6. **Local Research Workbench**: We provide an unauthenticated loopback-first web interface with Canvas visualizations and exact backend endpoints.
 
 ---
 
@@ -149,7 +155,7 @@ For each point $q \in \mathcal{G}_G$, the scanner computes:
 
 The **minimum mixed regret infimum** is:
 $$\mu_G(\Gamma) = \min_{q \in \mathcal{G}_G} \rho(q).$$
-Games with $\mu_G(\Gamma) > \tau > 0$ are guaranteed to have **no stationary equilibrium anywhere near the grid points**.
+Games with $\mu_G(\Gamma) > \tau > 0$ have no stationary equilibrium **at those enumerated grid points**. No neighborhood or continuous-domain exclusion follows without an additional continuity bound.
 
 ```
 Algorithm 1: High-Throughput Parallel Mixed Simplex Screening
@@ -214,7 +220,7 @@ The complete 15-mask absorbing payoff tensor of Candidate 46876 is presented bel
 | **Grid $G = 3$ ($4^4 = 256$ pts) Min Regret** | $1/9 \approx 0.1111$ | **$8/9 \approx 0.8889$** | **8.0× higher** |
 | **Grid $G = 4$ ($5^4 = 625$ pts) Min Regret** | $1/10 = 0.1000$ | **$3/4 = 0.7500$** | **7.5× higher** |
 | **Period-2 Grid $d=2$ ($3^8 = 6561$ pts) Min Regret** | **$4/21 \approx 0.1904$** | **$1.0000$** | **5.25× higher** |
-| **Period-1 SMT Status ($\varepsilon = 0$)** | **UNSAT** (Proven by Z3/cvc5) | **CAD Timeout** (High Algebraic Coupling) | Challenge Benchmark |
+| **Period-1 SMT Status ($\varepsilon = 0$)** | Solver-reported UNSAT for the bounded encoding | Timeout (inconclusive) | Challenge benchmark |
 | **Bivariate Algebraic Reduction ($q_0, q_1$)** | Degrees $(25, 32)$ & $(23, 27)$ | Degrees $(32, 32)$ & $(26, 28)$ | Solved in $<1$s via `uniform eliminate` |
 
 ### 5.4 Two-Period Cyclic Grid Resistance
@@ -232,7 +238,7 @@ $$\Phi_i(q_{-i}) \equiv \left(1 - \prod_{j \ne i}(1 - q_j)\right) \mathbb{E}[u_i
 
 Exploiting this structural conditional linearity, we implemented `uniform eliminate`, an exact symbolic pseudo-remainder resultant elimination engine (`src/uniform_lab/elimination.py`):
 1. **Three-Player Games**: Automatically eliminates $q_2$ and $q_1$ in $0.009$ seconds to produce the exact degree-12 univariate characteristic polynomial $P(q_0)$, isolating all 4 interior algebraic equilibria in $(0, 1)$ with Sturm sequences.
-2. **Four-Player Games**: Eliminates $q_3$ and $q_2$ via pseudo-remainder reductions with exact scalar primitive content scaling, reducing the continuous 4-player system to a bivariate polynomial system in $(q_0, q_1)$ in under $1.0$ second, bypassing SMT-CAD timeouts completely.
+2. **Four-Player Games**: Eliminates $q_3$ and $q_2$ via pseudo-remainder reductions with exact scalar primitive content scaling, deriving bivariate necessary conditions in $(q_0,q_1)$. Common-root isolation and back-substitution remain open, so this is a reduction rather than a solution.
 
 ---
 
@@ -241,7 +247,7 @@ Exploiting this structural conditional linearity, we implemented `uniform elimin
 To ensure mathematical certitude beyond solver heuristics, we formalized quitting game certificate mathematics in the **Lean 4 interactive theorem prover** linked against **Mathlib 4.35.0**.
 
 ### 6.1 Formalized Theorems
-In `lean/Uniform/Certificate.lean`, we formalized and proved three structural theorems without axioms or `sorry` tokens:
+In `lean/Uniform/Certificate.lean`, we formalized and proved structural rational-arithmetic theorems with no `sorry` placeholders in the checked-in source:
 
 ```lean
 -- Regret transitivity under sub-optimal bounds
@@ -265,9 +271,9 @@ Using `uniform export-lean` and dedicated Lean 4 modules, we verified all canoni
 2. `Uniform.TwoPlayerCycle`: 2-player cycle game ($\text{regret} \le 0$).
 3. `Uniform.ThreePlayerMesh`: 3-player mesh game ($\text{regret} \le 0$).
 4. `Uniform.FourPlayerCandidate`: 4-player candidate 164952 ($\text{regret} \le 0$).
-5. `Uniform.AdversarialCandidate46876`: Formal machine-checked proof that Candidate 46876 has no pure instant equilibria across all 16 action profiles (`∀ mask : Fin 16, isPureNash mask = false := by decide`), machine-checked proof of its positive stationary regret lower bound (`0 < minStationaryRegretLowerBound := by norm_num`), and machine-checked proof that its cyclic grid resistance strictly exceeds the Solan–Vieille floor (`candidate_46876_exceeds_solan_vieille_cyclic_resistance := by norm_num`).
+5. `Uniform.AdversarialCandidate46876`: a machine-checked proof that the encoded Candidate 46876 has no pure equilibrium across its 16 pure profiles. Separate declarations only record and compare externally computed grid constants; they are not enumeration theorems.
 
-All 3,138 compiled Lean 4 jobs built cleanly via `lake build` with zero errors, zero warnings, and zero `sorry` placeholders. Complete replication instructions and claim-to-artifact mapping matrices are provided in [`docs/REPRODUCIBILITY.md`](../docs/REPRODUCIBILITY.md) and [`docs/ARTIFACT_EVALUATION.md`](../docs/ARTIFACT_EVALUATION.md). All 11 repository data exchange schemas conform strictly to JSON Schema Draft 2020-12 and all 54 unit tests pass.
+The release gate invokes `lake build` and rejects checked-in Lean source containing `sorry`. Build-job counts are environment metadata, not theorem counts. Complete replication instructions and claim-to-artifact mappings are provided in [`docs/REPRODUCIBILITY.md`](../docs/REPRODUCIBILITY.md) and [`docs/ARTIFACT_EVALUATION.md`](../docs/ARTIFACT_EVALUATION.md). Schemas are checked against the Draft 2020-12 meta-schema and examples are validated in the release suite.
 
 
 ---
@@ -278,7 +284,7 @@ UNIFORM provides an interactive, enterprise-grade research environment accessibl
 
 ```
 $ uv run uniform doctor
-=== UNIFORM Lab Enterprise System Diagnostics ===
+=== UNIFORM Lab System Diagnostics ===
 [OK]  Python Runtime             : 3.13.9
 [OK]  Platform                   : Windows-11
 [OK]  Cargo / Rust               : Available
@@ -289,7 +295,7 @@ $ uv run uniform doctor
 [OK]  Real Algebraic Fields      : Sturm sequences active
 [OK]  Essential APS Polytopes    : Canonical Caratheodory active
 --------------------------------------------------
-Overall System Status: ENTERPRISE READY (Code 0)
+Core Status: READY; optional backends are reported separately
 ```
 
 The web workbench (`uniform serve --open`) implements 10 full-featured suites with unified obsidian glassmorphism UI:
@@ -312,8 +318,8 @@ UNIFORM establishes a new methodological standard for algorithmic research in re
 
 ### Verified Results:
 - Engineered a 560,000 games/sec mixed simplex screening engine.
-- Discovered Candidate 46876 and proved it possesses an exact stationary regret lower bound $\ge 0.75$, demonstrating 8× higher equilibrium resistance than the historical Solan–Vieille benchmark.
-- Formally proved period-1 UNSAT across independent SMT solvers.
+- Retained Candidate 46876 after observing exact high regret on stated finite grids; no continuous lower bound is claimed.
+- Recorded bounded period-1 solver outcomes while preserving timeouts and native-proof trust boundaries.
 - Proved 4 benchmark game certificates and core regret lemmas in Lean 4 with Mathlib.
 
 ### Open Scientific Questions:

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/absorption-path-check-v1.schema.json",
+  "title": "UNIFORM finite absorption path check",
+  "type": "object",
+  "required": ["schema", "structurally_valid", "structural_errors", "sequentially_epsilon_perfect", "sequential_violations", "epsilon"],
+  "properties": {
+    "schema": {"const": "uniform.absorption-path-check/v1"},
+    "structurally_valid": {"type": "boolean"},
+    "structural_errors": {"type": "array", "items": {"type": "string"}},
+    "sequentially_epsilon_perfect": {"type": "boolean"},
+    "sequential_violations": {"type": "array"},
+    "epsilon": {"type": "string"}
+  },
+  "additionalProperties": false
+}

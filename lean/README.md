@@ -1,43 +1,21 @@
-# Lean 4 Formal Verification Layer
+# Lean 4 layer
 
-This formal verification suite pins **Lean 4.35.0** and **Mathlib 4.35.0**. It formalizes the mathematical foundations of finite multiplayer quitting games, proving structural lemmas and certifying game instances without axioms or `sorry` placeholders.
+The library pins Lean 4 and Mathlib 4.35.0. `lake build` compiles the theorem statements checked into this directory. Build-job counts are environment-dependent and are not used as theorem counts.
 
 ## Modules
 
-1. **`Uniform.Certificate`** ([`lean/Uniform/Certificate.lean`](Uniform/Certificate.lean)):
-   - Regret transitivity under sub-optimal bounds (`regret_transitivity_le`)
-   - Backward induction finite-horizon step (`finite_horizon_backward_induction_step`)
-   - Discounted Bellman residual gap bound (`discounted_bellman_gap_le`)
-   - One-phase cyclic value recurrence (`one_phase_cyclic_value`)
-   - Convex combination bounds (`convexCombination_le`, `weightedDeviationBound`)
+- `Uniform.Certificate` proves general rational-arithmetic identities used when reasoning about regret, convex combinations, a one-phase recurrence, and simple bounds.
+- `Uniform.Indifference` proves that a binary rational mixture is affine and that equality at two distinct mixing probabilities forces a zero coefficient. It is not yet connected to a formal finite-game model.
+- `Uniform.AdversarialCandidate46876` encodes a concrete payoff table and proves by decision procedure that none of its 16 pure profiles is a pure equilibrium. Its reported grid constants are data declarations; the comparison theorems do not formalize the external enumeration.
+- `Uniform.OnePlayerZero`, `Uniform.TwoPlayerCycle`, `Uniform.ThreePlayerMesh`, and `Uniform.FourPlayerCandidate` contain small concrete arithmetic facts.
 
-2. **`Uniform.AdversarialCandidate46876`** ([`lean/Uniform/AdversarialCandidate46876.lean`](Uniform/AdversarialCandidate46876.lean)):
-   - Formal payoff tensor for the 4-player Candidate 46876 game across all 16 masks.
-   - Machine-checked proof by decision procedure (`decide`) that every one of the 16 pure action profiles admits a strictly profitable unilateral deviation:
-     ```lean
-     theorem candidate_46876_no_pure_equilibrium :
-         ∀ mask : Fin 16, isPureNash mask = false := by decide
-     ```
-   - Machine-checked proof of positive stationary regret lower bound (`norm_num`):
-     ```lean
-     theorem stationary_regret_lower_bound_positive :
-         0 < minStationaryRegretLowerBound := by
-       unfold minStationaryRegretLowerBound; norm_num
-     ```
+The Python Lean exporter produces files that recompute reported rational regrets as `bestDeviation - value` and prove that every listed regret is bounded by the reported maximum. Generated files do not derive values from a game tensor or formalize arbitrary deviations.
 
-3. **Certified Game Benchmark Instances**:
-   - `Uniform.OnePlayerZero`: 1-player zero game instance.
-   - `Uniform.TwoPlayerCycle`: 2-player cycle game instance.
-   - `Uniform.ThreePlayerMesh`: 3-player cyclic mesh game instance.
-   - `Uniform.FourPlayerCandidate`: 4-player candidate 164952 instance.
+## Build
 
-## Building and Verifying
-
-To compile and verify all 3,144 Mathlib proof jobs:
-
-```powershell
+```bash
 cd lean
 lake build
 ```
 
-**Verification Status:** All 3,144 jobs compile cleanly with 0 errors, 0 warnings, and 0 `sorry` tokens.
+The release audit also scans checked-in Lean sources for `sorry`, but the authoritative check is the Lake build. Absence of `sorry` does not imply absence of imported axioms or completion of the broader game-theory formalization.

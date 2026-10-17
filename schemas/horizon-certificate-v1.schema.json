@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/horizon-certificate-v1.schema.json",
+  "title": "UNIFORM finite-horizon certificate",
+  "type": "object",
+  "required": ["schema", "evaluation", "horizon", "start_phase", "value", "best_deviation_value", "regret", "maximum_regret"],
+  "properties": {
+    "schema": {"const": "uniform.horizon-certificate/v1"},
+    "evaluation": {"type": "string"},
+    "horizon": {"type": "integer", "minimum": 1},
+    "start_phase": {"type": "integer", "minimum": 0},
+    "value": {"$ref": "#/$defs/vector"},
+    "best_deviation_value": {"$ref": "#/$defs/vector"},
+    "regret": {"$ref": "#/$defs/vector"},
+    "maximum_regret": {"$ref": "#/$defs/rational"}
+  },
+  "$defs": {"rational": {"type": "string"}, "vector": {"type": "array", "items": {"$ref": "#/$defs/rational"}}},
+  "additionalProperties": false
+}

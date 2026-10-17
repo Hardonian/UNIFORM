@@ -1,145 +1,56 @@
-# UNIFORM Scientific Reproducibility & Replication Manifesto
+# Reproducibility
 
-This document provides complete, bit-for-bit, peer-verifiable instructions to independently reproduce and audit every mathematical finding, symbolic elimination benchmark, adversarial counterexample candidate, and machine-checked Lean 4 proof in **UNIFORM**.
+UNIFORM separates deterministic mathematical outputs from environment-dependent metadata. Exact rational results and file hashes should reproduce; wall-clock timings, timestamps, executable paths, and solver versions need not.
 
----
+## Pinned source environment
 
-## 1. Ground Truth & Methodological Principles
-
-1. **Zero-Float Policy**:
-   No floating-point arithmetic is permitted in any theorem or certificate. Every payoff, transition probability, polynomial coefficient, and regret bound is computed strictly in the rational field $\mathbb{Q}$ or exact real algebraic fields $\mathbb{Q}(\alpha)$ with Sturm root isolation.
-2. **Strict Demarcation**:
-   - **Empirical/Computational Evidence**: Finite grid screenings, solver certificates, and numeric samples are explicitly scoped and never conflated with general existence proofs.
-   - **Mathematical Proof**: Machine-checked formal theorems verified in the Lean 4 kernel with 0 added axioms, 0 warnings, and 0 `sorry`.
-
----
-
-## 2. Quickstart: 1-Click Universal Replication
-
-### Option A: Hermetic Containerized Replication (Docker)
-Ensure Docker is installed, then run from the repository root:
 ```bash
-docker build -t uniform-verify .
-docker run --rm uniform-verify
+git clone https://github.com/Hardonian/UNIFORM.git
+cd UNIFORM
+uv sync --frozen --extra dev --extra solvers
 ```
-This builds the Ubuntu container, runs the complete test matrix, checks all Lean 4 Mathlib theorems, and executes `scripts/reproduce_all.py`.
 
-### Option B: Native Host Replication
-With [uv](https://docs.astral.sh/uv/) installed:
+The Python dependency graph is locked in `uv.lock`, Rust dependencies in `rust-scanner/Cargo.lock`, and Lean/Mathlib in `lean/lean-toolchain` and `lean/lake-manifest.json`.
+
+## Complete release verification
+
 ```bash
-# 1. Install Python dependencies
-uv sync --extra dev
-
-# 2. Run universal replication suite
 uv run python scripts/reproduce_all.py
 ```
-This executes the 5-step scientific audit and generates `audit_certificate.json` stamped with SHA-256 hashes of all inputs and schemas.
 
----
+The command performs actual Draft 2020-12 meta-schema checks, validates versioned examples, reproduces scoped eliminants, enumerates both complete 6,561-profile grids, runs Python coverage/Ruff/mypy, runs Rust formatting/Clippy/tests, and invokes `lake build`. It writes `audit_certificate.json` only after every gate passes.
 
-## 3. Step-by-Step Findings & Theorem Reproduction
+The certificate verdict is `SCOPED_RELEASE_CHECKS_PASSED`. Its scope explicitly excludes a proof of the general uniform-equilibrium conjecture, a continuous-domain interpretation of finite-grid minima, semantic checking of native SMT proofs, and confirmation of un-back-substituted eliminant roots.
 
-### Finding 1: Adversarial Candidate 46876
-Candidate 46876 is a 4-player quitting game discovered via continuous mixed-simplex screening:
+## Individual gates
 
-1. **Absence of Pure Equilibria (Formal Lean 4 Proof)**:
-   Verified by the Lean 4 kernel decision procedure without axioms:
-   ```bash
-   cd lean
-   lake env lean Uniform/AdversarialCandidate46876.lean
-   ```
-   *Theorem:* `candidate_46876_no_pure_equilibrium : ∀ mask : Fin 16, isPureNash mask = false`
-
-2. **Cyclic Grid Resistance Audit (6,561 Profiles)**:
-   To independently evaluate all $3^8 = 6,561$ profiles on $\{0, 1/2, 1\}^8$:
-   ```bash
-   uniform screen examples/adversarial_candidate_46876.json --denominator 2 --period 2 --output results/cand46876_grid.json
-   ```
-   *Result:* The minimum regret across all 6,561 profiles satisfies $\text{regret} \ge 1.0000$.
-   By comparison, Solan–Vieille (2002) collapses to $4/21 \approx 0.1904$ on the alternating profile $[(0, 1/2, 0, 1/2), (1/2, 0, 1/2, 0)]$.
-   *Conclusion:* Candidate 46876 possesses $> 5.25\times$ higher cyclic grid resistance than the Solan–Vieille benchmark.
-
----
-
-### Finding 2: Exact Sylvester Resultant Elimination
-
-Eliminates reliance on black-box Cylindrical Algebraic Decomposition (CAD) SMT timeouts by deriving closed-form univariate and bivariate polynomial systems.
-
-1. **3-Player Mesh Game**:
-   ```bash
-   uniform eliminate examples/three_player_mesh.json
-   ```
-   *Output:*
-   - Derived Characteristic Polynomial: Degree 12.
-   - Isolated Interior Roots in $[0, 1]$: Exactly 4 roots:
-     * $r_1 \in [81/1000, 82/1000]$
-     * $r_2 \in [234/1000, 235/1000]$
-     * $r_3 \in [545/1000, 546/1000]$
-     * $r_4 \in [891/1000, 892/1000]$
-   - Execution Time: $< 0.06$ seconds.
-
-2. **4-Player Solan–Vieille & Candidate 46876 Elimination**:
-   ```bash
-   uniform eliminate examples/solan_vieille_2002.json
-   uniform eliminate examples/adversarial_candidate_46876.json
-   ```
-   *Output:* Reduces 8-variable indifference systems to bivariate $(q_0, q_1)$ systems of degree $(23, 27)$ and $(26, 28)$ in $< 2.0$ seconds.
-
----
-
-### Finding 3: High-Throughput Rayon Screening
-
-To replicate the 43.9 million games/second throughput benchmark of the SplitMix64 generator and screening engine:
 ```bash
-cd rust-scanner
-cargo test --release
-cargo run --release -- --games 5000000 --seed 42 --threads 8
-```
-Deterministic seed 42 will reproduce identical candidate flags across all operating systems.
+uv run pytest -q --cov=uniform_lab --cov-fail-under=80
+uv run ruff check .
+uv run mypy
+uv run uniform solve-campaign examples/one_player_zero.json \
+  --period 1 --epsilon 0 --solvers z3 cvc5 --output-dir solver-output/smoke
 
----
+cargo fmt --manifest-path rust-scanner/Cargo.toml -- --check
+cargo clippy --manifest-path rust-scanner/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path rust-scanner/Cargo.toml --release
 
-### Finding 4: Lean 4 Proof Suite & Zero Debt Verification
-
-To build and verify the entire formal library (3,138+ compiled proof artifacts):
-```bash
-cd lean
-lake build
-```
-Verify that no `sorry` placeholders exist in the codebase:
-```bash
-grep -rn "sorry" lean/Uniform/
-```
-Expected output: 0 matches.
-
----
-
-## 4. JSON Schema Validation
-
-All 11 formal data exchange schemas conform strictly to JSON Schema Draft 2020-12:
-```bash
-uv run pytest tests/test_schemas.py -v
+cd lean && lake build && cd ..
+uv build
+uvx twine check dist/*
 ```
 
-| Schema File | Scope |
-| :--- | :--- |
-| `quitting-game-v1.schema.json` | Multiplayer quitting game payoff definitions |
-| `algebraic-elimination-v1.schema.json` | Exact Sylvester resultant certificates & roots |
-| `periodic-regret-certificate-v1.schema.json` | Exact rational cyclic regret bounds |
-| `algebraic-periodic-certificate-v1.schema.json` | Real algebraic field reduction certificates |
-| `essential-aps-polytopes-v1.schema.json` | Rational V-polytope unions under APS operators |
-| `stochastic-game-v1.schema.json` | Finite stochastic games and transitions |
-| `stochastic-model-check-v1.schema.json` | Bellman residual certificates |
-| `periodic-grid-search-v1.schema.json` | Exhaustive rational grid search shards |
-| `solver-artifact-v1.schema.json` | SMT solver provenance, benchmarks, proofs |
-| `absorption-path-v1.schema.json` | Exact finite-state absorption matrix chains |
-| `algebraic-periodic-profile-v1.schema.json` | Algebraic cyclic profile representations |
+## Container
 
----
+```bash
+docker build -t uniform-release .
+docker run --rm uniform-release
+```
 
-## 5. Contact & Institutional Attribution
+The container pins the requested Rust and uv versions and Lean pins its own toolchain. Upstream base-image and installer content should be digest-pinned by archival users who require byte-identical environments. The project does not label timing-bearing output “bit-for-bit reproducible.”
 
-For research questions, formal verification correspondence, or benchmark submissions:
-- **Repository**: [https://github.com/Hardonian/UNIFORM](https://github.com/Hardonian/UNIFORM)
-- **Artifact Manifest**: `audit_certificate.json`
-- **Citation**: See [`CITATION.cff`](file:///c:/Users/scott/GitHub/UNIFORM/CITATION.cff)
+## Interpreting benchmark artifacts
+
+Throughput depends on CPU, compiler, power state, and invocation parameters. Report the complete command, hardware, compiler version, sample count, seed, and elapsed time. A checked-in benchmark is evidence for that recorded run, not a universal performance guarantee.
+
+Grid outputs are exhaustive only if `complete_global_grid` is true and `evaluated_profiles == total_profiles`. Solver artifacts bind results to the SHA-256 hash of the exact SMT query. Lean claims are limited to the theorem statements in the modules that Lake actually compiled.

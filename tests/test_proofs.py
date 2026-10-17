@@ -44,5 +44,25 @@ def test_smt_proof_trace_parse_and_verify() -> None:
     assert trace.concludes_false is True
     valid, msg = trace.verify()
     assert valid is True
-    assert "proof verified" in msg
-    assert trace.to_dict()["valid"] is True
+    assert "structure audited" in msg
+    report = trace.to_dict()
+    assert report["structurally_valid"] is True
+    assert report["semantically_verified"] is False
+
+
+def test_smt_trace_rejects_undeclared_and_forward_premises() -> None:
+    trace = SmtProofTrace.parse(
+        "(step t2 (cl false) :rule resolution :premises (t1))\n"
+        "(step t1 (cl p) :rule assume :premises ())"
+    )
+    valid, message = trace.verify()
+    assert valid is False
+    assert "undeclared premise" in message
+
+
+def test_smt_trace_does_not_claim_semantic_verification() -> None:
+    trace = SmtProofTrace.parse("(step t1 (cl false) :rule made-up :premises ())")
+    report = trace.to_dict()
+    assert report["structurally_valid"] is True
+    assert report["semantically_verified"] is False
+    assert "inference rules" in report["verification_scope"]

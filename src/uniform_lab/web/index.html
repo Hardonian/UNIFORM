@@ -3,11 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UNIFORM Lab | Enterprise Multiplayer Quitting & Stochastic Games Workbench</title>
+  <title>UNIFORM Lab | Exact Game Research Workbench</title>
   <meta name="description" content="Exact arithmetic research workbench for finite multiplayer quitting games, stochastic games, QF_NRA SMT campaigns, and essential APS operators.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="theme-dark">
@@ -78,11 +75,11 @@
 
       <div class="sidebar-footer">
         <div class="system-meta-card">
-          <div class="meta-row"><span>Version</span><strong id="meta-version-badge">v1.0.0 Enterprise</strong></div>
+          <div class="meta-row"><span>Version</span><strong id="meta-version-badge">v1.0.0rc1</strong></div>
           <div class="meta-row"><span>Python</span><strong>3.13 / uv</strong></div>
           <div class="meta-row"><span>Rust Scanner</span><strong>SplitMix64</strong></div>
           <div class="meta-row"><span>Lean 4</span><strong>4.35.0 (0 sorry)</strong></div>
-          <div class="meta-row"><span>Schemas</span><strong id="meta-schemas-badge">11 Draft 2020-12</strong></div>
+          <div class="meta-row"><span>Schemas</span><strong id="meta-schemas-badge">Versioned Draft 2020-12</strong></div>
         </div>
       </div>
     </aside>
@@ -92,7 +89,7 @@
       <!-- Top Application Bar -->
       <header id="app-topbar" class="topbar">
         <div class="topbar-left">
-          <h1 id="page-title" class="page-title">Enterprise Multiplayer Research Workbench</h1>
+          <h1 id="page-title" class="page-title">Multiplayer Research Workbench</h1>
           <span class="page-subtitle" id="page-subtitle-text">Exact arithmetic research for finite multiplayer quitting and stochastic games</span>
         </div>
         <div class="topbar-right">
@@ -100,9 +97,9 @@
             <span class="badge-icon">🛡️</span>
             <span>EXACT PROOF BOUNDARY</span>
           </div>
-          <button type="button" id="btn-quick-verify" class="btn btn-primary" title="Run fast in-browser validation">
+          <button type="button" id="btn-quick-verify" class="btn btn-primary" title="Show the release verification command">
             <svg class="btn-icon" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
-            <span>Run Verification Suite</span>
+            <span>Release Verification</span>
           </button>
         </div>
       </header>
@@ -115,7 +112,7 @@
           <h2 id="heading-dashboard" class="visually-hidden">Executive Dashboard</h2>
           <div class="dashboard-hero-banner">
             <div class="hero-text">
-              <span class="hero-tag">ENTERPRISE RESEARCH ACCELERATOR</span>
+              <span class="hero-tag">EXACT RESEARCH WORKBENCH</span>
               <h2 class="hero-heading">Rigorous Finite Game Verification at Scale</h2>
               <p class="hero-desc">UNIFORM Lab couples exact rational and algebraic arithmetic with deterministic parallel screening and interactive geometry, keeping a hard line between computational evidence and open mathematical problems.</p>
             </div>
@@ -126,9 +123,9 @@
                 <span class="metric-sub">Deterministic Rayon run</span>
               </div>
               <div class="metric-card" id="card-metric-precision">
-                <span class="metric-val">100% Exact</span>
-                <span class="metric-label">Rational & Algebraic</span>
-                <span class="metric-sub">No floating-point errors</span>
+                <span class="metric-val">Exact Backend</span>
+                <span class="metric-label">Rational & Algebraic Certificates</span>
+                <span class="metric-sub">Browser plots are approximate</span>
               </div>
               <div class="metric-card" id="card-metric-solvers">
                 <span class="metric-val">Z3 + cvc5</span>
@@ -136,9 +133,9 @@
                 <span class="metric-sub">Reproducible artifacts</span>
               </div>
               <div class="metric-card" id="card-metric-formal">
-                <span class="metric-val">3,139</span>
-                <span class="metric-label">Lean 4 Mathlib Jobs</span>
-                <span class="metric-sub">Formalized lemmas (0 sorry)</span>
+                <span class="metric-val">Lake Build</span>
+                <span class="metric-label">Lean 4 Modules</span>
+                <span class="metric-sub">Checked in CI</span>
               </div>
             </div>
           </div>
@@ -150,7 +147,7 @@
                 <h3 class="panel-title">Engineering Milestone & Roadmap Verification Matrix</h3>
                 <span class="panel-subtitle">Audited state of M1 through M8 research objectives</span>
               </div>
-              <span class="badge badge-success" id="milestones-verified-badge">All 8 Milestones Audited</span>
+              <span class="badge badge-warning" id="milestones-verified-badge">Scoped implementation status</span>
             </div>
             <div class="milestones-grid" id="milestones-container">
               <!-- Rendered via JS -->
@@ -559,7 +556,7 @@
             </div>
             <div class="header-actions">
               <span class="badge badge-info">SplitMix64 Seed 7</span>
-              <span class="badge badge-success">43,974,793 Games / Sec</span>
+              <span class="badge badge-success">Benchmark-specific throughput</span>
             </div>
           </div>
 
@@ -580,9 +577,9 @@
                 <table class="data-table">
                   <thead><tr><th>Sample ID</th><th>Seed</th><th>Pure Deviation Margin</th><th>Actions</th></tr></thead>
                   <tbody id="tbody-scanner-candidates">
-                    <tr><td><strong>164952</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs" onclick="window.UNIFORM_APP.loadCandidate(164952)">Load in Studio</button></td></tr>
-                    <tr><td><strong>405715</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs" onclick="window.UNIFORM_APP.loadCandidate(405715)">Load in Studio</button></td></tr>
-                    <tr><td><strong>430755</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs" onclick="window.UNIFORM_APP.loadCandidate(430755)">Load in Studio</button></td></tr>
+                    <tr><td><strong>164952</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs candidate-load" data-candidate-id="164952">Load in Studio</button></td></tr>
+                    <tr><td><strong>405715</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs candidate-load" data-candidate-id="405715">Load in Studio</button></td></tr>
+                    <tr><td><strong>430755</strong></td><td>7</td><td><span class="badge badge-accent">+4</span></td><td><button type="button" class="btn btn-primary btn-xs candidate-load" data-candidate-id="430755">Load in Studio</button></td></tr>
                   </tbody>
                 </table>
               </div>

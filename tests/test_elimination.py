@@ -52,6 +52,7 @@ def test_indifference_polynomials_two_player() -> None:
 
     res = eliminate_quitting_game(game)
     assert res.stationary_equilibrium_possible
+    assert res.interior_candidate_status == "confirmed"
     assert len(res.isolated_interior_roots) >= 1
 
 
@@ -62,7 +63,8 @@ def test_eliminate_three_player_mesh() -> None:
     assert res.characteristic_polynomial is not None
     assert res.characteristic_polynomial.degree == 12
     assert len(res.isolated_interior_roots) == 4
-    assert res.stationary_equilibrium_possible
+    assert res.stationary_equilibrium_possible is None
+    assert res.interior_candidate_status == "eliminant_roots_found"
 
 
 def test_eliminate_adversarial_candidate_46876() -> None:
@@ -73,3 +75,5 @@ def test_eliminate_adversarial_candidate_46876() -> None:
     # Verifies that it reduced to bivariate in (q0, q1) in milliseconds
     assert res.bivariate_degrees[0] > 0
     assert res.bivariate_degrees[1] > 0
+    assert res.stationary_equilibrium_possible is None
+    assert res.interior_candidate_status == "reduced_not_solved"

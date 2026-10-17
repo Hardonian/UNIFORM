@@ -1,19 +1,44 @@
 [build-system]
-requires = ["hatchling>=1.26"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
 name = "uniform-lab"
-version = "0.3.0"
+version = "1.0.0rc1"
 description = "Exact and explicitly scoped experiments for multiplayer quitting and stochastic games"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "UNIFORM Lab contributors" }]
+keywords = ["game theory", "quitting games", "stochastic games", "exact arithmetic", "formal methods"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/Hardonian/UNIFORM"
+Repository = "https://github.com/Hardonian/UNIFORM"
+Issues = "https://github.com/Hardonian/UNIFORM/issues"
+
 [project.optional-dependencies]
-dev = ["pytest>=8.3", "pytest-cov>=6", "mypy>=1.13", "ruff>=0.9"]
+dev = [
+  "build>=1.2",
+  "jsonschema>=4.23",
+  "mypy>=1.13",
+  "pytest>=8.3",
+  "pytest-cov>=6",
+  "ruff>=0.9",
+  "twine>=6.0",
+]
 solvers = ["z3-solver>=4.13", "cvc5>=1.2"]
 
 [project.scripts]
@@ -24,6 +49,20 @@ packages = ["src/uniform_lab"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "schemas" = "uniform_lab/schemas"
+"examples" = "uniform_lab/examples"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/CITATION.cff",
+  "/LICENSE",
+  "/README.md",
+  "/docs",
+  "/examples",
+  "/lean",
+  "/schemas",
+  "/src",
+  "/tests",
+]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
@@ -41,3 +80,16 @@ select = ["E", "F", "I", "UP", "B"]
 python_version = "3.11"
 strict = true
 files = ["src/uniform_lab"]
+
+[tool.coverage.run]
+branch = true
+source = ["uniform_lab"]
+omit = [
+  "src/uniform_lab/__main__.py",
+  "src/uniform_lab/solver_worker.py",
+]
+
+[tool.coverage.report]
+fail_under = 80
+
+show_missing = true

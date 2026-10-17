@@ -1,193 +1,110 @@
-# UNIFORM Lab: Exact Research Workbench for Multiplayer Quitting Games
+# UNIFORM Lab
 
-[![Lean 4 Proofs](https://img.shields.io/badge/Lean_4-3138_Jobs_Verified_(0_sorry)-brightgreen.svg)](lean/)
-[![Python Tests](https://img.shields.io/badge/Python_Tests-54%2F54_Passing-brightgreen.svg)](tests/)
-[![Rust Scanner](https://img.shields.io/badge/Rust_Scanner-43.9M_games%2Fsec-blue.svg)](rust-scanner/)
-[![Arithmetic](https://img.shields.io/badge/Arithmetic-Zero--Float_Exact_ℚ-orange.svg)](src/uniform_lab/)
-[![Schemas](https://img.shields.io/badge/Schemas-11_Draft_2020--12-blueviolet.svg)](schemas/)
-[![Replication](https://img.shields.io/badge/Replication-1--Click_Docker-success.svg)](docs/REPRODUCIBILITY.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/Hardonian/UNIFORM/actions/workflows/ci.yml/badge.svg)](https://github.com/Hardonian/UNIFORM/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue.svg)](pyproject.toml)
 
-**UNIFORM Lab** is an exact-arithmetic computational research platform, automated discovery engine, and formal machine-checked verification framework for finite multiplayer quitting games and small stochastic games. 
+UNIFORM Lab is an exact-arithmetic research workbench for finite multiplayer quitting games and small stochastic games. It combines rational and univariate real-algebraic arithmetic, bounded-period regret certificates, exhaustive rational grids, QF_NRA solver campaigns, exact rational polytopes, a deterministic Rust scanner, and a Lean 4 library.
 
-By strictly eliminating floating-point arithmetic (IEEE 754) in favor of exact fractions ($\mathbb{Q}$), real-algebraic field extensions $\mathbb{Q}(\alpha)$ with automated Sturm sequence root isolation, and exact convex polytope geometry, UNIFORM converts bounded computational evidence into machine-checked mathematical certificates while maintaining a rigorous boundary between computational screening and open mathematical conjectures.
+The package is deliberately scoped. A finite grid minimum is evidence about that grid, an SMT result is about the emitted bounded formula, and an elimination polynomial supplies necessary interior-candidate conditions unless back-substitution is completed. None of these artifacts alone proves or disproves the general uniform-equilibrium conjecture.
 
----
+## Install
 
-## 🔬 Core Scientific Discoveries & Breakthroughs
+Python 3.11 or newer is required.
 
-### 1. Discovery of Adversarial Candidate 46876
-Using UNIFORM's parallel continuous mixed-simplex screening engine over 50,000 games, we discovered **Candidate 46876** ([`examples/adversarial_candidate_46876.json`](examples/adversarial_candidate_46876.json)):
-- **Stationary Regret Lower Bound**: Possesses a global stationary regret lower bound of **$\mu \ge 3/4 = 0.75$** across 625 points of the strategy space—**7.5× higher** equilibrium resistance than the historical Solan–Vieille (2002) benchmark ($0.10$).
-- **Intractable SMT Benchmark**: While Solan–Vieille period-1 is proved UNSAT by Z3 and cvc5 in $<0.5$s, Candidate 46876 features such dense non-linear algebraic coupling that both state-of-the-art SMT solvers exhaust their bounds and time out (Z3 at 60s, cvc5 at 711s), providing a premier open benchmark for Non-linear Real Arithmetic (QF_NRA) Cylindrical Algebraic Decomposition (CAD).
-
-### 2. Two-Period Cyclic Grid Resistance ($\ge 1.000$)
-In Solan and Vieille's 2002 counterexample, equilibrium existence was rescued by moving to a two-phase correlated or alternating cycle.
-We executed an exhaustive evaluation across all $3^8 = 6,561$ strategy profiles of the period-2 grid with denominator 2 ($\{0, 1/2, 1\}^8$):
-- **Solan–Vieille (2002)**: The two-phase cycle collapses worst-case regret from $0.3333$ down to **$4/21 \approx 0.1904$** (and alternating cycle yields $1/5 = 0.2000$).
-- **Candidate 46876**: Across all 6,561 independent periodic profiles, **the minimum regret remains strictly bounded below by $\ge 1.0000$** (**5.25× higher cyclic resistance** than Solan–Vieille), demonstrating that Candidate 46876 vigorously repels low-denominator two-phase cyclic coordination.
-
-### 3. Conditional Termination Indifference Principle & Resultant Elimination Engine
-We proved that in any finite quitting game, when player $i$ randomizes strictly ($0 < q_i < 1$), the indifference condition $\Phi_i(q_{-i}) = 0$ is **strictly multilinear in opponents' strategies and independent of $q_i$**:
-$$\Phi_i(q_{-i}) \equiv \left(1 - \prod_{j \ne i}(1 - q_j)\right) \mathbb{E}[u_i(T \cup \{i\}) \mid q_{-i}] - \sum_{\emptyset \ne T \subseteq N \setminus \{i\}} P(T \mid q_{-i}) u_i(T) = 0$$
-
-Exploiting this structural conditional linearity, `uniform eliminate` ([`src/uniform_lab/elimination.py`](src/uniform_lab/elimination.py)) executes exact Sylvester resultant pseudo-remainders with integer content scaling:
-- **3-Player Games** ([`three_player_mesh.json`](examples/three_player_mesh.json)): Eliminates $q_2$ and $q_1$ in **$0.05$ seconds** to derive the exact degree-12 characteristic polynomial and isolate all 4 real algebraic equilibrium roots via Sturm sequences.
-- **4-Player Games** ([`adversarial_candidate_46876.json`](examples/adversarial_candidate_46876.json)): Reduces the 4-player, 8-variable continuous system to a bivariate polynomial system in $(q_0, q_1)$ in **under $1.8$ seconds**, completely bypassing SMT-CAD timeouts.
-
-### 4. Machine-Checked Formal Verification in Lean 4
-We formalized quitting game certificate mathematics and Candidate 46876 in **Lean 4** linked against **Mathlib 4.35.0**:
-- Verified by decision procedure (`decide`) that every one of Candidate 46876's 16 pure action profiles admits a strictly profitable deviation:
-  ```lean
-  theorem candidate_46876_no_pure_equilibrium :
-      ∀ mask : Fin 16, isPureNash mask = false := by decide
-  ```
-- Machine-checked the positive stationary regret lower bound theorem (`by norm_num`).
-- Machine-checked that Candidate 46876's cyclic grid resistance strictly exceeds the Solan–Vieille floor (`by norm_num`).
-- Verified structural lemmas for regret transitivity, backward induction, and discounted Bellman gaps across **3,138 compiled Lean 4 jobs** with **zero custom axioms or `sorry` placeholders**.
-
----
-
-## 📄 Research Publications & Replication Manifesto
-
-All mathematical proofs, SMT encodings, and empirical findings are documented in full publication-ready formats:
-
-| Document | Format | Audience & Purpose | Link |
-|---|---|---|---|
-| **Replication Manifesto** | Markdown Standard | Step-by-step bit-for-bit replication guide, hardware specs, and theorem audits | [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) |
-| **Academic Preprint** | Markdown / GitHub | Comprehensive research paper with full mathematical proofs and derivations | [`papers/UNIFORM_RESEARCH_PAPER.md`](papers/UNIFORM_RESEARCH_PAPER.md) |
-| **LaTeX Preprint** | Standalone LaTeX | Complete academic preprint formatted for arXiv (cs.GT / cs.LO) and ACM EC | [`papers/UNIFORM_RESEARCH_PAPER.tex`](papers/UNIFORM_RESEARCH_PAPER.tex) |
-| **Executive Summary** | Markdown Briefing | Targeted executive summary for Google Research & DeepMind Multi-Agent Teams | [`papers/GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md`](papers/GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md) |
-| **Universal Audit Runner** | Python Script | 1-click verification runner emitting SHA-256 stamped `audit_certificate.json` | [`scripts/reproduce_all.py`](scripts/reproduce_all.py) |
-| **Citation Metadata** | Citation File Format | Standardized citation file for academic journals and bibtex generators | [`CITATION.cff`](CITATION.cff) |
-
----
-
-## ⚡ Quick Start & Replication
-
-### 1-Click Hermetic Container Replication (Docker)
 ```bash
-docker build -t uniform . && docker run --rm uniform
+python -m pip install uniform-lab
+uniform --version
+uniform doctor
 ```
 
-### Local Host Setup
-Requires Python 3.11+ and Rust 1.85+.
-```powershell
-# Clone the repository
-git clone https://github.com/Hardonian/UNIFORM.git
-cd UNIFORM
+For a source checkout with both optional SMT backends:
 
-# Install exact Python environment and optional SMT solvers (Z3 & cvc5)
-uv sync --extra dev --extra solvers
-
-# Run system health diagnostics
-uv run uniform doctor
+```bash
+uv sync --frozen --extra dev --extra solvers
+uv run uniform validate-game examples/one_player_zero.json
 ```
 
-### Complete Verification Suite
-```powershell
-# 1. Run universal replication suite (audits schemas, proofs, elimination, tests)
-uv run python scripts/reproduce_all.py
+Rust and Lean are optional for the Python package. They are required for the complete repository release gate.
 
-# 2. Run full Python test suite (54/54 passing)
-uv run pytest -q
+## What is independently checked?
 
-# 3. Run Rust test suite (3/3 passing)
-cargo test --manifest-path rust-scanner/Cargo.toml
+| Component | Exact scope | Important boundary |
+|---|---|---|
+| Periodic certificate | Values and all deterministic unilateral policies of the stated period | Does not cover arbitrary nonperiodic strategies |
+| Finite grid | Every profile on the stated rational grid when `complete_global_grid` is true | Does not establish a continuous-domain lower bound |
+| SAT model check | Solver assignments re-evaluated with Python `Fraction` arithmetic | Algebraic/unparsed values are rejected |
+| UNSAT result | Stamped bounded solver result; optional native proof is retained | Native SMT proof semantics are not independently checked |
+| Farkas certificate | Exact `λ ≥ 0`, `λᵀA = 0`, and `λᵀb < 0` checks | Applies only to linear systems |
+| SMT trace audit | Unique IDs, backward premise references, and final contradiction marker | Explicitly not a semantic Alethe proof checker |
+| Lean export | Recomputes reported rational regrets and their common bound | Does not derive values from the game/profile semantics |
+| Elimination | Exact resultants and isolated univariate eliminant roots | Three-/four-player outputs require back-substitution to confirm solutions |
+| Lean library | The checked-in theorem statements compiled by Lake/Mathlib | Only the statements present in `lean/Uniform` are formalized |
 
-# 4. Compile and verify all Lean 4 Mathlib theorems (3,138 jobs, 0 sorry)
+## Common workflows
+
+```bash
+# Exact bounded-period certificate
+uniform periodic GAME.json PROFILE.json
+
+# Complete rational-grid enumeration
+uniform grid GAME.json --denominator 2 --period 2 --output grid.json
+
+# Export, run, stamp, and cross-check Z3 and cvc5
+uniform solve-campaign GAME.json --period 2 --epsilon 1/10 \
+  --solvers z3 cvc5 --output-dir solver-output/run
+
+# Discounted stationary stochastic-game campaign
+uniform stochastic-solve-campaign GAME.json --beta 9/10 --epsilon 1/20 \
+  --solvers z3 cvc5 --output-dir solver-output/stochastic
+
+# Exact symbolic elimination (interior stationary candidates)
+uniform eliminate GAME.json
+
+# Local browser workbench; loopback is the safe default
+uniform serve --host 127.0.0.1 --port 8080 --open
+```
+
+Run `uniform --help` and see [docs/CLI.md](docs/CLI.md) for the complete command surface. JSON interfaces are versioned in [schemas](schemas); those schemas and representative examples are bundled in the wheel and available through `uniform_lab.load_schema()` and `uniform_lab.load_example()`.
+
+## Candidate experiments
+
+The repository includes two complete denominator-2, period-2 enumerations, each containing 6,561 independent periodic profiles:
+
+- `examples/solan_vieille_2002.json`
+- `examples/adversarial_candidate_46876.json`
+
+The observed minima are exact for those finite grids and the stated same-period deviation class. They are not advertised as global lower bounds over the continuous strategy space. `scripts/reproduce_all.py` reruns the enumerations instead of trusting checked-in numbers.
+
+## Repository release gate
+
+```bash
+uv sync --frozen --extra dev --extra solvers
+uv run pytest -q --cov=uniform_lab --cov-fail-under=80
+uv run ruff check .
+uv run mypy
+
+cargo fmt --manifest-path rust-scanner/Cargo.toml -- --check
+cargo clippy --manifest-path rust-scanner/Cargo.toml --all-targets -- -D warnings
+cargo test --manifest-path rust-scanner/Cargo.toml --release
+
 cd lean && lake build && cd ..
-
-# 5. Execute exact symbolic resultant elimination (derives characteristic polynomial)
-uv run uniform eliminate examples/three_player_mesh.json
-
-# 6. Launch Enterprise Web Workbench (10 interactive suites)
-uv run uniform serve --port 8080 --open
+uv run python scripts/reproduce_all.py
+uv build
+uvx twine check dist/*
 ```
 
----
+The audit runner writes `audit_certificate.json` with hashes and a `SCOPED_RELEASE_CHECKS_PASSED` verdict. Timing and timestamps are informative metadata, not reproducibility claims.
 
-## 🖥️ Enterprise Web Workbench (`uniform serve`)
+The included Dockerfile provides a pinned verification environment:
 
-UNIFORM includes a zero-dependency, local-first interactive research workbench hosted on an obsidian glassmorphism UI:
-- **Dashboard**: Live telemetry, game library status, and diagnostic health checks.
-- **Quitting Game Studio**: Interactive payoff editor with auto-normalization and pure-equilibrium detection.
-- **Periodic Regret Simulator**: Real-time evaluation of cycle values, unilateral deviations, and exact regret matrices.
-- **Sylvester Resultant Elimination Lab**: Multilinear polynomial resultant engine with real-time Sturm sequence root isolation and bivariate reduction.
-- **Solan–Vieille Algebraic Studio**: Exact Sturm root bisection, polynomial factorization, and algebraic certificate validation.
-- **Essential APS 2D/3D Polytopes**: Interactive Canvas visualizers with Minkowski sums and Carathéodory extreme-point reduction.
-- **Stochastic Game Studio**: Discounted Bellman residuals and vanishing discount trajectories ($\beta \to 1$).
-- **Rayon Scanner Analytics**: High-throughput parameter controls and live candidate ranking tables.
-- **SMT Solver Matrix**: Direct execution of Z3 and cvc5 over QF_NRA with SHA-256 stamped campaign artifacts.
-- **Lean 4 Export Studio**: One-click generation and download of formalized Mathlib theorem modules.
-- **System Diagnostics**: Real-time verification of compilers, runtimes, and exact arithmetic cores (`/api/doctor`).
-
----
-
-## 📚 Repository Architecture
-
-```
-UNIFORM/
-├── .github/workflows/             # GitHub Actions CI matrix (Python, Rust, Lean 4)
-├── examples/                      # Canonical games & benchmark instances
-│   ├── adversarial_candidate_46876.json # Discovered stationary-resistant 4-player game
-│   ├── solan_vieille_2002.json    # Historical Solan-Vieille 4-player game
-│   ├── three_player_mesh.json     # 3-player cyclic mesh game
-│   ├── two_player_cycle.json      # 2-player cycle game
-│   └── one_player_zero.json       # 1-player zero game
-├── lean/                          # Lean 4 formal verification suite (Mathlib 4.35)
-│   ├── Uniform/
-│   │   ├── Certificate.lean       # Structural regret & Bellman theorems
-│   │   └── AdversarialCandidate46876.lean # Machine-checked proof for Candidate 46876
-│   └── lakefile.toml              # Lake configuration (3,138 compiled jobs)
-├── papers/                        # Research papers & executive briefing
-│   ├── UNIFORM_RESEARCH_PAPER.md  # Complete academic paper (Markdown)
-│   ├── UNIFORM_RESEARCH_PAPER.tex # Standalone LaTeX preprint (ACM EC / arXiv)
-│   └── GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md # Targeted Google Research briefing
-├── docs/                          # Scientific documentation & replication guides
-│   ├── REPRODUCIBILITY.md         # Comprehensive scientific replication manifesto
-│   └── CLI.md                     # Enterprise CLI command reference
-├── schemas/                       # 11 JSON Schemas (Draft 2020-12)
-├── scripts/                       # Reproduction & verification scripts
-│   └── reproduce_all.py           # Universal scientific replication runner
-├── rust-scanner/                  # Rayon-powered deterministic scanner
-│   ├── Cargo.toml                 # Rust dependencies (Rayon, Serde)
-│   └── src/main.rs                # Parallel mixed-simplex screening engine
-├── src/uniform_lab/               # Exact Python core package
-│   ├── algebraic.py               # Real algebraic field Q(alpha) & Sturm root isolation
-│   ├── elimination.py             # Sylvester resultants & pseudo-remainder elimination
-│   ├── polytopes.py               # Exact rational V-polytopes & essential APS operator
-│   ├── quitting.py                # Quitting game payoffs & periodic regret certificates
-│   ├── smt.py                     # QF_NRA encoding & solver adapters (Z3/cvc5)
-│   ├── proofs.py                  # Independent Farkas & SMT-LIB2 proof checker
-│   ├── lean_exporter.py           # Automated translation to Lean 4 theorems
-│   ├── server.py                  # Local HTTP server & REST API for Web Workbench
-│   └── web/                       # Obsidian glassmorphism web interface
-├── tests/                         # Full automated test suite (54/54 passing)
-├── CITATION.cff                   # Citation metadata (CFF 1.2.0)
-└── Dockerfile                     # Hermetic containerized verification environment
+```bash
+docker build -t uniform-release .
+docker run --rm uniform-release
 ```
 
----
+## Development and release status
 
-## 📖 Citation
+`1.0.0rc1` is the API-stabilization release candidate. See [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).
 
-If you use UNIFORM in your research, please cite our technical preprint:
-
-```bibtex
-@article{uniform2026,
-  author    = {The UNIFORM Laboratory and Research Collaborative},
-  title     = {Non-Existence of Stationary and Cyclic Equilibria in Multiplayer Quitting Games: 
-               Exact Algebraic Elimination and Machine-Checked Proofs},
-  journal   = {arXiv preprint arXiv:2610.UNIFORM},
-  year      = {2026},
-  url       = {https://github.com/Hardonian/UNIFORM}
-}
-```
-
----
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for details.
-
+The project is licensed under Apache-2.0.

@@ -59,7 +59,7 @@ Solver SAT means “a candidate exists in the encoded class.” Solver UNSAT mea
 independently checkable proof trace is also retained. Solver artifacts hash the exact
 query, record backend/version/status/runtime, preserve raw streams separately, and
 state whether a rational SAT model passed the independent checker. A retained native
-solver proof is labelled as native evidence until a separate proof checker validates it.
+solver proof is labelled as native evidence unless an external compatible semantic proof checker validates it. The built-in SMT trace command performs structural auditing only.
 
 ## Exact algebraic profile certificate
 

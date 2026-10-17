@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/farkas-certificate-v1.schema.json",
+  "title": "UNIFORM exact Farkas infeasibility certificate check",
+  "type": "object",
+  "required": ["schema", "valid", "message", "rows", "columns", "matrix", "multipliers", "bounds"],
+  "properties": {
+    "schema": {"const": "uniform.farkas-certificate/v1"},
+    "valid": {"type": "boolean"},
+    "message": {"type": "string"},
+    "rows": {"type": "integer", "minimum": 1},
+    "columns": {"type": "integer", "minimum": 0},
+    "matrix": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}},
+    "multipliers": {"type": "array", "items": {"type": "string"}},
+    "bounds": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import uniform_lab.solver as solver_module
 from uniform_lab.quitting import QuittingGame, periodic_regret_certificate
 from uniform_lab.smt import (
     evaluate_rational,
@@ -74,3 +75,61 @@ def test_z3_native_unsat_proof_is_retained_when_requested(tmp_path: Path) -> Non
     run = run_solver(query, "z3", produce_proof=True)
     assert run.status == "unsat"
     assert run.proof
+
+
+def test_python_binding_has_a_hard_parent_timeout(monkeypatch, tmp_path: Path) -> None:
+    query = tmp_path / "query.smt2"
+    query.write_text("(check-sat)\n", encoding="utf-8")
+    monkeypatch.setattr(solver_module.shutil, "which", lambda _name: None)
+
+    def expire(*args, **kwargs):
+        raise solver_module.subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(solver_module.subprocess, "run", expire)
+    run = run_solver(query, "z3", timeout=Fraction(1, 100))
+    assert run.status == "timeout"
+    assert run.timed_out is True
+    assert run.returncode == 124
+
+
+def test_direct_python_binding_direct_z3(tmp_path: Path) -> None:
+    if find_spec("z3") is None:
+        pytest.skip("optional z3 binding is not installed")
+    from uniform_lab.solver import _run_python_binding_direct
+
+    query = tmp_path / "sat.smt2"
+    query.write_text("(check-sat)\n", encoding="utf-8")
+    run = _run_python_binding_direct(query, "z3", timeout=5.0, produce_proof=False)
+    assert run.status == "sat"
+
+
+def test_direct_python_binding_direct_cvc5(tmp_path: Path) -> None:
+    if find_spec("cvc5") is None:
+        pytest.skip("optional cvc5 binding is not installed")
+    from uniform_lab.solver import _run_python_binding_direct
+
+    query = tmp_path / "sat_cvc5.smt2"
+    query.write_text("(check-sat)\n", encoding="utf-8")
+    run = _run_python_binding_direct(query, "cvc5", timeout=5.0, produce_proof=False)
+    assert run.status == "sat"
+
+
+
+def test_solver_hard_timeout_enforced(tmp_path: Path) -> None:
+    if find_spec("z3") is None:
+        pytest.skip("optional z3 binding is not installed")
+    query = tmp_path / "timeout_query.smt2"
+    # An unsolvable nonlinear query or simple check with an ultra-short timeout
+    query.write_text(
+        "(set-logic QF_NRA)\n"
+        "(declare-fun x () Real)\n"
+        "(assert (= (+ (* x x x x x) (* x x x) 1.0) 0.0))\n"
+        "(check-sat)\n",
+        encoding="utf-8",
+    )
+    run = run_solver(query, "z3", timeout=0.001)
+    assert run.timed_out is True
+    assert run.status == "timeout"
+    assert run.elapsed_seconds < 4.0
+
+

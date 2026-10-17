@@ -1,5 +1,7 @@
 /**
- * UNIFORM Lab Enterprise Web Workbench Application Logic
+ * UNIFORM Lab local research workbench application logic.
+ * Browser-side plots use JavaScript numbers for visualization; certificate endpoints
+ * return exact rational strings from the Python backend.
  * Pure vanilla JavaScript with zero external runtime dependencies.
  */
 
@@ -156,12 +158,12 @@
     { id: "M1", name: "Exact Quitting Engine & Horizons", status: "VERIFIED", desc: "Rational periodic regret, same-period pure unilateral deviations, and backward induction." },
     { id: "M2", name: "Fixed-Period QF_NRA Export", status: "VERIFIED", desc: "Exact nonlinear real arithmetic encoding with explicit scope and division-by-zero protection." },
     { id: "M3", name: "Stochastic Game Validators", status: "VERIFIED", desc: "Normalized discounted Bellman residuals and stationary QF_NRA campaigns with cross-checking." },
-    { id: "M4", name: "Parallel Rayon Million-Game Screen", status: "VERIFIED", desc: "Deterministic SplitMix64 screening at 43.9M games/sec; candidate handoff to exact Python verifier." },
-    { id: "M5", name: "Multi-Solver Artifacts & Proofs", status: "VERIFIED", desc: "Z3/cvc5 artifact stamping, native proof retention, and independent Farkas certificate checker." },
+    { id: "M4", name: "Parallel Rayon Screening", status: "IMPLEMENTED", desc: "Deterministic SplitMix64 screening with benchmark-specific throughput recorded in artifacts." },
+    { id: "M5", name: "Multi-Solver Artifacts", status: "IMPLEMENTED", desc: "Z3/cvc5 artifact stamping, native proof retention, exact SAT re-evaluation, and independent Farkas checking." },
     { id: "M6", name: "Essential APS & Canonical Polytopes", status: "VERIFIED", desc: "Finite unions of rational V-polytopes, Carathéodory simplex elimination, and halfspace clipping." },
-    { id: "M7", name: "Lean 4 Machine-Checked Lemmas", status: "VERIFIED", desc: "Mathlib-verified arithmetic facts, regret bounds, and formal certificate code generation (0 sorry)." },
-    { id: "M8", name: "Exact Sylvester Resultant Elimination", status: "VERIFIED", desc: "Closed-form characteristic polynomials & bivariate reduction bypassing SMT-CAD timeouts." },
-    { id: "M9", name: "Formal Resolution & Peer Review", status: "ADVANCED", desc: "Open scientific schema verification, containerized replication manifesto, and reproducible preprint." }
+    { id: "M7", name: "Lean 4 Machine-Checked Lemmas", status: "IMPLEMENTED", desc: "Checked-in Mathlib lemmas plus arithmetic certificate generation; generated files do not formalize full game semantics." },
+    { id: "M8", name: "Exact Resultant Elimination", status: "IMPLEMENTED", desc: "Interior-candidate eliminants and bivariate necessary conditions with explicit back-substitution boundaries." },
+    { id: "M9", name: "Long-Term Formalization", status: "OPEN", desc: "Semantic SMT proof checking, complete back-substitution, and broader game-theoretic formalization remain future work." }
   ];
 
   // Application State
@@ -194,12 +196,18 @@
     setupSmtStudio();
     setupLeanStudio();
     setupCliDiagnostics();
+    document.querySelectorAll(".candidate-load").forEach(button => {
+      button.addEventListener("click", () => {
+        const sampleId = Number(button.getAttribute("data-candidate-id"));
+        if (Number.isInteger(sampleId)) window.UNIFORM_APP.loadCandidate(sampleId);
+      });
+    });
 
     // Global verify button
     const btnQuickVerify = document.getElementById("btn-quick-verify");
     if (btnQuickVerify) {
       btnQuickVerify.addEventListener("click", () => {
-        alert("Running complete UNIFORM Lab validation suite...\n\n✔ 54 Unit Tests Passing (Python 3.13 / uv, test_elimination, test_server, test_polytopes, test_smt)\n✔ Lean 4 Mathlib Certificate Verified (3,138 jobs, 0 sorry, 0 custom axioms)\n✔ Exact Sylvester Resultant Elimination Verified (<0.06s on 3P, <2s on 4P)\n✔ Z3 5.3.1 & cvc5 1.4.2 Cross-Checked\n✔ All 11 JSON Schemas Valid (Draft 2020-12)\n✔ Zero Floating Errors Detected (Exact Q and Q(alpha))\n\nAll scoped mathematical claims verified.");
+        alert("The browser cannot run the repository release gate.\n\nRun this in a source checkout:\n\nuv run python scripts/reproduce_all.py\n\nThat command executes schema/example validation, complete finite grids, Python quality gates, Rust checks, and the Lean build. Browser plots are visual approximations; exact certificates come from API responses.");
       });
     }
   }
@@ -250,7 +258,7 @@
     MILESTONES.forEach(m => {
       const card = document.createElement("div");
       card.className = "milestone-item";
-      const isVerified = m.status === "VERIFIED";
+      const isVerified = ["VERIFIED", "IMPLEMENTED"].includes(m.status);
       const badgeClass = isVerified ? "badge-success" : "badge-warning";
       card.innerHTML = `
         <div class="milestone-top">
@@ -1254,7 +1262,7 @@ import Uniform.Certificate
 
 /-!
 Formal certificate for Solan-Vieille 2002 Period-2 Certificate
-Generated by UNIFORM Lab Enterprise
+Generated by UNIFORM Lab research workbench
 -/
 
 namespace Uniform.SolanVieille2002
@@ -1314,27 +1322,19 @@ end Uniform.SolanVieille2002
           })
           .then(data => {
             terminal.textContent = "$ uniform doctor\nRunning host and environment diagnostics...\n\n" +
-              `[OK] Python ${data.python} (${data.platform}) - strict typing active\n` +
-              `[OK] uv package manager linked\n` +
-              `[OK] Rust Toolchain: ${data.rust_cargo ? "Active (SplitMix64 deterministic engine)" : "Offline"}\n` +
-              `[OK] Lean 4 (lake ${data.lake ? "active" : "offline"}, 3,138 Mathlib jobs built, 0 sorry, 0 axioms)\n` +
-              `[OK] Z3 Python solver binding: ${data.z3_binding ? "Active" : "Optional"}\n` +
-              `[OK] cvc5 Python solver binding: ${data.cvc5_binding ? "Active" : "Optional"}\n` +
-              `[OK] Exact Rational & Algebraic Arithmetic verified\n` +
-              `[OK] All ${data.schemas_verified} Repository JSON Schemas valid (Draft 2020-12)\n\n` +
-              `Environment status: ENTERPRISE READY (${data.status.toUpperCase()})`;
+              `[OK] Python ${data.python} (${data.platform})\n` +
+              `[${data.rust_cargo ? "OK" : "WARN"}] Cargo / Rust: ${data.rust_cargo ? "available" : "optional and unavailable"}\n` +
+              `[${data.lake ? "OK" : "WARN"}] Lean / Lake: ${data.lake ? "available" : "optional and unavailable"}\n` +
+              `[${data.z3_binding ? "OK" : "WARN"}] Z3 binding: ${data.z3_binding ? "available" : "optional and unavailable"}\n` +
+              `[${data.cvc5_binding ? "OK" : "WARN"}] cvc5 binding: ${data.cvc5_binding ? "available" : "optional and unavailable"}\n` +
+              `[OK] ${data.schemas_available} bundled JSON Schemas available\n\n` +
+              `Core status: ${data.status.toUpperCase()}\n` +
+              "Availability is not a substitute for running the release verification command.";
           })
           .catch(() => {
-            terminal.textContent = "$ uniform doctor\nRunning host and environment diagnostics...\n\n" +
-              "[OK] Python 3.13.9 (win32) - strict typing active\n" +
-              "[OK] uv package manager linked\n" +
-              "[OK] Rust 1.85+ (SplitMix64 deterministic engine)\n" +
-              "[OK] Lean 4 (version 4.35.0, Lake 5.0.0, 3,138 jobs built, 0 sorry, 0 axioms)\n" +
-              "[OK] Z3 Python solver binding active\n" +
-              "[OK] cvc5 Python solver binding active\n" +
-              "[OK] Exact Rational & Algebraic Arithmetic verified\n" +
-              "[OK] All 11 Repository JSON Schemas valid (Draft 2020-12)\n\n" +
-              "Environment status: ENTERPRISE READY (Code 0)";
+            terminal.textContent = "$ uniform doctor\n\n" +
+              "Unable to reach /api/doctor. Start the workbench with `uniform serve`; " +
+              "no environment checks were inferred.";
           });
       });
     }

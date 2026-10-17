@@ -3,6 +3,7 @@ import threading
 import urllib.request
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from urllib.error import HTTPError
 
 from uniform_lab.server import WorkbenchRequestHandler, _doctor_diagnostics
 
@@ -12,7 +13,7 @@ def test_doctor_diagnostics() -> None:
     assert "platform" in diag
     assert "python" in diag
     assert "lake" in diag
-    assert diag["schemas_verified"] >= 10
+    assert diag["schemas_available"] >= 20
     assert diag["status"] == "ready"
 
 
@@ -36,6 +37,8 @@ def test_server_live_endpoints() -> None:
         with urllib.request.urlopen(f"{base_url}/api/doctor") as resp:
             data = json.loads(resp.read().decode())
             assert data["status"] == "ready"
+            assert resp.headers["X-Content-Type-Options"] == "nosniff"
+            assert resp.headers["Access-Control-Allow-Origin"] is None
 
         # Test GET /
         with urllib.request.urlopen(f"{base_url}/") as resp:
@@ -67,7 +70,10 @@ def test_server_live_endpoints() -> None:
         )
         with urllib.request.urlopen(req_elim) as resp:
             data = json.loads(resp.read().decode())
-            assert data["schema"] == "uniform.algebraic-elimination/v1"
+            assert data["schema"] in {
+                "uniform.algebraic-elimination/v1",
+                "uniform.algebraic-elimination/v2",
+            }
             assert data["players"] == 2
 
         # Test POST /api/periodic
@@ -84,7 +90,76 @@ def test_server_live_endpoints() -> None:
             assert data["schema"] == "uniform.periodic-regret-certificate/v1"
             assert "maximum_regret" in data
 
+        # Test GET /api/examples
+        with urllib.request.urlopen(f"{base_url}/api/examples") as resp:
+            data = json.loads(resp.read().decode())
+            assert isinstance(data, dict)
+            assert len(data) > 0
+
+        # Test GET static files
+        with urllib.request.urlopen(f"{base_url}/app.js") as resp:
+            assert resp.status == 200
+            assert "javascript" in resp.headers["Content-Type"]
+        with urllib.request.urlopen(f"{base_url}/style.css") as resp:
+            assert resp.status == 200
+            assert "text/css" in resp.headers["Content-Type"]
+
+
+        # Test POST /api/screen
+        req_screen = urllib.request.Request(
+            f"{base_url}/api/screen",
+            data=json.dumps({
+                "game": game_payload,
+                "denominator": 2,
+                "period": 1,
+                "max_profiles": 10,
+            }).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req_screen) as resp:
+            data = json.loads(resp.read().decode())
+            assert data["schema"] == "uniform.periodic-grid-search/v1"
+
+
     finally:
         server.shutdown()
         server.server_close()
 
+
+
+def test_server_rejects_unsafe_or_unbounded_requests() -> None:
+    server = ThreadingHTTPServer(("127.0.0.1", 0), WorkbenchRequestHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        wrong_type = urllib.request.Request(
+            f"{base_url}/api/validate-game", data=b"{}", headers={"Content-Type": "text/plain"}
+        )
+        try:
+            urllib.request.urlopen(wrong_type)
+        except HTTPError as exc:
+            assert exc.code == 415
+
+        too_large = urllib.request.Request(
+            f"{base_url}/api/validate-game",
+            data=b"{}",
+            headers={"Content-Type": "application/json", "Content-Length": "1048577"},
+        )
+        try:
+            urllib.request.urlopen(too_large)
+        except HTTPError as exc:
+            assert exc.code == 413
+
+        invalid_grid = urllib.request.Request(
+            f"{base_url}/api/screen",
+            data=json.dumps({"denominator": 21}).encode(),
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            urllib.request.urlopen(invalid_grid)
+        except HTTPError as exc:
+            assert exc.code == 400
+    finally:
+        server.shutdown()
+        server.server_close()

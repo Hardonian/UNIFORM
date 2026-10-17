@@ -4,19 +4,63 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python:
+    name: Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv sync --extra dev
-      - run: uv run pytest -q
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - run: uv sync --frozen --extra dev --extra solvers
+      - run: uv run pytest -q --cov=uniform_lab --cov-report=term-missing --cov-fail-under=80
       - run: uv run ruff check .
       - run: uv run mypy
+      - name: Exercise both optional solver backends
+        run: >-
+          uv run uniform solve-campaign examples/one_player_zero.json
+          --period 1 --epsilon 0 --solvers z3 cvc5 --timeout 30
+          --output-dir solver-output/ci
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv lock --check
+      - run: uv build
+      - run: uvx twine check dist/*
+      - name: Smoke-test the wheel in an isolated environment
+        shell: bash
+        run: |
+          python -m venv /tmp/uniform-wheel
+          /tmp/uniform-wheel/bin/pip install dist/*.whl
+          /tmp/uniform-wheel/bin/uniform --version
+          /tmp/uniform-wheel/bin/python -c "from uniform_lab import load_schema, schema_names; assert len(schema_names()) >= 20; load_schema('quitting-game-v1.schema.json')"
+          cd /tmp
+          /tmp/uniform-wheel/bin/uniform validate-game "$GITHUB_WORKSPACE/examples/one_player_zero.json"
 
   rust:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -28,6 +72,7 @@ jobs:
 
   lean:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: leanprover/lean-action@v1

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/solver-campaign-v1.schema.json",
+  "title": "UNIFORM bounded solver campaign summary",
+  "type": "object",
+  "required": ["schema", "statuses", "decisive_solvers_agree", "independently_verified_sat", "global_game_claim", "artifacts"],
+  "properties": {
+    "schema": {"const": "uniform.solver-campaign/v1"},
+    "statuses": {"type": "object", "additionalProperties": {"type": "string"}},
+    "decisive_solvers_agree": {"type": "boolean"},
+    "independently_verified_sat": {"type": "array", "items": {"type": "string"}},
+    "global_game_claim": {"const": false},
+    "artifacts": {"type": "array", "items": {"type": "object"}}
+  },
+  "additionalProperties": false
+}

@@ -10,6 +10,7 @@ from fractions import Fraction
 from importlib.util import find_spec
 from pathlib import Path
 
+from . import __version__
 from .algebraic import certify_algebraic_profile, load_algebraic_profile
 from .grid import periodic_grid_search, write_grid_csv
 from .io import (
@@ -33,7 +34,7 @@ from .quitting import (
 )
 from .rational import parse_rational, rational_text
 from .screening import verify_screen_document
-from .server import start_server
+from .server import _doctor_diagnostics, start_server
 from .smt import export_periodic_qfnra, independently_check_model
 from .solver import (
     build_solver_artifact,
@@ -58,6 +59,7 @@ def _profile(game_path: str, profile_path: str) -> tuple[QuittingGame, Profile]:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="uniform", description="Exact UNIFORM Lab research tools")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
     validate = sub.add_parser("validate-game", help="strictly validate a quitting-game JSON file")
     validate.add_argument("game")
@@ -180,7 +182,7 @@ def _parser() -> argparse.ArgumentParser:
 
     sub.add_parser("environment", help="print reproducibility-relevant runtime metadata")
 
-    serve = sub.add_parser("serve", help="launch the enterprise interactive research workbench")
+    serve = sub.add_parser("serve", help="launch the local interactive research workbench")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8080)
     serve.add_argument("--open", action="store_true", help="open web browser automatically")
@@ -188,7 +190,7 @@ def _parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="run comprehensive toolchain and environment diagnostics")
 
     export_lean = sub.add_parser(
-        "export-lean", help="export a machine-checkable Lean 4 certificate theorem file"
+        "export-lean", help="export a Lean 4 exact-arithmetic certificate file"
     )
     export_lean.add_argument("game")
     export_lean.add_argument("profile")
@@ -197,7 +199,8 @@ def _parser() -> argparse.ArgumentParser:
     export_lean.add_argument("--game-name", default="QuittingInstance")
 
     proof_check = sub.add_parser(
-        "proof-check", help="independently verify an SMT proof trace or Farkas certificate"
+        "proof-check",
+        help="verify a Farkas certificate or structurally audit an SMT proof trace",
     )
     proof_check.add_argument("proof_file")
 
@@ -213,7 +216,7 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> int:
+def _run(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = _parser().parse_args(argv)
@@ -530,37 +533,42 @@ def main(argv: list[str] | None = None) -> int:
         start_server(host=args.host, port=args.port, open_browser=args.open)
         return 0
     if args.command == "doctor":
-        elan_bin = Path.home() / ".elan/bin"
-        lake_ok = (
-            shutil.which("lake") is not None
-            or (elan_bin / "lake.exe").exists()
-            or (elan_bin / "lake").exists()
-        )
-        has_cargo = shutil.which("cargo") is not None
-        has_z3 = find_spec("z3") is not None
-        has_cvc5 = find_spec("cvc5") is not None
+        diagnostics = _doctor_diagnostics()
         checks = [
             ("Python Runtime", sys.version.split()[0], True),
             ("Platform", platform.platform(), True),
-            ("Cargo / Rust", "Available" if has_cargo else "Missing", has_cargo),
-            ("Lean 4 / Lake", "Linked (elan 4.2.4)" if lake_ok else "Not on PATH", bool(lake_ok)),
-            ("Z3 SMT Solver", "Python binding active" if has_z3 else "Missing", has_z3),
-            ("cvc5 SMT Solver", "Python binding active" if has_cvc5 else "Missing", has_cvc5),
+            (
+                "Cargo / Rust (optional)",
+                "Available" if diagnostics["rust_cargo"] else "Missing",
+                diagnostics["rust_cargo"],
+            ),
+            (
+                "Lean 4 / Lake (optional)",
+                "Available" if diagnostics["lake"] else "Missing",
+                diagnostics["lake"],
+            ),
+            (
+                "Z3 binding (optional)",
+                "Available" if diagnostics["z3_binding"] else "Missing",
+                diagnostics["z3_binding"],
+            ),
+            (
+                "cvc5 binding (optional)",
+                "Available" if diagnostics["cvc5_binding"] else "Missing",
+                diagnostics["cvc5_binding"],
+            ),
+            ("Bundled JSON schemas", str(diagnostics["schemas_available"]), True),
             ("Exact Fractional Core", "Active", True),
             ("Real Algebraic Fields", "Sturm sequences active", True),
             ("Essential APS Polytopes", "Canonical Caratheodory active", True),
         ]
-        print("=== UNIFORM Lab Enterprise System Diagnostics ===")
-        all_ok = True
+        print("=== UNIFORM Lab System Diagnostics ===")
         for name, detail, ok in checks:
             status = "[OK] " if ok else "[WARN]"
             print(f"{status} {name:<26} : {detail}")
-            if not ok:
-                all_ok = False
         print("-" * 50)
-        status_msg = "ENTERPRISE READY (Code 0)" if all_ok else "PARTIAL AVAILABILITY"
-        print(f"Overall System Status: {status_msg}")
-        return 0 if all_ok else 1
+        print("Core Status: READY; optional backends are reported separately")
+        return 0
     if args.command == "export-lean":
         game, profile = _profile(args.game, args.profile)
         cert = periodic_regret_certificate(game, profile)
@@ -588,7 +596,8 @@ def main(argv: list[str] | None = None) -> int:
         output_text = dump_json(result, args.output)
         if args.output is None:
             print(output_text, end="")
-        return 0 if result.get("valid") else 2
+        checked = result.get("valid", result.get("structurally_valid", False))
+        return 0 if checked else 2
     if args.command == "eliminate":
         from .elimination import eliminate_quitting_game
 
@@ -599,6 +608,16 @@ def main(argv: list[str] | None = None) -> int:
             print(output_text, end="")
         return 0
     raise AssertionError("unreachable")
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point with concise diagnostics for expected user/input failures."""
+
+    try:
+        return _run(argv)
+    except (OSError, TypeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+        print(f"uniform: error: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":

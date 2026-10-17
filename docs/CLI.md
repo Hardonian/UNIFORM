@@ -1,73 +1,48 @@
-# Command reference
+# CLI reference
 
-All probabilities and payoffs use integers or fraction strings. JSON decimal numbers
-and decimal strings are rejected by the certificate loaders.
+Run `uniform --help` or `uniform COMMAND --help` for authoritative options. Expected input and filesystem errors are printed concisely and return exit code 2.
 
-## Game and strategy certificates
+## Validation and exact evaluation
 
-- `uniform validate-game GAME` validates a complete quitting-game payoff table.
-- `uniform periodic GAME PROFILE [--output FILE]` evaluates exact rational periodic
-  regret from every start phase.
-- `uniform algebraic-periodic GAME PROFILE [--output FILE]` validates one isolated
-  algebraic generator and evaluates the same certificate symbolically.
-- `uniform horizon GAME PROFILE HORIZON` performs exact finite-horizon backward
-  induction.
-- `uniform eliminate GAME [--output FILE]` analyzes the exact mixed equilibrium
-  structure via the Conditional Termination Indifference Principle and Sylvester resultant
-  pseudo-remainders, outputting the exact univariate characteristic polynomial and
-  isolating all real algebraic roots with Sturm sequences.
-- `uniform stochastic GAME PROFILE [--beta Q] [--horizon H]` evaluates exact
-  discounted stationary and finite-horizon stochastic-game regret.
+- `validate-game GAME` — parse and validate a complete quitting-game tensor.
+- `periodic GAME PROFILE [--output FILE]` — exact rational bounded-period regret.
+- `algebraic-periodic GAME PROFILE [--output FILE]` — one-generator real-algebraic certificate.
+- `horizon GAME PROFILE HORIZON [--start-phase N]` — finite-horizon backward induction.
+- `grid GAME --denominator D --period P [...]` — deterministic rational-grid enumeration with optional sharding/cap.
+- `path-check GAME PATH [--epsilon Q]` — structural and sequential finite absorption-path checks.
+- `aps-polytopes GAME SETS [--steps N]` — exact rational-polytope essential APS iterations.
+- `stochastic GAME PROFILE [--beta Q] [--horizon N]` — exact discounted and finite-horizon stochastic evaluation.
+- `eliminate GAME [--output FILE]` — exact interior-candidate elimination. Inspect `interior_candidate_status`; three-player eliminant roots and four-player bivariate reductions are not confirmed solutions.
 
+## SMT workflows
 
-## Search and solvers
+- `smt GAME --period P --epsilon Q --output QUERY.smt2`
+- `solve QUERY.smt2 --solver {z3,cvc5} [...]`
+- `solve-campaign GAME --period P --epsilon Q --output-dir DIR [...]`
+- `check-model GAME MODEL --period P --epsilon Q`
+- `stochastic-smt GAME --beta Q --epsilon Q --output QUERY.smt2`
+- `stochastic-solve-campaign GAME --beta Q --epsilon Q --output-dir DIR [...]`
+- `stochastic-check-model GAME MODEL --beta Q --epsilon Q`
 
-- `uniform grid GAME --denominator D --period P` exhausts the rational product grid.
-  `--max-profiles` creates an explicitly incomplete run; `--shard-index I
-  --shard-count K` partitions the deterministic enumeration; `--csv FILE` writes the
-  retained candidates in tabular form.
-- `uniform smt GAME --period P --epsilon Q --output QUERY` emits the bounded QF_NRA
-  problem.
-- `uniform solve QUERY --solver z3|cvc5` runs one backend. Supplying `--game`,
-  `--period`, and `--epsilon` enables independent rational-model checking.
-  `--output-dir DIR` separates metadata, stdout, stderr, and any native proof.
-- `uniform solve-campaign GAME --period P --epsilon Q --output-dir DIR` generates one
-  query and runs both solvers by default. Each artifact carries query and canonical-game
-  SHA-256 hashes. Decisive disagreement returns exit code 3.
-- `uniform check-model GAME MODEL --period P --epsilon Q` independently checks a saved
-  rational SAT model.
-- `uniform stochastic-smt GAME --beta B --epsilon Q --output QUERY` exports the
-  discounted stationary QF_NRA system for a finite stochastic game.
-- `uniform stochastic-solve-campaign GAME --beta B --epsilon Q --output-dir DIR` runs
-  both solvers and independently checks rational stationary profiles from every state.
-- `uniform stochastic-check-model GAME MODEL --beta B --epsilon Q` rechecks a saved
-  stochastic-game SAT model using exact discounted values and deviations.
+SAT rational assignments are re-evaluated exactly. An UNSAT status is a bounded solver result. `--proof` retains backend-native proof text when available; the package does not semantically validate arbitrary Alethe/native SMT derivations.
 
-Z3 and cvc5 are optional dependencies: `uv sync --extra solvers`. The adapters prefer
-command-line executables and fall back to the official Python bindings. Statuses are
-normalized to `sat`, `unsat`, `unknown`, `timeout`, `error`, or `missing`.
+## Proof and Lean utilities
 
-## Absorption paths and APS
+- `proof-check FILE --type farkas` — independently verify an exact rational Farkas certificate.
+- `proof-check FILE --type smt` — structurally audit parsed trace IDs, premise ordering, and the final contradiction marker. The JSON result always reports `semantically_verified: false`.
+- `export-lean GAME PROFILE [--output FILE]` — emit a Lean file that recomputes reported rational regret identities and bounds. It does not derive phase values from the game semantics.
 
-- `uniform path-check GAME PATH [--epsilon Q]` validates the exact finite symbolic
-  continuous/jump path and its sequential conditions.
-- `uniform aps-polytopes GAME SETS [--steps N]` iterates the successor-restricted
-  operator over finite unions of exact rational V-polytopes.
+## Workbench and diagnostics
 
-## Formal verification, proofs, and enterprise workbench
+- `serve [--host HOST] [--port PORT] [--open]` — local unauthenticated HTTP workbench. Keep the default loopback host unless protected by an external security layer.
+- `doctor` — report core and optional tool availability.
+- `environment` — emit runtime/solver discovery metadata.
+- `--version` — print the installed package version.
 
-- `uniform doctor` performs comprehensive enterprise diagnostics across all runtimes,
-  compilers, SMT backends, and exact arithmetic engines.
-- `uniform export-lean GAME PROFILE [--output FILE]` translates an arbitrary quitting game
-  and rational profile into a formal Lean 4 theorem file verified against Mathlib.
-- `uniform proof-check PROOF_FILE [--type smt|farkas]` verifies an independent Farkas
-  infeasibility certificate or SMT-LIB2 / Alethe proof trace.
-- `uniform serve [--host HOST] [--port PORT] [--open]` launches the standalone Enterprise
-  Web Workbench with 10 interactive research suites and real-time backend API integration.
+## Exit codes
 
-## Exit behavior and trust boundary
+- `0`: requested check or operation succeeded.
+- `2`: invalid input, unavailable required backend, failed certificate/model check, or expected operational error.
+- `3`: decisive solvers in a campaign disagreed.
 
-Certificate commands return 0 when their requested scoped check passes and 2 when a
-candidate fails or execution fails. A solver `unknown` is retained as `unknown`; it is
-not converted into UNSAT. Grid completeness fields, algebraic scope, and the
-`global_game_claim=false` marker are part of the machine-readable outputs.
+Every certificate’s JSON `scope` and schema identifier are part of its public contract.

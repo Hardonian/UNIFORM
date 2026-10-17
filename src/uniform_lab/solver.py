@@ -7,6 +7,7 @@ import json
 import re
 import shutil
 import subprocess
+import sys
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -24,12 +25,13 @@ SolverStatus = Literal["sat", "unsat", "unknown", "timeout", "error", "missing"]
 
 
 def _status(stdout: str, *, timed_out: bool, returncode: int) -> SolverStatus:
-    if timed_out:
+    if timed_out or returncode == 124:
         return "timeout"
     match = re.search(r"(?m)^(sat|unsat|unknown)\s*$", stdout)
     if match:
         return match.group(1)  # type: ignore[return-value]
-    return "error" if returncode else "missing"
+    return "missing" if returncode == 127 else "error"
+
 
 
 @dataclass(frozen=True)
@@ -110,7 +112,9 @@ def run_solver(
             and _status(completed.stdout, timed_out=False, returncode=completed.returncode)
             == "unsat"
         ):
-            proof = _run_command_line_proof(executable, solver, query, timeout)
+            remaining = max(0.5, timeout - elapsed)
+            proof = _run_command_line_proof(executable, solver, query, remaining)
+
         return SolverRun(
             solver,
             executable,
@@ -183,7 +187,84 @@ def _run_command_line_proof(
 def _run_python_binding(
     path: Path, solver: str, timeout: float, *, produce_proof: bool
 ) -> SolverRun:
-    """Use optional official Python bindings when no command-line binary exists."""
+    """Run an official Python binding behind an enforceable process deadline."""
+
+    started = time.monotonic()
+    grace = min(5.0, max(0.25, timeout * 0.1))
+    command = [
+        sys.executable,
+        "-m",
+        "uniform_lab.solver_worker",
+        str(path.resolve()),
+        solver,
+        str(timeout),
+        "1" if produce_proof else "0",
+    ]
+    try:
+        completed = subprocess.run(
+            command,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=timeout + grace,
+        )
+    except subprocess.TimeoutExpired as exc:
+        stdout = exc.stdout.decode() if isinstance(exc.stdout, bytes) else (exc.stdout or "")
+        stderr = exc.stderr.decode() if isinstance(exc.stderr, bytes) else (exc.stderr or "")
+        return SolverRun(
+            solver,
+            f"python:{solver}",
+            "unknown",
+            124,
+            stdout,
+            stderr or f"hard timeout after {timeout + grace:.3f} seconds",
+            time.monotonic() - started,
+            True,
+            "python-binding-subprocess",
+        )
+    try:
+        payload = json.loads(completed.stdout)
+        if not isinstance(payload, dict):
+            raise TypeError("worker result must be an object")
+        return SolverRun(
+            solver=str(payload["solver"]),
+            executable=str(payload["executable"]),
+            version=str(payload["version"]),
+            returncode=int(payload["returncode"]),
+            stdout=str(payload["stdout"]),
+            stderr=str(payload["stderr"]),
+            elapsed_seconds=float(payload["elapsed_seconds"]),
+            timed_out=bool(payload["timed_out"]),
+            backend="python-binding-subprocess",
+            proof=None if payload["proof"] is None else str(payload["proof"]),
+        )
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        is_timeout = completed.returncode == 124
+        return SolverRun(
+            solver,
+            f"python:{solver}",
+            "unknown",
+            completed.returncode or (124 if is_timeout else 1),
+            completed.stdout or "",
+            (
+                completed.stderr
+                or (
+                    f"hard timeout after {timeout:.3f} seconds (exit code 124)"
+                    if is_timeout
+                    else f"invalid solver worker response: {exc}"
+                )
+            ),
+            time.monotonic() - started,
+            is_timeout,
+            "python-binding-subprocess",
+        )
+
+
+
+def _run_python_binding_direct(
+    path: Path, solver: str, timeout: float, *, produce_proof: bool
+) -> SolverRun:
+    """Execute a binding in the isolated worker process."""
 
     started = time.monotonic()
     try:

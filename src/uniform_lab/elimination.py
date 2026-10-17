@@ -332,13 +332,27 @@ class EliminationResult:
     characteristic_polynomial: RationalPolynomial | None
     isolated_interior_roots: tuple[tuple[Q, Q], ...]
     bivariate_degrees: tuple[int, int] | None
-    stationary_equilibrium_possible: bool
+    interior_candidate_status: str
     summary: str
+
+    @property
+    def stationary_equilibrium_possible(self) -> bool | None:
+        """Compatibility view, restricted to fully decided all-interior cases."""
+
+        if self.interior_candidate_status == "confirmed":
+            return True
+        if self.interior_candidate_status == "ruled_out":
+            return False
+        return None
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "schema": "uniform.algebraic-elimination/v1",
+            "schema": "uniform.algebraic-elimination/v2",
             "players": self.players,
+            "scope": (
+                "all-interior stationary indifference candidates only; boundary supports "
+                "and uniform equilibrium are outside this certificate"
+            ),
             "characteristic_polynomial_coefficients": (
                 [rational_text(c) for c in self.characteristic_polynomial.coefficients]
                 if self.characteristic_polynomial
@@ -349,6 +363,7 @@ class EliminationResult:
                 for low, high in self.isolated_interior_roots
             ],
             "stationary_equilibrium_possible": self.stationary_equilibrium_possible,
+            "interior_candidate_status": self.interior_candidate_status,
             "summary": self.summary,
         }
 
@@ -375,12 +390,14 @@ def eliminate_quitting_game(game: QuittingGame) -> EliminationResult:
             return EliminationResult(
                 1,
                 None,
-                ((Fraction(0), Fraction(1)),),
+                (),
                 None,
-                True,
-                "Indifferent on entire interval [0, 1]",
+                "confirmed",
+                "Every interior quit probability satisfies the one-player indifference condition",
             )
-        return EliminationResult(1, None, (), None, False, "Player 1 strictly prefers pure action")
+        return EliminationResult(
+            1, None, (), None, "ruled_out", "No interior stationary indifference point"
+        )
 
     if n == 2:
         # Two equations: Phi_0(q_1) = 0 and Phi_1(q_0) = 0
@@ -392,14 +409,19 @@ def eliminate_quitting_game(game: QuittingGame) -> EliminationResult:
         roots_q1 = (
             isolate_real_roots(poly_q1, Fraction(0), Fraction(1)) if poly_q1.degree > 0 else []
         )
-        possible = len(roots_q0) > 0 and len(roots_q1) > 0
+        q0_feasible = poly_q0.is_zero or bool(roots_q0)
+        q1_feasible = poly_q1.is_zero or bool(roots_q1)
+        possible = q0_feasible and q1_feasible
         return EliminationResult(
             2,
             poly_q0,
             tuple(roots_q0),
             None,
-            possible,
-            f"Independent univariates: {len(roots_q0)} roots for q0, {len(roots_q1)} for q1",
+            "confirmed" if possible else "ruled_out",
+            (
+                "Independent indifference equations: "
+                f"{len(roots_q0)} isolated q0 roots and {len(roots_q1)} isolated q1 roots"
+            ),
         )
 
     if n == 3:
@@ -415,8 +437,11 @@ def eliminate_quitting_game(game: QuittingGame) -> EliminationResult:
             cur,
             tuple(roots),
             None,
-            len(roots) > 0,
-            f"Derived degree-{cur.degree} characteristic polynomial; {len(roots)} interior roots",
+            "eliminant_roots_found" if roots else "no_eliminant_roots",
+            (
+                f"Derived degree-{cur.degree} eliminant with {len(roots)} interior root intervals; "
+                "back-substitution is required to confirm simultaneous solutions"
+            ),
         )
 
     # 4-player game
@@ -436,6 +461,9 @@ def eliminate_quitting_game(game: QuittingGame) -> EliminationResult:
         None,
         (),
         deg_s12,
-        True,
-        f"Reduced to bivariate system in (q0, q1) of degrees {deg_s12} and {deg_s0} in <1s",
+        "reduced_not_solved",
+        (
+            "Derived bivariate necessary conditions in (q0, q1) with degrees "
+            f"{deg_s12} and {deg_s0}; existence is not decided"
+        ),
     )

@@ -7,11 +7,13 @@ import Uniform.Certificate
 /-!
 # Formal Machine-Checked Verification of Adversarial Candidate 46876
 
-Candidate 46876 is a 4-player quitting game discovered via continuous mixed-simplex
-screening. This module formally proves in Lean 4:
+Candidate 46876 is a 4-player quitting game retained by a finite mixed-grid screen.
+This module formally proves in Lean 4:
 1. Every pure action profile (Fin 16) is unstable (violates Nash equilibrium).
 2. For every pure profile, at least one player has a strictly profitable unilateral deviation.
-3. The maximum regret over the 1-phase rational grid (d=4) is bounded below by 3/4.
+
+The final declarations merely record and compare grid minima computed outside Lean. They
+do not connect those constants to an enumeration theorem or to the continuous simplex.
 -/
 
 namespace Uniform.Candidate46876
@@ -55,26 +57,25 @@ theorem candidate_46876_no_pure_equilibrium :
     ∀ mask : Fin 16, isPureNash mask = false := by
   decide
 
-def minStationaryRegretLowerBound : ℚ := 3 / 4
+def reportedStationaryGridMinimum : ℚ := 3 / 4
 
-theorem stationary_regret_lower_bound_positive :
-    0 < minStationaryRegretLowerBound := by
-  unfold minStationaryRegretLowerBound
+theorem reported_stationary_grid_minimum_positive :
+    0 < reportedStationaryGridMinimum := by
+  unfold reportedStationaryGridMinimum
   norm_num
 
-def cyclicGridResistanceBound : ℚ := 1
+def reportedCyclicGridMinimum : ℚ := 1
 
-theorem cyclic_grid_resistance_strictly_positive :
-    0 < cyclicGridResistanceBound := by
-  unfold cyclicGridResistanceBound
+theorem reported_cyclic_grid_minimum_positive :
+    0 < reportedCyclicGridMinimum := by
+  unfold reportedCyclicGridMinimum
   norm_num
 
-def solanVieilleCyclicResistanceFloor : ℚ := 4 / 21
+def reportedSolanVieilleCyclicGridMinimum : ℚ := 4 / 21
 
-theorem candidate_46876_exceeds_solan_vieille_cyclic_resistance :
-    solanVieilleCyclicResistanceFloor < cyclicGridResistanceBound := by
-  unfold solanVieilleCyclicResistanceFloor cyclicGridResistanceBound
+theorem reported_candidate_grid_minimum_exceeds_reported_solan_vieille_minimum :
+    reportedSolanVieilleCyclicGridMinimum < reportedCyclicGridMinimum := by
+  unfold reportedSolanVieilleCyclicGridMinimum reportedCyclicGridMinimum
   norm_num
 
 end Uniform.Candidate46876
-

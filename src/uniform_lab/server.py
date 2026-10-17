@@ -1,4 +1,4 @@
-"""Built-in HTTP server and REST API for UNIFORM Lab Enterprise Workbench."""
+"""Local HTTP server and bounded REST API for the UNIFORM research workbench."""
 
 from __future__ import annotations
 
@@ -13,15 +13,17 @@ from importlib.util import find_spec
 from pathlib import Path
 from typing import Any
 
-from .io import dump_json, load_json
+from .io import dump_json
 from .quitting import QuittingGame, normalize_profile, periodic_regret_certificate
+from .resources import example_names, load_example, schema_names
 
 WEB_DIR = Path(__file__).parent / "web"
+MAX_REQUEST_BYTES = 1_048_576
+MAX_GRID_PROFILES = 100_000
+REQUEST_ERRORS = (KeyError, IndexError, TypeError, ValueError, OverflowError)
 
 
 def _doctor_diagnostics() -> dict[str, Any]:
-    schemas_dir = Path(__file__).resolve().parent.parent.parent / "schemas"
-    schema_count = len(list(schemas_dir.glob("*.schema.json"))) if schemas_dir.exists() else 11
     return {
         "platform": platform.platform(),
         "python": sys.version.split()[0],
@@ -33,10 +35,15 @@ def _doctor_diagnostics() -> dict[str, Any]:
         ),
         "z3_binding": find_spec("z3") is not None,
         "cvc5_binding": find_spec("cvc5") is not None,
-        "schemas_verified": schema_count,
+        "schemas_available": len(schema_names()),
         "status": "ready",
     }
 
+
+
+class WorkbenchHTTPServer(ThreadingHTTPServer):
+    daemon_threads = True
+    allow_reuse_address = True
 
 
 class WorkbenchRequestHandler(BaseHTTPRequestHandler):
@@ -50,15 +57,25 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self._send_security_headers()
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_security_headers(self) -> None:
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header(
+            "Content-Security-Policy",
+            "default-src 'self'; script-src 'self'; style-src 'self'; "
+            "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
+        )
+
     def do_OPTIONS(self) -> None:
-        self.send_response(200)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_response(405)
+        self.send_header("Allow", "GET, POST")
+        self._send_security_headers()
         self.end_headers()
 
     def do_GET(self) -> None:
@@ -67,15 +84,11 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             self._send_json(_doctor_diagnostics())
             return
         if path == "/api/examples":
-            examples_dir = Path(__file__).resolve().parent.parent.parent / "examples"
-            found: dict[str, Any] = {}
-            if examples_dir.exists():
-                for f in examples_dir.glob("*.json"):
-                    try:
-                        found[f.stem] = load_json(f)
-                    except Exception:
-                        pass
+            found = {Path(name).stem: load_example(name) for name in example_names()}
             self._send_json(found)
+            return
+        if path.startswith("/api/"):
+            self._send_json({"error": "Unknown API endpoint"}, status=404)
             return
 
         # Serve static assets from WEB_DIR
@@ -83,8 +96,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         if path in {"", "/"}:
             target = WEB_DIR / "index.html"
 
-        web_root = str(WEB_DIR.resolve())
-        if not str(target).startswith(web_root) or not target.exists() or target.is_dir():
+        if not target.is_relative_to(WEB_DIR.resolve()) or not target.exists() or target.is_dir():
             target = WEB_DIR / "index.html"
 
         if not target.exists():
@@ -101,16 +113,37 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", f"{content_type}; charset=utf-8")
         self.send_header("Content-Length", str(len(content)))
+        self._send_security_headers()
         self.end_headers()
         self.wfile.write(content)
 
     def do_POST(self) -> None:
-        content_length = int(self.headers.get("Content-Length", 0))
-        body = self.rfile.read(content_length).decode("utf-8")
+        raw_length = self.headers.get("Content-Length")
+        if raw_length is None:
+            self._send_json({"error": "Content-Length is required"}, status=411)
+            return
         try:
+            content_length = int(raw_length)
+        except ValueError:
+            self._send_json({"error": "Invalid Content-Length"}, status=400)
+            return
+        if content_length < 0 or content_length > MAX_REQUEST_BYTES:
+            self._send_json(
+                {"error": f"Request body exceeds the {MAX_REQUEST_BYTES}-byte limit"}, status=413
+            )
+            return
+        content_type = self.headers.get_content_type()
+        if content_type != "application/json":
+            self._send_json({"error": "Content-Type must be application/json"}, status=415)
+            return
+        try:
+            body = self.rfile.read(content_length).decode("utf-8")
             payload = json.loads(body) if body else {}
-        except Exception as e:
+        except (UnicodeError, json.JSONDecodeError) as e:
             self._send_json({"error": f"Invalid JSON: {e}"}, status=400)
+            return
+        if not isinstance(payload, dict):
+            self._send_json({"error": "JSON request body must be an object"}, status=400)
             return
 
         path = self.path.split("?")[0]
@@ -126,7 +159,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
                         "pure_instant_equilibria": list(game.pure_instant_equilibria()),
                     }
                 )
-            except Exception as e:
+            except REQUEST_ERRORS as e:
                 self._send_json({"valid": False, "error": str(e)}, status=400)
             return
 
@@ -136,7 +169,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
                 profile = normalize_profile(game, payload["profile"])
                 cert = periodic_regret_certificate(game, profile)
                 self._send_json(cert.to_dict())
-            except Exception as e:
+            except REQUEST_ERRORS as e:
                 self._send_json({"error": str(e)}, status=400)
             return
 
@@ -148,7 +181,7 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
 
                 elim_result = eliminate_quitting_game(game)
                 self._send_json(elim_result.to_dict())
-            except Exception as e:
+            except REQUEST_ERRORS as e:
                 self._send_json({"error": str(e)}, status=400)
             return
 
@@ -159,13 +192,25 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
                 denominator = int(payload.get("denominator", 2))
                 period = int(payload.get("period", 2))
                 max_profiles = payload.get("max_profiles", 200)
+                if not 1 <= denominator <= 20:
+                    raise ValueError("denominator must be between 1 and 20")
+                if not 1 <= period <= 8:
+                    raise ValueError("period must be between 1 and 8")
+                if (
+                    isinstance(max_profiles, bool)
+                    or not isinstance(max_profiles, int)
+                    or not 1 <= max_profiles <= MAX_GRID_PROFILES
+                ):
+                    raise ValueError(
+                        f"max_profiles must be an integer from 1 to {MAX_GRID_PROFILES}"
+                    )
                 from .grid import periodic_grid_search
 
                 grid_result = periodic_grid_search(
                     game, denominator, period, max_profiles=max_profiles
                 )
                 self._send_json(grid_result.to_dict())
-            except Exception as e:
+            except REQUEST_ERRORS as e:
                 self._send_json({"error": str(e)}, status=400)
             return
 
@@ -174,10 +219,15 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
 
 def start_server(host: str = "127.0.0.1", port: int = 8080, open_browser: bool = False) -> None:
     """Start the UNIFORM Lab workbench web server."""
+    if not 0 <= port <= 65_535:
+        raise ValueError("port must be between 0 and 65535")
     server_address = (host, port)
-    httpd = ThreadingHTTPServer(server_address, WorkbenchRequestHandler)
-    url = f"http://{host}:{port}/"
-    print(f"UNIFORM Lab Enterprise Workbench running at {url}")
+    httpd = WorkbenchHTTPServer(server_address, WorkbenchRequestHandler)
+    actual_port = int(httpd.server_address[1])
+    url = f"http://{host}:{actual_port}/"
+    print(f"UNIFORM Lab research workbench running at {url}")
+    if host not in {"127.0.0.1", "localhost", "::1"}:
+        print("WARNING: this unauthenticated research API is exposed beyond the loopback host.")
     print("Press Ctrl+C to terminate.")
 
     if open_browser:

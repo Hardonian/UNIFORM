@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/smt-proof-structure-v1.schema.json",
+  "title": "UNIFORM SMT proof trace structural audit",
+  "type": "object",
+  "required": ["schema", "structurally_valid", "semantically_verified", "verification_scope", "message", "step_count", "concludes_false", "rules_used"],
+  "properties": {
+    "schema": {"const": "uniform.smt-proof-structure/v1"},
+    "structurally_valid": {"type": "boolean"},
+    "semantically_verified": {"const": false},
+    "verification_scope": {"type": "string", "minLength": 1},
+    "message": {"type": "string"},
+    "step_count": {"type": "integer", "minimum": 0},
+    "concludes_false": {"type": "boolean"},
+    "rules_used": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  },
+  "additionalProperties": false
+}

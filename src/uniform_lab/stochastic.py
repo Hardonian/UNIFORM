@@ -108,8 +108,11 @@ class StochasticGame:
                         f"state {state}, player {player}: probabilities must sum to one"
                     )
 
-    def induced(self, profile: StationaryProfile, player: int) -> tuple[list[Q], list[list[Q]]]:
-        self.validate_profile(profile)
+    def _induced_validated(
+        self, profile: StationaryProfile, player: int
+    ) -> tuple[list[Q], list[list[Q]]]:
+        if not 0 <= player < self.players:
+            raise IndexError("player index out of range")
         rewards = [Fraction(0) for _ in range(self.states)]
         transition = [[Fraction(0) for _ in range(self.states)] for _ in range(self.states)]
         for state in range(self.states):
@@ -123,22 +126,67 @@ class StochasticGame:
                     transition[state][target] += probability * self.transitions[key][target]
         return rewards, transition
 
+    def induced(self, profile: StationaryProfile, player: int) -> tuple[list[Q], list[list[Q]]]:
+        self.validate_profile(profile)
+        return self._induced_validated(profile, player)
+
+    def _discounted_player_values(
+        self, profile: StationaryProfile, beta: Q, player: int
+    ) -> tuple[Q, ...]:
+        rewards, transition = self._induced_validated(profile, player)
+        matrix = [
+            [
+                Fraction(row == column) - beta * transition[row][column]
+                for column in range(self.states)
+            ]
+            for row in range(self.states)
+        ]
+        return solve_linear(matrix, [(1 - beta) * value for value in rewards])
+
+    def _deviation_kernels(
+        self, profile: StationaryProfile, player: int
+    ) -> tuple[list[list[Q]], list[list[list[Q]]]]:
+        """Stage rewards/transitions for each pure action against fixed opponents."""
+
+        rewards = [
+            [Fraction(0) for _ in range(self.action_counts[player])]
+            for _ in range(self.states)
+        ]
+        transitions = [
+            [
+                [Fraction(0) for _ in range(self.states)]
+                for _ in range(self.action_counts[player])
+            ]
+            for _ in range(self.states)
+        ]
+        for state in range(self.states):
+            for action in range(self.action_counts[player]):
+                ranges = [
+                    range(self.action_counts[other]) if other != player else (action,)
+                    for other in range(self.players)
+                ]
+                for joint in product(*ranges):
+                    probability = Fraction(1)
+                    for other, chosen in enumerate(joint):
+                        if other != player:
+                            probability *= profile[state][other][chosen]
+                    key = (state, joint)
+                    rewards[state][action] += probability * self.payoffs[key][player]
+                    for target in range(self.states):
+                        transitions[state][action][target] += (
+                            probability * self.transitions[key][target]
+                        )
+        return rewards, transitions
+
     def discounted_values(self, profile: StationaryProfile, beta: Q) -> tuple[tuple[Q, ...], ...]:
         """Normalized discounted values: (1-beta) sum beta^t r_t."""
 
         if not 0 <= beta < 1:
             raise ValueError("beta must lie in [0,1)")
+        self.validate_profile(profile)
         by_player: list[tuple[Q, ...]] = []
         for player in range(self.players):
-            rewards, transition = self.induced(profile, player)
-            matrix = [
-                [
-                    Fraction(row == column) - beta * transition[row][column]
-                    for column in range(self.states)
-                ]
-                for row in range(self.states)
-            ]
-            by_player.append(solve_linear(matrix, [(1 - beta) * value for value in rewards]))
+            by_player.append(self._discounted_player_values(profile, beta, player))
         return tuple(
             tuple(by_player[player][state] for player in range(self.players))
             for state in range(self.states)
@@ -166,6 +214,9 @@ class StochasticGame:
         policies covers arbitrary behavioral unilateral deviations for this evaluation.
         """
 
+        if not 0 <= beta < 1:
+            raise ValueError("beta must lie in [0,1)")
+        self.validate_profile(profile)
         values = self.discounted_values(profile, beta)
         best = [
             [values[state][player] for player in range(self.players)]
@@ -173,11 +224,11 @@ class StochasticGame:
         ]
         for player in range(self.players):
             for policy in product(range(self.action_counts[player]), repeat=self.states):
-                candidate = self.discounted_values(
-                    self._replace_policy(profile, player, policy), beta
+                candidate = self._discounted_player_values(
+                    self._replace_policy(profile, player, policy), beta, player
                 )
                 for state in range(self.states):
-                    best[state][player] = max(best[state][player], candidate[state][player])
+                    best[state][player] = max(best[state][player], candidate[state])
         return tuple(
             tuple(best[state][player] - values[state][player] for player in range(self.players))
             for state in range(self.states)
@@ -191,37 +242,30 @@ class StochasticGame:
         if horizon < 1:
             raise ValueError("horizon must be positive")
         self.validate_profile(profile)
+        induced = [self._induced_validated(profile, player) for player in range(self.players)]
+        kernels = [self._deviation_kernels(profile, player) for player in range(self.players)]
         profile_total = [[Fraction(0) for _ in range(self.states)] for _ in range(self.players)]
         best_total = [[Fraction(0) for _ in range(self.states)] for _ in range(self.players)]
         for _ in range(horizon):
             next_profile = [[Fraction(0) for _ in range(self.states)] for _ in range(self.players)]
             next_best = [[Fraction(0) for _ in range(self.states)] for _ in range(self.players)]
             for player in range(self.players):
-                rewards, transition = self.induced(profile, player)
+                rewards, transition = induced[player]
+                action_rewards, action_transitions = kernels[player]
                 for state in range(self.states):
                     next_profile[player][state] = rewards[state] + sum(
                         transition[state][target] * profile_total[player][target]
                         for target in range(self.states)
                     )
-                    actions: list[Q] = []
-                    for action in range(self.action_counts[player]):
-                        total = Fraction(0)
-                        other_ranges = [
-                            range(self.action_counts[p]) if p != player else (action,)
-                            for p in range(self.players)
-                        ]
-                        for joint in product(*other_ranges):
-                            probability = Fraction(1)
-                            for other, chosen in enumerate(joint):
-                                if other != player:
-                                    probability *= profile[state][other][chosen]
-                            key = (state, joint)
-                            continuation = sum(
-                                self.transitions[key][target] * best_total[player][target]
-                                for target in range(self.states)
-                            )
-                            total += probability * (self.payoffs[key][player] + continuation)
-                        actions.append(total)
+                    actions = [
+                        action_rewards[state][action]
+                        + sum(
+                            action_transitions[state][action][target]
+                            * best_total[player][target]
+                            for target in range(self.states)
+                        )
+                        for action in range(self.action_counts[player])
+                    ]
                     next_best[player][state] = max(actions)
             profile_total, best_total = next_profile, next_best
         return tuple(

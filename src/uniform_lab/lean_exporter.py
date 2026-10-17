@@ -2,8 +2,19 @@
 
 from __future__ import annotations
 
+import re
+
 from .quitting import PeriodicRegretCertificate, QuittingGame
 from .rational import rational_text
+
+_LEAN_IDENTIFIER = re.compile(r"^[A-Za-z_][A-Za-z0-9_']*$")
+
+
+def _checked_namespace(module_name: str) -> str:
+    parts = module_name.split(".")
+    if not parts or any(not _LEAN_IDENTIFIER.fullmatch(part) for part in parts):
+        raise ValueError("module_name must be a dot-separated Lean identifier")
+    return parts[-1]
 
 
 def export_lean_certificate(
@@ -12,7 +23,16 @@ def export_lean_certificate(
     module_name: str = "Uniform.GeneratedInstance",
     game_name: str = "QuittingInstance",
 ) -> str:
-    """Generate a formal Lean 4 source file certifying the periodic regret of a game."""
+    """Generate a Lean file checking the certificate's concrete rational arithmetic.
+
+    The generated theorem recomputes every reported regret from the supplied value and
+    best-deviation arrays and checks the common bound.  It does not derive those arrays
+    from the game/profile semantics, so it is an arithmetic certificate rather than a
+    formal proof of equilibrium.
+    """
+
+    namespace = _checked_namespace(module_name)
+    safe_game_name = " ".join(game_name.splitlines())
 
     lines: list[str] = [
         "module",
@@ -22,12 +42,15 @@ def export_lean_certificate(
         "import Uniform.Certificate",
         "",
         "/-!",
-        f"Formal certificate for {game_name}",
+        f"Exact rational arithmetic certificate for {safe_game_name}",
         f"Players: {game.players}",
         f"Maximum regret: {rational_text(certificate.maximum_regret)}",
+        "",
+        "Scope: this file checks the reported regret arithmetic and bound. It does not",
+        "derive phase values or deviation values from the game/profile semantics.",
         "-/",
         "",
-        f"namespace {module_name.split('.')[-1]}",
+        f"namespace {namespace}",
         "",
         "open Uniform",
         "",
@@ -36,6 +59,12 @@ def export_lean_certificate(
             "def continuationPayoff : List ℚ := ["
             f"{', '.join(rational_text(x) for x in game.continuation)}]"
         ),
+        "def absorbingPayoffs : List (List ℚ) := [",
+        *[
+            f"  [{', '.join(rational_text(x) for x in game.payoffs[mask])}],"
+            for mask in sorted(game.payoffs)
+        ],
+        "]",
         f"def maximumRegret : ℚ := {rational_text(certificate.maximum_regret)}",
         "",
     ]
@@ -52,14 +81,29 @@ def export_lean_certificate(
         lines.append(f"def phase{phase_idx}Regrets : List ℚ := [{reg_str}]")
 
     lines.append("")
-    # Add regret bound theorem
+    for phase_idx in range(certificate.period):
+        lines.append(f"theorem phase{phase_idx}_regrets_recomputed :")
+        lines.append(
+            f"    phase{phase_idx}Regrets = List.zipWith regret "
+            f"phase{phase_idx}Values phase{phase_idx}BestDeviations := by"
+        )
+        lines.append("  native_decide")
+        lines.append("")
+
+    joined_regrets = " ++ ".join(
+        f"phase{phase_idx}Regrets" for phase_idx in range(certificate.period)
+    )
+    lines.append(f"def allRegrets : List ℚ := {joined_regrets}")
+    lines.append("")
     lines.append("theorem certificate_regret_bound :")
-    lines.append(f"    maximumRegret ≤ ({rational_text(certificate.maximum_regret)} : ℚ) := by")
-    lines.append("  unfold maximumRegret")
-    lines.append("  decide")
+    lines.append("    ∀ regretValue ∈ allRegrets, regretValue ≤ maximumRegret := by")
+    lines.append("  native_decide")
+    lines.append("")
+    lines.append("theorem maximum_regret_attained : maximumRegret ∈ allRegrets := by")
+    lines.append("  native_decide")
     lines.append("")
 
-    lines.append(f"end {module_name.split('.')[-1]}")
+    lines.append(f"end {namespace}")
     lines.append("")
 
     return "\n".join(lines)

@@ -6,10 +6,11 @@ abstract: >-
   suite designed to investigate the existence of uniform equilibrium in finite multiplayer
   quitting games and small stochastic games. The system eliminates numerical float artifacts
   through exact rational arithmetic and algebraic field arithmetic with Sturm root isolation.
-  It provides a high-throughput deterministic Rust scanner (43.9M games/s), multi-solver
-  SMT-CAD artifact generators (Z3/cvc5), exact Sylvester resultant elimination engines,
-  and machine-checked Lean 4 Mathlib proofs with zero axioms and zero proof debt.
-version: 0.3.0
+  It provides a deterministic Rust scanner with recorded benchmark artifacts, multi-solver
+  SMT artifact generation (Z3/cvc5), exact Sylvester resultant elimination primitives,
+  and a scoped Lean 4 Mathlib library. Finite-grid and eliminant results are not promoted
+  to claims about the general uniform-equilibrium problem.
+version: 1.0.0-rc1
 date-released: "2026-10-16"
 license: Apache-2.0
 repository-code: "https://github.com/Hardonian/UNIFORM"
@@ -32,7 +33,7 @@ preferred-citation:
   authors:
     - family-names: "UNIFORM Lab"
       given-names: "Research Team"
-  title: "Non-Existence of Stationary and Cyclic Equilibria in Multiplayer Quitting Games: Exact Algebraic Elimination and Machine-Checked Proofs"
+  title: "Exact Computational Evidence and Scoped Certificates in Multiplayer Quitting Games"
   year: 2026
   journal: "arXiv preprint arXiv:2610.UNIFORM"
   url: "https://github.com/Hardonian/UNIFORM"

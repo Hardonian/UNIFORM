@@ -65,6 +65,7 @@ class FarkasCertificate:
             "message": message,
             "rows": len(self.matrix),
             "columns": len(self.matrix[0]),
+            "matrix": [[rational_text(value) for value in row] for row in self.matrix],
             "multipliers": [rational_text(w) for w in self.multipliers],
             "bounds": [rational_text(b) for b in self.bounds],
         }
@@ -80,7 +81,12 @@ class ProofStep:
 
 @dataclass(frozen=True)
 class SmtProofTrace:
-    """Parsed SMT-LIB2 / Alethe proof trace with step verification."""
+    """Parsed SMT-LIB2/Alethe-like trace for a structural integrity audit.
+
+    This class deliberately does not claim to validate Alethe inference semantics or
+    bind assumptions to an SMT query.  A structurally well-formed trace is not, on its
+    own, an independently checked UNSAT proof.
+    """
 
     steps: tuple[ProofStep, ...]
     concludes_false: bool
@@ -134,7 +140,7 @@ class SmtProofTrace:
         return cls(tuple(steps), concludes_false)
 
     def verify(self) -> tuple[bool, str]:
-        """Verify that all premises refer to earlier steps and derive a contradiction."""
+        """Audit IDs, premise ordering, and the final contradiction marker only."""
         if not self.steps:
             return False, "proof trace contains no identifiable derivation steps"
         if not self.concludes_false:
@@ -142,20 +148,31 @@ class SmtProofTrace:
 
         step_map: set[str] = set()
         for step in self.steps:
+            if step.step_id in step_map:
+                return False, f"duplicate step identifier {step.step_id}"
             for p in step.premises:
                 if p not in step_map:
-                    # Permissive for external theory lemmas if labelled
-                    if not p.startswith("t") and not p.startswith("@"):
-                        return False, f"step {step.step_id} references undeclared premise {p}"
+                    return False, f"step {step.step_id} references undeclared premise {p}"
             step_map.add(step.step_id)
 
-        return True, f"proof verified: {len(self.steps)} steps derive contradiction"
+        final_clause = self.steps[-1].clause
+        if final_clause not in {("false",), ("cl",), ("cl", "false")}:
+            return False, "the final parsed step is not a contradiction marker"
+        return (
+            True,
+            f"trace structure audited: {len(self.steps)} ordered steps end in contradiction",
+        )
 
     def to_dict(self) -> dict[str, Any]:
-        valid, message = self.verify()
+        structurally_valid, message = self.verify()
         return {
-            "schema": "uniform.smt-proof-trace/v1",
-            "valid": valid,
+            "schema": "uniform.smt-proof-structure/v1",
+            "structurally_valid": structurally_valid,
+            "semantically_verified": False,
+            "verification_scope": (
+                "syntax, unique step identifiers, backward premise references, and final "
+                "contradiction marker; inference rules and SMT assertions are not checked"
+            ),
             "message": message,
             "step_count": len(self.steps),
             "concludes_false": self.concludes_false,

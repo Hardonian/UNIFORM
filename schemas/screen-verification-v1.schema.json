@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/screen-verification-v1.schema.json",
+  "title": "UNIFORM exact Rust-screen verification summary",
+  "type": "object",
+  "required": ["schema", "verified_candidates", "check", "global_nonexistence_claim"],
+  "properties": {
+    "schema": {"const": "uniform.screen-verification/v1"},
+    "verified_candidates": {"type": "integer", "minimum": 0},
+    "check": {"type": "string"},
+    "global_nonexistence_claim": {"const": false}
+  },
+  "additionalProperties": false
+}

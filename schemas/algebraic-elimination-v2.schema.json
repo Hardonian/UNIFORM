@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/algebraic-elimination-v2.schema.json",
+  "title": "UNIFORM scoped algebraic elimination result",
+  "type": "object",
+  "required": ["schema", "players", "scope", "characteristic_polynomial_coefficients", "isolated_interior_roots", "stationary_equilibrium_possible", "interior_candidate_status", "summary"],
+  "properties": {
+    "schema": {"const": "uniform.algebraic-elimination/v2"},
+    "players": {"type": "integer", "minimum": 1, "maximum": 4},
+    "scope": {"type": "string", "minLength": 1},
+    "characteristic_polynomial_coefficients": {"type": ["array", "null"], "items": {"$ref": "#/$defs/rational"}},
+    "isolated_interior_roots": {"type": "array", "items": {"type": "array", "prefixItems": [{"$ref": "#/$defs/rational"}, {"$ref": "#/$defs/rational"}], "items": false, "minItems": 2, "maxItems": 2}},
+    "stationary_equilibrium_possible": {"type": ["boolean", "null"]},
+    "interior_candidate_status": {"enum": ["confirmed", "ruled_out", "eliminant_roots_found", "no_eliminant_roots", "reduced_not_solved"]},
+    "summary": {"type": "string", "minLength": 1}
+  },
+  "$defs": {"rational": {"type": "string", "pattern": "^-?[0-9]+(?:/[1-9][0-9]*)?$"}},
+  "additionalProperties": false
+}

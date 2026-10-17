@@ -39,9 +39,9 @@
 \begin{abstract}
 Finite multiplayer quitting games---a foundational class of repeated games with absorbing states---have remained an open frontier in mathematical game theory for over two decades. While Solan and Vieille (2001, 2002) resolved existence for two- and three-player games and constructed an isolated four-player counterexample to stationary equilibrium existence via an irreducible degree-4 algebraic root, the broader question of whether every finite quitting game admits an ordinary independent uniform $\varepsilon$-equilibrium remains unresolved. Classical computational investigations have repeatedly stalled due to floating-point rounding errors, non-linear algebraic coupling, and the inability of local search heuristics to distinguish between numerical optimization failure and genuine mathematical non-existence.
 
-In this work, we present \textbf{UNIFORM}, an exact-arithmetic computational research workbench, automated discovery engine, and formal verification framework for multiplayer quitting and small stochastic games. UNIFORM strictly eliminates floating-point arithmetic in favor of exact rational computation ($\mathbb{Q}$), univariate real-algebraic field extensions $\mathbb{Q}(\alpha)$ with automated Sturm sequence root isolation, and set-valued Abreu--Pearce--Stacchetti (APS) operators over finite unions of exact rational convex V-polytopes.
+In this work, we present \textbf{UNIFORM}, a computational research workbench for multiplayer quitting and small stochastic games. Its certificate backend rejects floating-point inputs in favor of exact rational computation ($\mathbb{Q}$), univariate real-algebraic field extensions $\mathbb{Q}(\alpha)$ with automated Sturm sequence root isolation, and set-valued Abreu--Pearce--Stacchetti (APS) operators over finite unions of exact rational convex V-polytopes. Browser plots and timing metadata are not certificate arithmetic.
 
-To overcome the blind spots of existing pure-action filters, we engineer a high-throughput parallel mixed-strategy simplex screening engine capable of evaluating non-linear absorption probabilities, continuation payoffs, and unilateral deviation incentives across the full strategy simplex at over 560,000 games per second. Applying this scanner across 50,000 random game instances, we discover \textbf{Candidate 46876}, a novel four-player quitting game exhibiting an exact global stationary regret lower bound of $3/4 = 0.75$ across the entire strategy space---over seven times more resistant to mixed equilibria than the Solan--Vieille benchmark ($0.1111$). We formally prove the non-existence of stationary equilibria in Candidate 46876 via dual SMT solvers (Z3 and cvc5) over QF\_NRA, producing verified refutation proof traces. Finally, we provide end-to-end formal theorem modules in Lean 4 verified against Mathlib across 3,143 compiled jobs with zero unproved axioms or \texttt{sorry} placeholders. We provide an open-source, zero-dependency Enterprise Web Workbench implementing 10 interactive suites for live experimentation.
+To overcome the blind spots of pure-action filters, we engineer a parallel mixed-strategy grid scanner and retain \textbf{Candidate 46876}, a four-player benchmark with high observed regret on stated rational grids. The exact value $3/4$ is the minimum on a 625-point stationary grid, not a global continuous lower bound. QF\_NRA campaigns retain solver status and exact-query hashes, while rational SAT witnesses are re-evaluated independently; timeouts remain inconclusive and native proof text is not semantically checked by this package. Lean 4 modules compile the concrete theorem statements included in the repository, and a local browser workbench supports interactive exploration.
 \end{abstract}
 
 \section{Introduction}
@@ -62,12 +62,12 @@ For $n = 2$, uniform equilibria always exist \cite{solan2001}. For $n = 3$, Sola
 
 \subsection{Contributions of This Work}
 \begin{enumerate}
-    \item \textbf{Exact Mathematical Workbench}: We construct UNIFORM, an exact-arithmetic software platform strictly rejecting floating-point inputs and operating exclusively with exact fractions ($\mathbb{Q}$), symbolic polynomial quotients $\mathbb{Q}[x]/\langle m(x)\rangle$, and Sturm root isolation.
-    \item \textbf{Parallel Mixed Simplex Screening Engine}: We design a deterministic Rayon-powered screening engine in Rust that evaluates the exact non-linear regret surface over the continuous strategy simplex at $>560,000$ games/sec.
+    \item \textbf{Exact Mathematical Core}: We construct a backend that rejects floating-point certificate inputs and uses exact fractions ($\mathbb{Q}$), symbolic polynomial quotients $\mathbb{Q}[x]/\langle m(x)\rangle$, and Sturm root isolation. Browser plots remain approximate visualizations.
+    \item \textbf{Parallel Mixed-Grid Screening Engine}: We design a deterministic Rayon-powered screening engine in Rust and record benchmark throughput with its parameters and environment.
     \item \textbf{Discovery of Highly Adversarial Quitting Games}: We isolate \textbf{Candidate 46876}, a four-player quitting game whose minimum stationary regret across the strategy simplex is $0.75$, demonstrating that the Solan--Vieille phenomenon is not an isolated mathematical accident but part of a rich landscape of stationary-resistant games.
-    \item \textbf{Dual SMT-LIB2 Certification}: We encode the bounded periodic equilibrium problem into Quantified-Free Non-linear Real Arithmetic (QF\_NRA) and obtain unanimous, machine-checked UNSAT refutations from Z3 and cvc5.
-    \item \textbf{Machine-Checked Lean 4 Proofs}: We formalize quitting game theory in Lean 4 with Mathlib, establishing machine-checked proofs for general regret transitivity, backward induction, and concrete certificate lemmas for 1-, 2-, 3-, and 4-player games without unproved axioms or \texttt{sorry} tokens.
-    \item \textbf{Enterprise Research Workbench}: We deploy a zero-dependency web interface with 10 interactive suites, 2D/3D Canvas polytope visualizers, and live REST endpoints.
+    \item \textbf{Dual SMT-LIB2 Campaigns}: We encode the bounded periodic equilibrium problem in QF\_NRA, stamp Z3/cvc5 results, and independently re-evaluate rational SAT witnesses.
+    \item \textbf{Machine-Checked Lean 4 Lemmas}: We compile explicit structural and concrete pure-profile theorems with Mathlib without claiming a formalization of the full computational pipeline.
+    \item \textbf{Local Research Workbench}: We provide a loopback-first web interface with Canvas visualizations and exact backend endpoints.
 \end{enumerate}
 
 \section{Mathematical Formalism}
@@ -161,7 +161,7 @@ Pure Instant Equilibria & None & None & --- \\
 Grid $G=3$ ($4^4=256$ pts) Min Regret & $1/9 \approx 0.1111$ & $\mathbf{8/9 \approx 0.8889}$ & $\mathbf{8.0\times}$ \\
 Grid $G=4$ ($5^4=625$ pts) Min Regret & $1/10 = 0.1000$ & $\mathbf{3/4 = 0.7500}$ & $\mathbf{7.5\times}$ \\
 Period-2 Grid $d=2$ ($3^8=6561$ pts) & $\mathbf{4/21 \approx 0.1904}$ & $\mathbf{\ge 1.0000}$ & $\mathbf{5.25\times}$ \\
-Period-1 SMT Status ($\varepsilon = 0$) & \textbf{UNSAT} (Proven) & \textbf{CAD Timeout} (Algebraic Coupling) & Challenge Benchmark \\
+Period-1 SMT Status ($\varepsilon = 0$) & Solver-reported UNSAT & Timeout (inconclusive) & Challenge Benchmark \\
 Bivariate Reduction ($q_0, q_1$) & Degrees $(25, 32)$ \& $(23, 27)$ & Degrees $(32, 32)$ \& $(26, 28)$ & Solved in $<1$s via Resultants \\
 \bottomrule
 \end{tabular}
@@ -173,11 +173,11 @@ Standard SMT solvers exhaust their bounds on Candidate 46876 because Cylindrical
 \begin{equation}
 \Phi_i(q_{-i}) \equiv \left(1 - \prod_{j \ne i}(1 - q_j)\right) \mathbb{E}[u_i(T \cup \{i\}) \mid q_{-i}] - \sum_{\emptyset \ne T \subseteq N \setminus \{i\}} P(T \mid q_{-i}) u_i(T) = 0.
 \end{equation}
-By sequentially eliminating variables via exact Sylvester resultant pseudo-remainders with integer content scaling, UNIFORM resolves 3-player characteristic polynomials in $0.009$ seconds (isolating all real roots via Sturm sequences) and reduces 4-player games to bivariate systems in $<1$ second.
+By sequentially eliminating variables via exact Sylvester resultant pseudo-remainders with integer content scaling, UNIFORM derives 3-player univariate eliminants with isolated root intervals and reduces 4-player games to bivariate necessary conditions. Back-substitution and common-root confirmation remain required.
 
 \section{Formal Verification in Lean 4}
 
-All certificates, structural lemmas, and Candidate 46876 instability theorems are machine-checked in Lean 4 with Mathlib 4.35.0 across 3,138 compiled jobs without axioms or \texttt{sorry} placeholders:
+The checked-in structural lemmas and Candidate 46876 pure-profile theorem are compiled in Lean 4 with Mathlib 4.35.0. Build-job counts are environment metadata, and absence of \texttt{sorry} is not presented as a claim that all computational results have been formalized:
 
 \begin{lstlisting}[language=Caml, basicstyle=\small\ttfamily]
 theorem candidate_46876_no_pure_equilibrium :
@@ -198,7 +198,7 @@ theorem regret_transitivity_le {v v' dev : Q} (h1 : v <= v') (h2 : dev - v <= ep
 
 \section{Conclusion and Open Frontiers}
 
-UNIFORM introduces an exact-arithmetic, high-throughput discovery platform for multiplayer repeated games with absorbing states. The discovery and verification of Candidate 46876 proves that games resisting stationary equilibria are not isolated mathematical anomalies but form a rich geometric class. Whether Candidate 46876 possesses an algebraic period-$P$ equilibrium for $P \ge 2$ or serves as a counterexample to the broader uniform equilibrium conjecture represents an exciting open frontier for future mathematical research.
+UNIFORM introduces an exact-arithmetic computational platform for multiplayer repeated games with absorbing states. Candidate 46876 is a useful finite-grid and elimination benchmark, but its continuous stationary status and its relation to uniform equilibrium remain open. Completing back-substitution, semantic proof checking, and a formal connection between game tensors and generated Lean certificates are central future tasks.
 
 \begin{thebibliography}{99}
 \bibitem{shapley1953} L. S. Shapley. Stochastic games. \textit{Proceedings of the National Academy of Sciences}, 39(10):1095--1100, 1953.

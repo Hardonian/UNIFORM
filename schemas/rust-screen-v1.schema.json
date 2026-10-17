@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/rust-screen-v1.schema.json",
+  "title": "UNIFORM parallel Rayon Rust screening output",
+  "type": "object",
+  "required": [
+    "schema",
+    "scope",
+    "deterministic_rng",
+    "samples",
+    "seed",
+    "payoff_range_inclusive",
+    "elapsed_seconds",
+    "samples_per_second",
+    "matching_games",
+    "retained_games",
+    "candidates"
+  ],
+  "properties": {
+    "schema": {"const": "uniform.rust-screen/v1"},
+    "scope": {"type": "string"},
+    "deterministic_rng": {"type": "string"},
+    "samples": {"type": "integer", "minimum": 0},
+    "seed": {"type": "integer"},
+    "payoff_range_inclusive": {
+      "type": "array",
+      "items": {"type": "integer"},
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "mixed_grid_steps": {"type": ["integer", "null"]},
+    "elapsed_seconds": {"type": "number", "minimum": 0},
+    "samples_per_second": {"type": "number", "minimum": 0},
+    "matching_games": {"type": "integer", "minimum": 0},
+    "retained_games": {"type": "integer", "minimum": 0},
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sample_id", "seed", "pure_deviation_margin", "continuation", "payoffs"],
+        "properties": {
+          "sample_id": {"type": "integer"},
+          "seed": {"type": "integer"},
+          "pure_deviation_margin": {"type": "integer"},
+          "min_mixed_regret": {"type": ["number", "null"]},
+          "continuation": {
+            "type": "array",
+            "items": {"type": "integer"},
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "payoffs": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {"type": "integer"},
+              "minItems": 4,
+              "maxItems": 4
+            }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

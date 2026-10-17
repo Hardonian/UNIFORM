@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from fractions import Fraction
+from functools import cmp_to_key, lru_cache
 from itertools import combinations
 from typing import Any
 
@@ -66,14 +67,11 @@ def _full_column_rank_solution(
     return tuple(augmented[row][-1] for row in pivot_rows)
 
 
-def point_in_convex_hull(point: Point, vertices: Sequence[Point]) -> bool:
-    """Decide rational convex-hull membership exactly using Carathéodory simplices."""
-
+@lru_cache(maxsize=16_384)
+def _point_in_convex_hull_cached(point: Point, vertices: tuple[Point, ...]) -> bool:
     if not vertices:
         return False
     dimension = len(point)
-    if any(len(vertex) != dimension for vertex in vertices):
-        raise ValueError("convex-hull dimension mismatch")
     unique = tuple(sorted(set(vertices)))
     for size in range(1, min(dimension + 1, len(unique)) + 1):
         for simplex in combinations(unique, size):
@@ -85,6 +83,16 @@ def point_in_convex_hull(point: Point, vertices: Sequence[Point]) -> bool:
             if solution is not None and all(weight >= 0 for weight in solution):
                 return True
     return False
+
+
+def point_in_convex_hull(point: Point, vertices: Sequence[Point]) -> bool:
+    """Decide rational convex-hull membership exactly using Carathéodory simplices."""
+
+    dimension = len(point)
+    frozen_vertices = tuple(vertices)
+    if any(len(vertex) != dimension for vertex in frozen_vertices):
+        raise ValueError("convex-hull dimension mismatch")
+    return _point_in_convex_hull_cached(point, frozen_vertices)
 
 
 @dataclass(frozen=True)
@@ -205,13 +213,22 @@ class RationalPolytope:
         if len(self.vertices) < 3:
             return []
         cx, cy = self.center_of_mass()
-        # Sort vertices counter-clockwise
-        import math
 
-        sorted_verts = sorted(
-            self.vertices,
-            key=lambda v: math.atan2(float(v[1] - cy), float(v[0] - cx)),
-        )
+        def compare_angles(left: Point, right: Point) -> int:
+            left_x, left_y = left[0] - cx, left[1] - cy
+            right_x, right_y = right[0] - cx, right[1] - cy
+            left_upper = left_y > 0 or (left_y == 0 and left_x >= 0)
+            right_upper = right_y > 0 or (right_y == 0 and right_x >= 0)
+            if left_upper != right_upper:
+                return -1 if left_upper else 1
+            cross = left_x * right_y - left_y * right_x
+            if cross != 0:
+                return -1 if cross > 0 else 1
+            left_radius = left_x * left_x + left_y * left_y
+            right_radius = right_x * right_x + right_y * right_y
+            return (left_radius > right_radius) - (left_radius < right_radius)
+
+        sorted_verts = sorted(self.vertices, key=cmp_to_key(compare_angles))
         inequalities: list[tuple[Point, Q]] = []
         for i in range(len(sorted_verts)):
             p1 = sorted_verts[i]
