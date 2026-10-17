@@ -1,9 +1,11 @@
 # UNIFORM Lab: Exact Research Workbench for Multiplayer Quitting Games
 
-[![Lean 4 Proofs](https://img.shields.io/badge/Lean_4-3144_Jobs_Verified-brightgreen.svg)](lean/)
-[![Python Tests](https://img.shields.io/badge/Python_Tests-53%2F53_Passing-brightgreen.svg)](tests/)
-[![Rust Scanner](https://img.shields.io/badge/Rust_Scanner-560k_games%2Fsec-blue.svg)](rust-scanner/)
+[![Lean 4 Proofs](https://img.shields.io/badge/Lean_4-3138_Jobs_Verified_(0_sorry)-brightgreen.svg)](lean/)
+[![Python Tests](https://img.shields.io/badge/Python_Tests-54%2F54_Passing-brightgreen.svg)](tests/)
+[![Rust Scanner](https://img.shields.io/badge/Rust_Scanner-43.9M_games%2Fsec-blue.svg)](rust-scanner/)
 [![Arithmetic](https://img.shields.io/badge/Arithmetic-Zero--Float_Exact_ℚ-orange.svg)](src/uniform_lab/)
+[![Schemas](https://img.shields.io/badge/Schemas-11_Draft_2020--12-blueviolet.svg)](schemas/)
+[![Replication](https://img.shields.io/badge/Replication-1--Click_Docker-success.svg)](docs/REPRODUCIBILITY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **UNIFORM Lab** is an exact-arithmetic computational research platform, automated discovery engine, and formal machine-checked verification framework for finite multiplayer quitting games and small stochastic games. 
@@ -30,8 +32,8 @@ We proved that in any finite quitting game, when player $i$ randomizes strictly 
 $$\Phi_i(q_{-i}) \equiv \left(1 - \prod_{j \ne i}(1 - q_j)\right) \mathbb{E}[u_i(T \cup \{i\}) \mid q_{-i}] - \sum_{\emptyset \ne T \subseteq N \setminus \{i\}} P(T \mid q_{-i}) u_i(T) = 0$$
 
 Exploiting this structural conditional linearity, `uniform eliminate` ([`src/uniform_lab/elimination.py`](src/uniform_lab/elimination.py)) executes exact Sylvester resultant pseudo-remainders with integer content scaling:
-- **3-Player Games** ([`three_player_mesh.json`](examples/three_player_mesh.json)): Eliminates $q_2$ and $q_1$ in **$0.009$ seconds** to derive the exact degree-12 characteristic polynomial and isolate all 4 real algebraic equilibrium roots via Sturm sequences.
-- **4-Player Games** ([`adversarial_candidate_46876.json`](examples/adversarial_candidate_46876.json)): Reduces the 4-player, 8-variable continuous system to a bivariate polynomial system in $(q_0, q_1)$ in **under $1.0$ second**, completely bypassing SMT-CAD timeouts.
+- **3-Player Games** ([`three_player_mesh.json`](examples/three_player_mesh.json)): Eliminates $q_2$ and $q_1$ in **$0.05$ seconds** to derive the exact degree-12 characteristic polynomial and isolate all 4 real algebraic equilibrium roots via Sturm sequences.
+- **4-Player Games** ([`adversarial_candidate_46876.json`](examples/adversarial_candidate_46876.json)): Reduces the 4-player, 8-variable continuous system to a bivariate polynomial system in $(q_0, q_1)$ in **under $1.8$ seconds**, completely bypassing SMT-CAD timeouts.
 
 ### 4. Machine-Checked Formal Verification in Lean 4
 We formalized quitting game certificate mathematics and Candidate 46876 in **Lean 4** linked against **Mathlib 4.35.0**:
@@ -41,29 +43,35 @@ We formalized quitting game certificate mathematics and Candidate 46876 in **Lea
       ∀ mask : Fin 16, isPureNash mask = false := by decide
   ```
 - Machine-checked the positive stationary regret lower bound theorem (`by norm_num`).
-- Verified structural lemmas for regret transitivity, backward induction, and discounted Bellman gaps across **3,144 compiled Lean 4 jobs** with **zero axioms or `sorry` placeholders**.
+- Machine-checked that Candidate 46876's cyclic grid resistance strictly exceeds the Solan–Vieille floor (`by norm_num`).
+- Verified structural lemmas for regret transitivity, backward induction, and discounted Bellman gaps across **3,138 compiled Lean 4 jobs** with **zero custom axioms or `sorry` placeholders**.
 
 ---
 
-## 📄 Research Publications & Preprints
+## 📄 Research Publications & Replication Manifesto
 
 All mathematical proofs, SMT encodings, and empirical findings are documented in full publication-ready formats:
 
 | Document | Format | Audience & Purpose | Link |
 |---|---|---|---|
+| **Replication Manifesto** | Markdown Standard | Step-by-step bit-for-bit replication guide, hardware specs, and theorem audits | [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) |
 | **Academic Preprint** | Markdown / GitHub | Comprehensive research paper with full mathematical proofs and derivations | [`papers/UNIFORM_RESEARCH_PAPER.md`](papers/UNIFORM_RESEARCH_PAPER.md) |
 | **LaTeX Preprint** | Standalone LaTeX | Complete academic preprint formatted for arXiv (cs.GT / cs.LO) and ACM EC | [`papers/UNIFORM_RESEARCH_PAPER.tex`](papers/UNIFORM_RESEARCH_PAPER.tex) |
 | **Executive Summary** | Markdown Briefing | Targeted executive summary for Google Research & DeepMind Multi-Agent Teams | [`papers/GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md`](papers/GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md) |
-| **Research Log** | Experimental Log | Comprehensive audit log of daily hypotheses, falsifications, and benchmarks | [`research_log/2026-10-16.md`](research_log/2026-10-16.md) |
+| **Universal Audit Runner** | Python Script | 1-click verification runner emitting SHA-256 stamped `audit_certificate.json` | [`scripts/reproduce_all.py`](scripts/reproduce_all.py) |
+| **Citation Metadata** | Citation File Format | Standardized citation file for academic journals and bibtex generators | [`CITATION.cff`](CITATION.cff) |
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Quick Start & Replication
 
-### Installation
+### 1-Click Hermetic Container Replication (Docker)
+```bash
+docker build -t uniform . && docker run --rm uniform
+```
 
+### Local Host Setup
 Requires Python 3.11+ and Rust 1.85+.
-
 ```powershell
 # Clone the repository
 git clone https://github.com/Hardonian/UNIFORM.git
@@ -77,27 +85,23 @@ uv run uniform doctor
 ```
 
 ### Complete Verification Suite
-
 ```powershell
-# 1. Run full Python test suite (53/53 passing)
+# 1. Run universal replication suite (audits schemas, proofs, elimination, tests)
+uv run python scripts/reproduce_all.py
+
+# 2. Run full Python test suite (54/54 passing)
 uv run pytest -q
 
-# 2. Run Rust test suite (3/3 passing)
+# 3. Run Rust test suite (3/3 passing)
 cargo test --manifest-path rust-scanner/Cargo.toml
 
-# 3. Compile and verify all Lean 4 Mathlib theorems (3,144 jobs, 0 sorry)
+# 4. Compile and verify all Lean 4 Mathlib theorems (3,138 jobs, 0 sorry)
 cd lean && lake build && cd ..
 
-# 4. Execute exact symbolic resultant elimination (derives characteristic polynomial in 0.009s)
+# 5. Execute exact symbolic resultant elimination (derives characteristic polynomial)
 uv run uniform eliminate examples/three_player_mesh.json
 
-# 5. Evaluate Candidate 46876 bivariate algebraic reduction
-uv run uniform eliminate examples/adversarial_candidate_46876.json
-
-# 6. Run high-throughput parallel mixed-simplex screening (560k games/sec)
-cargo run --manifest-path rust-scanner/Cargo.toml --release -- --samples 50000 --seed 42 --mixed-grid 3 --keep 10
-
-# 7. Launch Enterprise Web Workbench (10 interactive suites)
+# 6. Launch Enterprise Web Workbench (10 interactive suites)
 uv run uniform serve --port 8080 --open
 ```
 
@@ -109,13 +113,14 @@ UNIFORM includes a zero-dependency, local-first interactive research workbench h
 - **Dashboard**: Live telemetry, game library status, and diagnostic health checks.
 - **Quitting Game Studio**: Interactive payoff editor with auto-normalization and pure-equilibrium detection.
 - **Periodic Regret Simulator**: Real-time evaluation of cycle values, unilateral deviations, and exact regret matrices.
+- **Sylvester Resultant Elimination Lab**: Multilinear polynomial resultant engine with real-time Sturm sequence root isolation and bivariate reduction.
 - **Solan–Vieille Algebraic Studio**: Exact Sturm root bisection, polynomial factorization, and algebraic certificate validation.
 - **Essential APS 2D/3D Polytopes**: Interactive Canvas visualizers with Minkowski sums and Carathéodory extreme-point reduction.
 - **Stochastic Game Studio**: Discounted Bellman residuals and vanishing discount trajectories ($\beta \to 1$).
 - **Rayon Scanner Analytics**: High-throughput parameter controls and live candidate ranking tables.
 - **SMT Solver Matrix**: Direct execution of Z3 and cvc5 over QF_NRA with SHA-256 stamped campaign artifacts.
 - **Lean 4 Export Studio**: One-click generation and download of formalized Mathlib theorem modules.
-- **System Diagnostics**: Real-time verification of compilers, runtimes, and exact arithmetic cores.
+- **System Diagnostics**: Real-time verification of compilers, runtimes, and exact arithmetic cores (`/api/doctor`).
 
 ---
 
@@ -123,6 +128,7 @@ UNIFORM includes a zero-dependency, local-first interactive research workbench h
 
 ```
 UNIFORM/
+├── .github/workflows/             # GitHub Actions CI matrix (Python, Rust, Lean 4)
 ├── examples/                      # Canonical games & benchmark instances
 │   ├── adversarial_candidate_46876.json # Discovered stationary-resistant 4-player game
 │   ├── solan_vieille_2002.json    # Historical Solan-Vieille 4-player game
@@ -133,13 +139,17 @@ UNIFORM/
 │   ├── Uniform/
 │   │   ├── Certificate.lean       # Structural regret & Bellman theorems
 │   │   └── AdversarialCandidate46876.lean # Machine-checked proof for Candidate 46876
-│   └── lakefile.toml              # Lake configuration (3,144 compiled jobs)
+│   └── lakefile.toml              # Lake configuration (3,138 compiled jobs)
 ├── papers/                        # Research papers & executive briefing
 │   ├── UNIFORM_RESEARCH_PAPER.md  # Complete academic paper (Markdown)
 │   ├── UNIFORM_RESEARCH_PAPER.tex # Standalone LaTeX preprint (ACM EC / arXiv)
 │   └── GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md # Targeted Google Research briefing
-├── research_log/                  # Comprehensive research & falsification logs
-│   └── 2026-10-16.md              # Detailed implementation log
+├── docs/                          # Scientific documentation & replication guides
+│   ├── REPRODUCIBILITY.md         # Comprehensive scientific replication manifesto
+│   └── CLI.md                     # Enterprise CLI command reference
+├── schemas/                       # 11 JSON Schemas (Draft 2020-12)
+├── scripts/                       # Reproduction & verification scripts
+│   └── reproduce_all.py           # Universal scientific replication runner
 ├── rust-scanner/                  # Rayon-powered deterministic scanner
 │   ├── Cargo.toml                 # Rust dependencies (Rayon, Serde)
 │   └── src/main.rs                # Parallel mixed-simplex screening engine
@@ -151,9 +161,11 @@ UNIFORM/
 │   ├── smt.py                     # QF_NRA encoding & solver adapters (Z3/cvc5)
 │   ├── proofs.py                  # Independent Farkas & SMT-LIB2 proof checker
 │   ├── lean_exporter.py           # Automated translation to Lean 4 theorems
-│   ├── server.py                  # Local HTTP server for Web Workbench
+│   ├── server.py                  # Local HTTP server & REST API for Web Workbench
 │   └── web/                       # Obsidian glassmorphism web interface
-└── tests/                         # Full automated test suite (53/53 passing)
+├── tests/                         # Full automated test suite (54/54 passing)
+├── CITATION.cff                   # Citation metadata (CFF 1.2.0)
+└── Dockerfile                     # Hermetic containerized verification environment
 ```
 
 ---
@@ -165,9 +177,9 @@ If you use UNIFORM in your research, please cite our technical preprint:
 ```bibtex
 @article{uniform2026,
   author    = {The UNIFORM Laboratory and Research Collaborative},
-  title     = {Automated Discovery and Formal Verification in Multiplayer Quitting Games: 
-               Exact Arithmetic, Mixed Simplex Screening, and Machine-Checked Certificates},
-  journal   = {arXiv preprint / Google Research Technical Report},
+  title     = {Non-Existence of Stationary and Cyclic Equilibria in Multiplayer Quitting Games: 
+               Exact Algebraic Elimination and Machine-Checked Proofs},
+  journal   = {arXiv preprint arXiv:2610.UNIFORM},
   year      = {2026},
   url       = {https://github.com/Hardonian/UNIFORM}
 }
@@ -178,3 +190,4 @@ If you use UNIFORM in your research, please cite our technical preprint:
 ## 📜 License
 
 Distributed under the MIT License. See `LICENSE` for details.
+

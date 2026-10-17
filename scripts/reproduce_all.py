@@ -112,21 +112,25 @@ def audit_symbolic_elimination(repo_root: Path) -> dict[str, Any]:
 def audit_cyclic_resistance(repo_root: Path) -> dict[str, Any]:
     examples_dir = repo_root / "examples"
     sv_game = QuittingGame.from_dict(load_json(examples_dir / "solan_vieille_2002.json"))
-    cand_game = QuittingGame.from_dict(
-        load_json(examples_dir / "adversarial_candidate_46876.json")
-    )
+    cand_game = QuittingGame.from_dict(load_json(examples_dir / "adversarial_candidate_46876.json"))
 
     # Test key cyclic profiles
-    alt_sv = ((Fraction(0), Fraction(1, 2), Fraction(0), Fraction(1, 2)),
-              (Fraction(1, 2), Fraction(0), Fraction(1, 2), Fraction(0)))
+    alt_sv = (
+        (Fraction(0), Fraction(1, 2), Fraction(0), Fraction(1, 2)),
+        (Fraction(1, 2), Fraction(0), Fraction(1, 2), Fraction(0)),
+    )
     regret_sv_alt = periodic_regret_certificate(sv_game, alt_sv).maximum_regret
 
     # Audit candidate 46876 at stationary and cyclic grid samples
     sample_profiles = [
-        ((Fraction(0), Fraction(0), Fraction(0), Fraction(0)),
-         (Fraction(0), Fraction(0), Fraction(0), Fraction(0))),
-        ((Fraction(1, 2), Fraction(1, 2), Fraction(1, 2), Fraction(1, 2)),
-         (Fraction(1, 2), Fraction(1, 2), Fraction(1, 2), Fraction(1, 2))),
+        (
+            (Fraction(0), Fraction(0), Fraction(0), Fraction(0)),
+            (Fraction(0), Fraction(0), Fraction(0), Fraction(0)),
+        ),
+        (
+            (Fraction(1, 2), Fraction(1, 2), Fraction(1, 2), Fraction(1, 2)),
+            (Fraction(1, 2), Fraction(1, 2), Fraction(1, 2), Fraction(1, 2)),
+        ),
         alt_sv,
     ]
     min_cand_regret = Fraction(999, 1)
@@ -170,18 +174,20 @@ def run_full_replication() -> None:
     print("[3/5] Running Exact Sylvester Resultant Elimination...", end=" ", flush=True)
     elim_report = audit_symbolic_elimination(repo_root)
     print("OK")
+    mesh_info = elim_report["three_player_mesh"]
     print(
-        f"      - 3-Player Mesh: degree-{elim_report['three_player_mesh']['characteristic_polynomial_degree']} "
-        f"poly, {elim_report['three_player_mesh']['isolated_interior_roots']} roots "
-        f"({elim_report['three_player_mesh']['elapsed_seconds']}s)"
+        f"      - 3-Player Mesh: degree-{mesh_info['characteristic_polynomial_degree']} poly, "
+        f"{mesh_info['isolated_interior_roots']} roots ({mesh_info['elapsed_seconds']}s)"
     )
+    sv_info = elim_report["solan_vieille_2002"]
     print(
-        f"      - Solan-Vieille 2002: Bivariate degrees {elim_report['solan_vieille_2002']['bivariate_degrees']} "
-        f"({elim_report['solan_vieille_2002']['elapsed_seconds']}s)"
+        f"      - Solan-Vieille 2002: Bivariate degrees {sv_info['bivariate_degrees']} "
+        f"({sv_info['elapsed_seconds']}s)"
     )
+    cand_info = elim_report["adversarial_candidate_46876"]
     print(
-        f"      - Candidate 46876: Bivariate degrees {elim_report['adversarial_candidate_46876']['bivariate_degrees']} "
-        f"({elim_report['adversarial_candidate_46876']['elapsed_seconds']}s)"
+        f"      - Candidate 46876: Bivariate degrees {cand_info['bivariate_degrees']} "
+        f"({cand_info['elapsed_seconds']}s)"
     )
 
     # 4. Cyclic Grid Resistance Comparison
