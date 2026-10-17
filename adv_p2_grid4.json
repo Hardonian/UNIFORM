@@ -1,0 +1,190 @@
+{
+  "best": [
+    {
+      "maximum_regret": "1/4",
+      "profile": [
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/4",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "1/4",
+      "profile": [
+        [
+          "1/4",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "4/13",
+      "profile": [
+        [
+          "0",
+          "0",
+          "3/4",
+          "0"
+        ],
+        [
+          "1/4",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "4/13",
+      "profile": [
+        [
+          "1/4",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "3/4",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "3/8",
+      "profile": [
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ],
+        [
+          "1/4",
+          "0",
+          "1/4",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "3/8",
+      "profile": [
+        [
+          "1/4",
+          "0",
+          "1/4",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "2/5",
+      "profile": [
+        [
+          "0",
+          "0",
+          "1/2",
+          "0"
+        ],
+        [
+          "1/4",
+          "0",
+          "0",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "2/5",
+      "profile": [
+        [
+          "1/4",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "1/2",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "24/55",
+      "profile": [
+        [
+          "0",
+          "0",
+          "3/4",
+          "0"
+        ],
+        [
+          "1/4",
+          "0",
+          "1/4",
+          "0"
+        ]
+      ]
+    },
+    {
+      "maximum_regret": "24/55",
+      "profile": [
+        [
+          "1/4",
+          "0",
+          "1/4",
+          "0"
+        ],
+        [
+          "0",
+          "0",
+          "3/4",
+          "0"
+        ]
+      ]
+    }
+  ],
+  "complete_global_grid": true,
+  "complete_shard": true,
+  "denominator": 4,
+  "elapsed_seconds": 3228.756955699995,
+  "evaluated_profiles": 390625,
+  "global_game_claim": false,
+  "period": 2,
+  "players": 4,
+  "schema": "uniform.periodic-grid-search/v1",
+  "scope": "all independent periodic profiles on the stated rational grid; regret covers deterministic unilateral policies of the same period",
+  "shard": {
+    "count": 1,
+    "index": 0,
+    "profiles": 390625
+  },
+  "total_profiles": 390625
+}
