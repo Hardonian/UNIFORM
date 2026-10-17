@@ -22,6 +22,7 @@ struct Args {
     payoff_min: i16,
     payoff_max: i16,
     keep: usize,
+    mixed_grid: Option<usize>,
     output: Option<PathBuf>,
 }
 
@@ -30,6 +31,8 @@ struct Candidate {
     sample_id: u64,
     seed: u64,
     pure_deviation_margin: i16,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    min_mixed_regret: Option<f64>,
     continuation: [i16; PLAYERS],
     payoffs: Vec<[i16; PLAYERS]>,
 }
@@ -42,6 +45,8 @@ struct Output {
     samples: u64,
     seed: u64,
     payoff_range_inclusive: [i16; 2],
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mixed_grid_steps: Option<usize>,
     elapsed_seconds: f64,
     samples_per_second: f64,
     matching_games: usize,
@@ -56,6 +61,7 @@ fn parse_args() -> Result<Args, String> {
         payoff_min: -4,
         payoff_max: 4,
         keep: 100,
+        mixed_grid: None,
         output: None,
     };
     let mut arguments = env::args().skip(1);
@@ -71,9 +77,12 @@ fn parse_args() -> Result<Args, String> {
             "--min" => result.payoff_min = value()?.parse().map_err(|_| "invalid --min")?,
             "--max" => result.payoff_max = value()?.parse().map_err(|_| "invalid --max")?,
             "--keep" => result.keep = value()?.parse().map_err(|_| "invalid --keep")?,
+            "--mixed-grid" => {
+                result.mixed_grid = Some(value()?.parse().map_err(|_| "invalid --mixed-grid")?)
+            }
             "--output" => result.output = Some(PathBuf::from(value()?)),
             "--help" | "-h" => {
-                return Err("usage: uniform-scan [--samples N] [--seed N] [--min I] [--max I] [--keep N] [--output FILE]".into());
+                return Err("usage: uniform-scan [--samples N] [--seed N] [--min I] [--max I] [--keep N] [--mixed-grid STEPS] [--output FILE]".into());
             }
             _ => return Err(format!("unknown argument {argument}")),
         }
@@ -136,27 +145,151 @@ fn no_pure_instant_equilibrium(game: &[[i16; PLAYERS]]) -> Option<i16> {
     Some(minimum_profitable_gain)
 }
 
+fn profile_regret(game: &[[i16; PLAYERS]], q: &[f64; PLAYERS]) -> f64 {
+    let mut sigma = 1.0;
+    for &p in q {
+        sigma *= 1.0 - p;
+    }
+    let abs_prob = 1.0 - sigma;
+
+    let v: [f64; PLAYERS] = if abs_prob <= 1e-12 {
+        [0.0; PLAYERS]
+    } else {
+        let mut r = [0.0; PLAYERS];
+        for mask in 1..=ABSORBING_MASKS {
+            let mut prob = 1.0;
+            for (player, &q_player) in q.iter().enumerate() {
+                if (mask & (1 << player)) != 0 {
+                    prob *= q_player;
+                } else {
+                    prob *= 1.0 - q_player;
+                }
+            }
+            if prob > 0.0 {
+                for player in 0..PLAYERS {
+                    r[player] += prob * (game[mask - 1][player] as f64);
+                }
+            }
+        }
+        std::array::from_fn(|p| r[p] / abs_prob)
+    };
+
+    let mut max_player_regret = 0.0f64;
+    for player in 0..PLAYERS {
+        let mut q_dev0 = *q;
+        q_dev0[player] = 0.0;
+        let mut sigma0 = 1.0;
+        for &p in &q_dev0 {
+            sigma0 *= 1.0 - p;
+        }
+        let dev0_val = if 1.0 - sigma0 <= 1e-12 {
+            0.0
+        } else {
+            let mut r0 = 0.0;
+            for mask in 1..=ABSORBING_MASKS {
+                if (mask & (1 << player)) == 0 {
+                    let mut prob = 1.0;
+                    for (other, &q_other) in q_dev0.iter().enumerate() {
+                        if (mask & (1 << other)) != 0 {
+                            prob *= q_other;
+                        } else {
+                            prob *= 1.0 - q_other;
+                        }
+                    }
+                    r0 += prob * (game[mask - 1][player] as f64);
+                }
+            }
+            r0 / (1.0 - sigma0)
+        };
+
+        let mut dev1_val = 0.0;
+        for mask in 1..=ABSORBING_MASKS {
+            if (mask & (1 << player)) != 0 {
+                let mut prob = 1.0;
+                for (other, &q_other) in q.iter().enumerate() {
+                    if other == player {
+                        continue;
+                    }
+                    if (mask & (1 << other)) != 0 {
+                        prob *= q_other;
+                    } else {
+                        prob *= 1.0 - q_other;
+                    }
+                }
+                dev1_val += prob * (game[mask - 1][player] as f64);
+            }
+        }
+
+        let best_dev = dev0_val.max(dev1_val);
+        let regret = best_dev - v[player];
+        if regret > max_player_regret {
+            max_player_regret = regret;
+        }
+    }
+    max_player_regret
+}
+
+fn min_mixed_grid_regret(game: &[[i16; PLAYERS]], grid_steps: usize) -> f64 {
+    let mut min_regret = f64::MAX;
+    let n = grid_steps.max(1);
+    for i0 in 0..=n {
+        let q0 = (i0 as f64) / (n as f64);
+        for i1 in 0..=n {
+            let q1 = (i1 as f64) / (n as f64);
+            for i2 in 0..=n {
+                let q2 = (i2 as f64) / (n as f64);
+                for i3 in 0..=n {
+                    let q3 = (i3 as f64) / (n as f64);
+                    let r = profile_regret(game, &[q0, q1, q2, q3]);
+                    if r < min_regret {
+                        min_regret = r;
+                    }
+                }
+            }
+        }
+    }
+    min_regret
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = parse_args()
         .map_err(|message| std::io::Error::new(std::io::ErrorKind::InvalidInput, message))?;
     let started = Instant::now();
-    let matches: Vec<(u64, i16)> = (0..args.samples)
+    let matches: Vec<(u64, i16, Option<f64>)> = (0..args.samples)
         .into_par_iter()
         .filter_map(|sample_id| {
             let game = make_game(&args, sample_id);
-            no_pure_instant_equilibrium(&game).map(|margin| (sample_id, margin))
+            no_pure_instant_equilibrium(&game).map(|margin| {
+                let mixed = args
+                    .mixed_grid
+                    .map(|steps| min_mixed_grid_regret(&game, steps));
+                (sample_id, margin, mixed)
+            })
         })
         .collect();
     let matching_games = matches.len();
     let mut ranked = matches;
-    ranked.sort_unstable_by_key(|&(sample_id, margin)| (std::cmp::Reverse(margin), sample_id));
+    if args.mixed_grid.is_some() {
+        ranked.sort_unstable_by(|a, b| {
+            let r_a = a.2.unwrap_or(0.0);
+            let r_b = b.2.unwrap_or(0.0);
+            r_b.partial_cmp(&r_a)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| std::cmp::Reverse(a.1).cmp(&std::cmp::Reverse(b.1)))
+                .then_with(|| a.0.cmp(&b.0))
+        });
+    } else {
+        ranked
+            .sort_unstable_by_key(|&(sample_id, margin, _)| (std::cmp::Reverse(margin), sample_id));
+    }
     ranked.truncate(args.keep);
     let candidates = ranked
         .into_iter()
-        .map(|(sample_id, margin)| Candidate {
+        .map(|(sample_id, margin, min_mixed_regret)| Candidate {
             sample_id,
             seed: args.seed,
             pure_deviation_margin: margin,
+            min_mixed_regret,
             continuation: [0; PLAYERS],
             payoffs: make_game(&args, sample_id),
         })
@@ -164,11 +297,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let elapsed = started.elapsed().as_secs_f64();
     let output = Output {
         schema: "uniform.rust-screen/v1",
-        scope: "integer screening for absence of pure equilibria in the one-shot continuation-payoff game; not an equilibrium nonexistence claim",
+        scope: "integer screening for absence of pure equilibria in the one-shot continuation-payoff game; optional mixed grid ranking",
         deterministic_rng: "counter-based SplitMix64 keyed by (seed,sample_id,payoff_index)",
         samples: args.samples,
         seed: args.seed,
         payoff_range_inclusive: [args.payoff_min, args.payoff_max],
+        mixed_grid_steps: args.mixed_grid,
         elapsed_seconds: elapsed,
         samples_per_second: args.samples as f64 / elapsed,
         matching_games,
@@ -199,6 +333,7 @@ mod tests {
             payoff_min: -4,
             payoff_max: 4,
             keep: 1,
+            mixed_grid: None,
             output: None,
         };
         assert_eq!(make_game(&args, 42), make_game(&args, 42));
@@ -209,5 +344,29 @@ mod tests {
     fn constant_zero_game_has_pure_equilibria() {
         let game = vec![[0; PLAYERS]; ABSORBING_MASKS];
         assert_eq!(no_pure_instant_equilibrium(&game), None);
+    }
+
+    #[test]
+    fn solan_vieille_mixed_grid_regret_is_positive() {
+        let game: Vec<[i16; PLAYERS]> = vec![
+            [1, 4, 0, 0],     // 1
+            [4, 1, 0, 0],     // 2
+            [1, 1, 1, 1],     // 3
+            [0, 0, 1, 4],     // 4
+            [1, 1, 1, 0],     // 5
+            [0, 1, 1, 1],     // 6
+            [1, 0, 0, 0],     // 7
+            [0, 0, 4, 1],     // 8
+            [1, 0, 1, 1],     // 9
+            [1, 1, 0, 1],     // 10
+            [0, 1, 0, 0],     // 11
+            [1, 1, 1, 1],     // 12
+            [0, 0, 0, 1],     // 13
+            [0, 0, 1, 0],     // 14
+            [-1, -1, -1, -1], // 15
+        ];
+        assert!(no_pure_instant_equilibrium(&game).is_some());
+        let min_r = min_mixed_grid_regret(&game, 3);
+        assert!((min_r - (1.0 / 9.0)).abs() < 1e-4);
     }
 }
