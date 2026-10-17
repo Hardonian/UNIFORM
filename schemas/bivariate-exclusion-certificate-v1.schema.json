@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uniform-lab.invalid/schemas/bivariate-exclusion-certificate-v1.schema.json",
+  "title": "UNIFORM exact 2D bivariate interval exclusion certificate",
+  "type": "object",
+  "required": [
+    "schema",
+    "certified_unsat",
+    "domain",
+    "boxes_evaluated",
+    "boxes_pruned",
+    "unresolved_count",
+    "unresolved_boxes"
+  ],
+  "properties": {
+    "schema": {"const": "uniform.bivariate-exclusion-certificate/v1"},
+    "certified_unsat": {"type": "boolean"},
+    "domain": {"$ref": "#/$defs/box"},
+    "boxes_evaluated": {"type": "integer", "minimum": 0},
+    "boxes_pruned": {"type": "integer", "minimum": 0},
+    "unresolved_count": {"type": "integer", "minimum": 0},
+    "unresolved_boxes": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/box"}
+    }
+  },
+  "$defs": {
+    "rational": {"type": "string", "pattern": "^-?[0-9]+(?:/[1-9][0-9]*)?$"},
+    "box": {
+      "type": "object",
+      "required": ["x", "y", "max_width"],
+      "properties": {
+        "x": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"$ref": "#/$defs/rational"}
+        },
+        "y": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"$ref": "#/$defs/rational"}
+        },
+        "max_width": {"$ref": "#/$defs/rational"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
