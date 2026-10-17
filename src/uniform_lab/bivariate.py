@@ -7,9 +7,10 @@ All operations strictly adhere to the UNIFORM zero-float exact arithmetic guaran
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from fractions import Fraction
-from typing import Any, Mapping
+from typing import Any
 
 
 @dataclass(frozen=True)
