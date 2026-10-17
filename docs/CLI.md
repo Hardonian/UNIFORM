@@ -12,8 +12,13 @@ and decimal strings are rejected by the certificate loaders.
   algebraic generator and evaluates the same certificate symbolically.
 - `uniform horizon GAME PROFILE HORIZON` performs exact finite-horizon backward
   induction.
+- `uniform eliminate GAME [--output FILE]` analyzes the exact mixed equilibrium
+  structure via the Conditional Termination Indifference Principle and Sylvester resultant
+  pseudo-remainders, outputting the exact univariate characteristic polynomial and
+  isolating all real algebraic roots with Sturm sequences.
 - `uniform stochastic GAME PROFILE [--beta Q] [--horizon H]` evaluates exact
   discounted stationary and finite-horizon stochastic-game regret.
+
 
 ## Search and solvers
 
