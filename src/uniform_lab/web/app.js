@@ -695,6 +695,57 @@
         }
       }
     });
+
+    const btnBivariate = document.getElementById("btn-run-bivariate-prune");
+    if (btnBivariate) {
+      btnBivariate.addEventListener("click", () => {
+        const targetVal = targetSelect ? targetSelect.value : "current";
+        const targetGame = getSelectedGame(targetVal);
+
+        if (verdictEl) verdictEl.textContent = "Pruning...";
+        if (summaryEl) summaryEl.textContent = "Executing exact 2D branch-and-prune interval root exclusion over [1/100, 99/100]²...";
+
+        const t0 = performance.now();
+
+        fetch("/api/bivariate-prune", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ game: targetGame, max_evaluations: 1000 })
+        })
+        .then(res => {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(cert => {
+          const elapsed = (performance.now() - t0) / 1000;
+          if (timeEl) timeEl.textContent = elapsed.toFixed(3) + "s";
+          if (degreeEl) degreeEl.textContent = "2D Box Interval";
+          if (rootsEl) rootsEl.textContent = `${cert.boxes_pruned}/${cert.boxes_evaluated} Pruned`;
+          if (verdictEl) {
+            verdictEl.textContent = cert.certified_unsat ? "Continuous UNSAT Certified" : "Pruning Complete";
+            verdictEl.className = cert.certified_unsat ? "stat-val text-success" : "stat-val text-accent";
+          }
+          if (tableWrapper) tableWrapper.style.display = "none";
+          if (summaryEl) {
+            summaryEl.textContent = cert.certified_unsat
+              ? `Certified UNSAT: Evaluated ${cert.boxes_evaluated} boxes, pruned ${cert.boxes_pruned} boxes (100%). Zero simultaneous roots in (0, 1)².`
+              : `Branch-and-prune evaluated ${cert.boxes_evaluated} boxes, pruned ${cert.boxes_pruned} boxes. Unresolved boxes: ${cert.unresolved_count}.`;
+          }
+          if (polyDisplay) {
+            polyDisplay.style.display = "block";
+            polyDisplay.innerHTML = `<strong>Bivariate Exclusion Certificate:</strong><br>` +
+              `Domain: [${cert.domain.x.join(", ")}] × [${cert.domain.y.join(", ")}]<br>` +
+              `Certified UNSAT: <strong>${cert.certified_unsat ? "YES (Zero continuous mixed equilibria in domain)" : "NO"}</strong><br>` +
+              `Boxes Evaluated: ${cert.boxes_evaluated}<br>` +
+              `Boxes Pruned: ${cert.boxes_pruned}<br>` +
+              `Schema: <code>${cert.schema}</code>`;
+          }
+        })
+        .catch(err => {
+          if (summaryEl) summaryEl.textContent = "Error executing bivariate pruning: " + err.message;
+        });
+      });
+    }
   }
 
   function evalFraction(str) {

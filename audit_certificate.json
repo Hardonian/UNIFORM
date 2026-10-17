@@ -1,13 +1,13 @@
 {
-  "elapsed_seconds": 94.9199,
-  "generated_at_epoch": 1792207954.3637736,
+  "elapsed_seconds": 119.7305,
+  "generated_at_epoch": 1792209470.909083,
   "lean": {
     "build": {
       "command": [
         "C:\\Users\\scott\\.elan\\bin\\lake.exe",
         "build"
       ],
-      "elapsed_seconds": 10.7478,
+      "elapsed_seconds": 10.406,
       "status": "passed",
       "stdout_tail": [
         "Build completed successfully (3145 jobs)."
@@ -43,7 +43,7 @@
         ]
       ],
       "denominator": 2,
-      "elapsed_seconds": 31.22157,
+      "elapsed_seconds": 33.68761,
       "evaluated_profiles": 6561,
       "minimum_observed_regret": "1",
       "period": 2,
@@ -65,7 +65,7 @@
         ]
       ],
       "denominator": 2,
-      "elapsed_seconds": 33.46531,
+      "elapsed_seconds": 33.6389,
       "evaluated_profiles": 6561,
       "minimum_observed_regret": "4/21",
       "period": 2,
@@ -102,7 +102,7 @@
     },
     "schema_count": 24,
     "status": "draft_2020_12_meta_validated",
-    "validated_examples": 17
+    "validated_examples": 20
   },
   "scope": "software release checks and the explicitly enumerated finite experiments; not a proof of the general uniform-equilibrium conjecture",
   "software": {
@@ -117,7 +117,7 @@
         "-D",
         "warnings"
       ],
-      "elapsed_seconds": 0.3911,
+      "elapsed_seconds": 0.3941,
       "status": "passed",
       "stdout_tail": []
     },
@@ -130,7 +130,7 @@
         "--",
         "--check"
       ],
-      "elapsed_seconds": 0.2503,
+      "elapsed_seconds": 0.3159,
       "status": "passed",
       "stdout_tail": []
     },
@@ -142,13 +142,13 @@
         "rust-scanner/Cargo.toml",
         "--release"
       ],
-      "elapsed_seconds": 0.4491,
+      "elapsed_seconds": 6.4971,
       "status": "passed",
       "stdout_tail": [
-        "test tests::generator_is_deterministic ... ok",
         "test tests::solan_vieille_mixed_grid_regret_is_positive ... ok",
+        "test tests::candidate_46876_periodic_regret_matches_python ... ok",
         "",
-        "test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
         ""
       ]
     },
@@ -158,7 +158,7 @@
         "-m",
         "mypy"
       ],
-      "elapsed_seconds": 0.7524,
+      "elapsed_seconds": 0.6118,
       "status": "passed",
       "stdout_tail": [
         "Success: no issues found in 22 source files"
@@ -173,14 +173,14 @@
         "--cov=uniform_lab",
         "--cov-fail-under=80"
       ],
-      "elapsed_seconds": 15.1655,
+      "elapsed_seconds": 31.8237,
       "status": "passed",
       "stdout_tail": [
         "src\\uniform_lab\\stochastic_smt.py      97      6     42      6    91%   31, 34, 77, 79, 138, 152",
         "-------------------------------------------------------------------------------",
-        "TOTAL                                3064    466   1142    248    81%",
-        "Required test coverage of 80% reached. Total coverage: 80.79%",
-        "92 passed in 13.80s"
+        "TOTAL                                3120    468   1152    250    81%",
+        "Required test coverage of 80% reached. Total coverage: 81.04%",
+        "95 passed in 30.51s"
       ]
     },
     "ruff": {
@@ -191,7 +191,7 @@
         "check",
         "."
       ],
-      "elapsed_seconds": 0.2401,
+      "elapsed_seconds": 0.2557,
       "status": "passed",
       "stdout_tail": [
         "All checks passed!"
@@ -205,7 +205,7 @@
         28
       ],
       "characteristic_polynomial_degree": null,
-      "elapsed_seconds": 1.13938,
+      "elapsed_seconds": 1.11936,
       "interior_candidate_status": "reduced_not_solved",
       "isolated_eliminant_root_intervals": 0,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
@@ -216,7 +216,7 @@
         27
       ],
       "characteristic_polynomial_degree": null,
-      "elapsed_seconds": 0.85634,
+      "elapsed_seconds": 0.74564,
       "interior_candidate_status": "reduced_not_solved",
       "isolated_eliminant_root_intervals": 0,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
@@ -224,7 +224,7 @@
     "three_player_mesh.json": {
       "bivariate_degrees": null,
       "characteristic_polynomial_degree": 12,
-      "elapsed_seconds": 0.03567,
+      "elapsed_seconds": 0.0329,
       "interior_candidate_status": "eliminant_roots_found",
       "isolated_eliminant_root_intervals": 4,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"
@@ -232,7 +232,7 @@
     "two_player_cycle.json": {
       "bivariate_degrees": null,
       "characteristic_polynomial_degree": 1,
-      "elapsed_seconds": 0.00044,
+      "elapsed_seconds": 0.00057,
       "interior_candidate_status": "confirmed",
       "isolated_eliminant_root_intervals": 1,
       "scope": "all-interior stationary indifference candidates only; boundary supports and uniform equilibrium are outside this certificate"

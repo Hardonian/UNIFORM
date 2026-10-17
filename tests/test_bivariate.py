@@ -116,3 +116,27 @@ def test_branch_and_prune_detects_common_root() -> None:
     for b in cert.unresolved_boxes:
         assert b.x.contains(Fraction(1, 2))
         assert b.y.contains(Fraction(1, 2))
+
+def test_extract_bivariate_resultants_and_prune() -> None:
+    import json
+
+    from uniform_lab.bivariate import extract_bivariate_resultants, prune_quitting_game
+    from uniform_lab.quitting import QuittingGame
+
+    with open("examples/adversarial_candidate_46876.json", encoding="utf-8") as f:
+        game = QuittingGame.from_dict(json.load(f))
+
+    p1, p2 = extract_bivariate_resultants(game)
+    assert p1.max_deg_x >= 20
+    assert p2.max_deg_x >= 20
+
+    cert = prune_quitting_game(game, max_evaluations=15, min_width=Fraction(1, 4))
+    assert cert.boxes_evaluated > 0
+    assert cert.to_dict()["schema"] == "uniform.bivariate-exclusion-certificate/v1"
+
+    # Non-4-player error check
+    with open("examples/one_player_zero.json", encoding="utf-8") as f:
+        game_1p = QuittingGame.from_dict(json.load(f))
+    with pytest.raises(ValueError, match="require exactly 4 players"):
+        extract_bivariate_resultants(game_1p)
+

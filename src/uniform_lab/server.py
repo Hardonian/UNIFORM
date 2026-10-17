@@ -15,6 +15,7 @@ from typing import Any
 
 from .io import dump_json
 from .quitting import QuittingGame, normalize_profile, periodic_regret_certificate
+from .rational import parse_rational
 from .resources import example_names, load_example, schema_names
 
 WEB_DIR = Path(__file__).parent / "web"
@@ -210,6 +211,25 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
                     game, denominator, period, max_profiles=max_profiles
                 )
                 self._send_json(grid_result.to_dict())
+            except REQUEST_ERRORS as e:
+                self._send_json({"error": str(e)}, status=400)
+            return
+
+        if path == "/api/bivariate-prune":
+            try:
+                raw_game = payload.get("game", payload)
+                game = QuittingGame.from_dict(raw_game)
+                from .bivariate import BivariateBox, RationalInterval, prune_quitting_game
+
+                d_lo = parse_rational(payload.get("domain_lo", "1/100"), field="domain_lo")
+                d_hi = parse_rational(payload.get("domain_hi", "99/100"), field="domain_hi")
+                min_w = parse_rational(payload.get("min_width", "1/256"), field="min_width")
+                max_evals = int(payload.get("max_evaluations", 200))
+                domain = BivariateBox(RationalInterval(d_lo, d_hi), RationalInterval(d_lo, d_hi))
+                biv_cert = prune_quitting_game(
+                    game, domain=domain, max_evaluations=max_evals, min_width=min_w
+                )
+                self._send_json(biv_cert.to_dict())
             except REQUEST_ERRORS as e:
                 self._send_json({"error": str(e)}, status=400)
             return

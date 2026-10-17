@@ -5,6 +5,8 @@
 //! 2. Arbitrary-period cyclic screening (--audit-game): Rayon multi-core exhaustive grid evaluation
 //!    for arbitrary periods P and denominators D, verifying periodic regret bounds.
 
+#![allow(clippy::needless_range_loop, clippy::manual_memcpy)]
+
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -872,7 +874,10 @@ mod tests {
                 min_r_p1 = r;
             }
         }
-        assert!((min_r_p1 - 0.75).abs() < 1e-6, "P=1 D=4 min regret must be 0.75, got {min_r_p1}");
+        assert!(
+            (min_r_p1 - 0.75).abs() < 1e-6,
+            "P=1 D=4 min regret must be 0.75, got {min_r_p1}"
+        );
 
         // P=2, D=2: 6561 profiles. Python computed min regret = 1.0
         let values_d2: Vec<f64> = (0..=2).map(|k| (k as f64) / 2.0).collect();
@@ -884,6 +889,9 @@ mod tests {
                 min_r_p2 = r;
             }
         }
-        assert!((min_r_p2 - 1.0).abs() < 1e-6, "P=2 D=2 min regret must be 1.0, got {min_r_p2}");
+        assert!(
+            (min_r_p2 - 1.0).abs() < 1e-6,
+            "P=2 D=2 min regret must be 1.0, got {min_r_p2}"
+        );
     }
 }

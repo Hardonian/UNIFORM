@@ -69,8 +69,8 @@ Empirically test whether Candidate 46876 can be resolved by higher-period altern
 | :---: | :---: | :---: | :---: | :---: |
 | **$P = 1$ (Stationary)** | $D = 4$ | $5^4 = 625$ | **$\ge 0.7500$** | $0.1000$ |
 | **$P = 2$ (2-Phase Cycle)** | $D = 2$ | $3^8 = 6,561$ | **$\ge 1.0000$** | **$4/21 \approx 0.1904$** |
-| **$P = 3$ (3-Phase Cycle)** | $D = 2$ | $3^{12} = 531,441$ | **$\ge 1.0000$ (Sample audited)** | $< 0.1500$ |
-| **$P = 4$ (4-Phase Cycle)** | $D = 2$ | $3^{16} \approx 4.3 \times 10^7$ | Under Rayon evaluation | $< 0.1000$ |
+| **$P = 3$ (3-Phase Cycle)** | $D = 2$ | $3^{12} = 531,441$ | **$\ge 1.0000$** (0.101s, 5.28M prof/s) | $< 0.1500$ |
+| **$P = 4$ (4-Phase Cycle)** | $D = 2$ | $3^{16} \approx 4.3 \times 10^7$ | **$\ge 1.0000$** (15.37s, 2.80M prof/s) | $< 0.1000$ |
 
 ### Scientific Significance
 If Candidate 46876 maintains $\text{regret} \ge 1.0000$ across all periods $P \in \{1, 2, 3, 4\}$, it will provide the strongest empirical evidence since 2002 that **uniform equilibrium does not exist in general 4-player quitting games**, transforming our understanding of repeated stochastic games.
@@ -85,13 +85,17 @@ If Candidate 46876 maintains $\text{regret} \ge 1.0000$ across all periods $P \i
   - Exact 2D Bivariate Box-Pruning Interval UNSAT Engine in [`src/uniform_lab/bivariate.py`](../src/uniform_lab/bivariate.py) with formal certificate schema.
   - Hardened multi-layer solver timeout architecture with native OS watchdog thread and process isolation.
   - Full release gate verification (92 unit tests passing, 80.79% coverage, 24 schemas, clean `audit_certificate.json`).
-- [ ] **Session 2 (Next Up)**:
-  - Scale Rust Rayon screening in `rust-scanner/src/main.rs` to arbitrary periods $P \ge 3$.
-  - Exhaustively audit all $3^{12} = 531,441$ period-3 cyclic profiles on Candidate 46876.
-  - Execute parallel screening over $3^{16} \approx 4.3 \times 10^7$ period-4 cyclic profiles at 40M+ profiles/sec.
-- [ ] **Session 3**:
-  - Run the 2D branch-and-prune interval engine over Candidate 46876's actual resultant polynomials ($S_1, S_2$) to certify zero continuous stationary equilibria in $(0, 1)^2$.
-  - Expose bivariate pruning in the CLI (`uniform bivariate-prune`) and Web Workbench UI.
-- [ ] **Session 4**:
-  - Compile the definitive research monograph and package the reproducible replication bundle for ACM EC / CAV / Google Research submission.
+- [x] **Session 2 (Completed)**:
+  - Scaled Rust Rayon screening in `rust-scanner/src/main.rs` to arbitrary periods $P \ge 1$ (`--audit-game`, `--period`, `--denominator`).
+  - Exhaustively audited all $3^{12} = 531,441$ period-3 cyclic profiles on Candidate 46876 in **0.101s** (5.28M profiles/s). Minimum regret floor: **$\ge 1.000000$** (`examples/candidate_46876_period3_screen.json`).
+  - Exhaustively audited all $3^{16} = 43,046,721$ period-4 cyclic profiles on Candidate 46876 in **15.366s** (2.80M profiles/s). Minimum regret floor: **$\ge 1.000000$** (`examples/candidate_46876_period4_screen.json`).
+- [x] **Session 3 (Completed)**:
+  - Derived bivariate resultants ($S_1, S_2$) of degrees (26, 28) and (32, 32) from Candidate 46876.
+  - Implemented exact 2D branch-and-prune rational box interval engine in `src/uniform_lab/bivariate.py` (`examples/candidate_46876_bivariate_certificate.json`).
+  - Exposed `uniform bivariate-prune` CLI subcommand and added interactive 2D Box Pruning action to Web Workbench UI.
+  - Achieved 95 passing unit tests with 81.04% total codebase test coverage.
+- [x] **Session 4 (Completed)**:
+  - Compiled and aligned research monographs (`papers/UNIFORM_RESEARCH_PAPER.md`, `.tex`, `GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md`).
+  - Linked Lean 4 theorems and updated claim-to-artifact evaluation matrix in `docs/ARTIFACT_EVALUATION.md` and `README.md`.
+  - Re-certified replication pipeline across all verification stages.
 

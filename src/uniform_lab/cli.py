@@ -211,6 +211,16 @@ def _parser() -> argparse.ArgumentParser:
     eliminate.add_argument("game")
     eliminate.add_argument("--output")
 
+    bivariate = sub.add_parser(
+        "bivariate-prune", help="exact 2D branch-and-prune interval root exclusion"
+    )
+    bivariate.add_argument("game")
+    bivariate.add_argument("--domain-lo", default="1/100")
+    bivariate.add_argument("--domain-hi", default="99/100")
+    bivariate.add_argument("--max-evaluations", type=int, default=500)
+    bivariate.add_argument("--min-width", default="1/256")
+    bivariate.add_argument("--output")
+
     proof_check.add_argument("--type", choices=("smt", "farkas"), default="smt")
     proof_check.add_argument("--output")
     return parser
@@ -607,6 +617,21 @@ def _run(argv: list[str] | None = None) -> int:
         if args.output is None:
             print(output_text, end="")
         return 0
+    if args.command == "bivariate-prune":
+        from .bivariate import BivariateBox, RationalInterval, prune_quitting_game
+
+        game = load_quitting_game(args.game)
+        d_lo = parse_rational(args.domain_lo, field="domain-lo")
+        d_hi = parse_rational(args.domain_hi, field="domain-hi")
+        min_w = parse_rational(args.min_width, field="min-width")
+        domain = BivariateBox(RationalInterval(d_lo, d_hi), RationalInterval(d_lo, d_hi))
+        biv_cert = prune_quitting_game(
+            game, domain=domain, max_evaluations=args.max_evaluations, min_width=min_w
+        )
+        output_text = dump_json(biv_cert.to_dict(), args.output)
+        if args.output is None:
+            print(output_text, end="")
+        return 0 if biv_cert.certified_unsat else 2
     raise AssertionError("unreachable")
 
 

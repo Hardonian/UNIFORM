@@ -221,7 +221,7 @@ def branch_and_prune_2d(
 def extract_bivariate_resultants(
     game: QuittingGame,
 ) -> tuple[BivariatePolynomial, BivariatePolynomial]:
-    """Derive the two bivariate resultant polynomials S1(q0, q1) and S2(q0, q1) from a 4-player game."""
+    """Derive bivariate polynomials S1(q0, q1) and S2(q0, q1) from a 4-player game."""
     if game.players != 4:
         raise ValueError(f"Bivariate resultants require exactly 4 players, got {game.players}")
     from .elimination import indifference_polynomials, prem, resultant
@@ -246,7 +246,7 @@ def prune_quitting_game(
     max_evaluations: int = 500,
     min_width: Fraction = Fraction(1, 256),
 ) -> BivariateExclusionCertificate:
-    """Run exact 2D branch-and-prune interval root exclusion over the game's bivariate resultants."""
+    """Exact 2D branch-and-prune root exclusion over the game's bivariate resultants."""
     if domain is None:
         domain = BivariateBox(
             RationalInterval(Fraction(1, 100), Fraction(99, 100)),

@@ -163,3 +163,28 @@ def test_server_rejects_unsafe_or_unbounded_requests() -> None:
     finally:
         server.shutdown()
         server.server_close()
+
+def test_server_bivariate_prune_endpoint() -> None:
+    server = ThreadingHTTPServer(("127.0.0.1", 0), WorkbenchRequestHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    base_url = f"http://127.0.0.1:{server.server_address[1]}"
+    try:
+        with open("examples/adversarial_candidate_46876.json", encoding="utf-8") as f:
+            game_data = json.load(f)
+        payload_bytes = json.dumps(
+            {"game": game_data, "max_evaluations": 10, "min_width": "1/4"}
+        ).encode()
+        req = urllib.request.Request(
+            f"{base_url}/api/bivariate-prune",
+            data=payload_bytes,
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode())
+            assert data["schema"] == "uniform.bivariate-exclusion-certificate/v1"
+            assert "boxes_evaluated" in data
+    finally:
+        server.shutdown()
+        server.server_close()
+
