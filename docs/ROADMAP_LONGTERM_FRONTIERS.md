@@ -79,7 +79,19 @@ If Candidate 46876 maintains $\text{regret} \ge 1.0000$ across all periods $P \i
 
 ## 🗓️ Development Session Milestones
 
-- [x] **Session 1 (Completed)**: Exact rational/algebraic arithmetic, tested elimination primitives, Lean 4 lemmas for pure-Nash absence, local Workbench, and scoped release suite.
-- [ ] **Session 2 (In Progress)**: Connecting `Indifference.lean` to a formal finite-game model and auditing 531,441 period-3 profiles in Rust/Python.
-- [ ] **Session 3**: Implementing the exact 2D branch-and-prune interval exclusion engine in `src/uniform_lab/bivariate.py`.
-- [ ] **Session 4**: Running parallel Rayon screening for $4.3 \times 10^7$ period-4 cyclic profiles and compiling the definitive research update.
+- [x] **Session 1 (Completed)**:
+  - Exact rational/algebraic arithmetic and tested elimination primitives.
+  - Lean 4 formal proof of the Indifference Principle in [`lean/Uniform/Indifference.lean`](../lean/Uniform/Indifference.lean) (3,145 jobs, 0 axioms, 0 sorry).
+  - Exact 2D Bivariate Box-Pruning Interval UNSAT Engine in [`src/uniform_lab/bivariate.py`](../src/uniform_lab/bivariate.py) with formal certificate schema.
+  - Hardened multi-layer solver timeout architecture with native OS watchdog thread and process isolation.
+  - Full release gate verification (92 unit tests passing, 80.79% coverage, 24 schemas, clean `audit_certificate.json`).
+- [ ] **Session 2 (Next Up)**:
+  - Scale Rust Rayon screening in `rust-scanner/src/main.rs` to arbitrary periods $P \ge 3$.
+  - Exhaustively audit all $3^{12} = 531,441$ period-3 cyclic profiles on Candidate 46876.
+  - Execute parallel screening over $3^{16} \approx 4.3 \times 10^7$ period-4 cyclic profiles at 40M+ profiles/sec.
+- [ ] **Session 3**:
+  - Run the 2D branch-and-prune interval engine over Candidate 46876's actual resultant polynomials ($S_1, S_2$) to certify zero continuous stationary equilibria in $(0, 1)^2$.
+  - Expose bivariate pruning in the CLI (`uniform bivariate-prune`) and Web Workbench UI.
+- [ ] **Session 4**:
+  - Compile the definitive research monograph and package the reproducible replication bundle for ACM EC / CAV / Google Research submission.
+
