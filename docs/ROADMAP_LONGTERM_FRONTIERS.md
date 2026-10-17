@@ -6,7 +6,7 @@ This roadmap outlines the mathematical strategy, technical milestones, and devel
 
 ## 🎯 The Three Bleeding-Edge Frontier Tracks
 
-```
+```text
                                   UNIFORM
                           LONG-TERM FRONTIERS
                                    │
@@ -23,10 +23,12 @@ gradient independence        real zeros in (0, 1)²         cycles for Candidate
 
 ## Track 1: Formal Machine-Checked Foundations (Lean 4)
 
-### Objective
+### Track 1 Objective
+
 Elevate the foundational algebraic assumptions of quitting game theory into explicit machine-checked theorems in the Lean 4 / Mathlib ecosystem, with declared assumptions and no `sorry` placeholders.
 
 ### Key Theorems
+
 1. **The Payoff Affine Decomposition Theorem**:
    For any player $i$, their expected payoff in any stage game is strictly affine in their own action $q_i$:
    $$U_i(q_i, q_{-i}) = v_i^{\text{cont}}(q_{-i}) + q_i \cdot \Delta_i(q_{-i})$$
@@ -41,10 +43,12 @@ Elevate the foundational algebraic assumptions of quitting game theory into expl
 
 ## Track 2: Exact 2D Bivariate Interval Root Exclusion Engine
 
-### Objective
+### Track 2 Objective
+
 Provide an unconditional, computer-algebraic proof that **Candidate 46876 admits NO completely mixed stationary equilibrium** anywhere in the continuous 4-player hypercube $(0, 1)^4$.
 
 ### Methodology
+
 1. **Resultant Contraction**:
    By sequentially eliminating $q_3$ and $q_2$ via pseudo-remainder resultants with primitive content reduction, UNIFORM contracts the continuous 8-variable indifference system down to two bivariate polynomials:
    $$S_1(q_0, q_1) = 0 \quad (\text{deg } 20, 20)$$
@@ -61,10 +65,12 @@ Provide an unconditional, computer-algebraic proof that **Candidate 46876 admits
 
 ## Track 3: High-Period Multi-Phase Cyclic Grid Screening
 
-### Objective
+### Track 3 Objective
+
 Empirically test whether Candidate 46876 can be resolved by higher-period alternating cycles ($P = 3, 4, 5$), or if its adversarial structure repels cyclic coordination across arbitrary horizons.
 
 ### Empirical Benchmarks
+
 | Period $P$ | Grid Resolution $D$ | Profile Search Space | Candidate 46876 Min Regret | Solan–Vieille 2002 Min Regret |
 | :---: | :---: | :---: | :---: | :---: |
 | **$P = 1$ (Stationary)** | $D = 4$ | $5^4 = 625$ | **$\ge 0.7500$** | $0.1000$ |
@@ -73,6 +79,7 @@ Empirically test whether Candidate 46876 can be resolved by higher-period altern
 | **$P = 4$ (4-Phase Cycle)** | $D = 2$ | $3^{16} \approx 4.3 \times 10^7$ | **$\ge 1.0000$** (15.37s, 2.80M prof/s) | $< 0.1000$ |
 
 ### Scientific Significance
+
 If Candidate 46876 maintains $\text{regret} \ge 1.0000$ across all periods $P \in \{1, 2, 3, 4\}$, it will provide the strongest empirical evidence since 2002 that **uniform equilibrium does not exist in general 4-player quitting games**, transforming our understanding of repeated stochastic games.
 
 ---
@@ -98,4 +105,3 @@ If Candidate 46876 maintains $\text{regret} \ge 1.0000$ across all periods $P \i
   - Compiled and aligned research monographs (`papers/UNIFORM_RESEARCH_PAPER.md`, `.tex`, `GOOGLE_RESEARCH_EXECUTIVE_SUMMARY.md`).
   - Linked Lean 4 theorems and updated claim-to-artifact evaluation matrix in `docs/ARTIFACT_EVALUATION.md` and `README.md`.
   - Re-certified replication pipeline across all verification stages.
-
