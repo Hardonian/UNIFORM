@@ -8,6 +8,13 @@ UNIFORM Lab is an exact-arithmetic research workbench for finite multiplayer qui
 
 The package is deliberately scoped. A finite grid minimum is evidence about that grid, an SMT result is about the emitted bounded formula, and an elimination polynomial supplies necessary interior-candidate conditions unless back-substitution is completed. None of these artifacts alone proves or disproves the general uniform-equilibrium conjecture.
 
+[![CI](https://github.com/Hardonian/UNIFORM/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Hardonian/UNIFORM/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Lean 4](https://img.shields.io/badge/Lean_4-machine_checked-111827)](https://lean-lang.org/)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+
+> **Portfolio signal:** UNIFORM is the exact-arithmetic research flagship: it makes solver-backed results auditable by separating finite-scope evidence, machine-checked claims, and open conjectures.
+
 ## Install
 
 Python 3.11 or newer is required.
