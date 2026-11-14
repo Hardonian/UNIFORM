@@ -92,12 +92,20 @@ class WorkbenchRequestHandler(BaseHTTPRequestHandler):
             return
 
         # Serve static assets from WEB_DIR
-        target = (WEB_DIR / path.lstrip("/")).resolve()
+        web_root = WEB_DIR.resolve()
         if path in {"", "/"}:
-            target = WEB_DIR / "index.html"
+            target = (web_root / "index.html").resolve()
+        else:
+            try:
+                requested = Path(path.lstrip("/"))
+                target = (web_root / requested).resolve()
+                if not target.is_relative_to(web_root):
+                    target = (web_root / "index.html").resolve()
+            except (OSError, RuntimeError):
+                target = (web_root / "index.html").resolve()
 
-        if not target.is_relative_to(WEB_DIR.resolve()) or not target.exists() or target.is_dir():
-            target = WEB_DIR / "index.html"
+        if not target.exists() or target.is_dir():
+            target = (web_root / "index.html").resolve()
 
         if not target.exists():
             self.send_response(404)
